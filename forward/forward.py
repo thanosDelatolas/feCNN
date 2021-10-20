@@ -57,7 +57,13 @@ def create_forward_model(sampling='ico3', info=None, verbose=0, fixed_ori=True):
         # Fixed Orientations
         fwd = mne.convert_forward_solution(fwd, surf_ori=True, force_fixed=True,
                                             use_cps=True, verbose=verbose)
-
+    fig = mne.viz.plot_alignment(
+        info, src=src, eeg=['original', 'projected'], trans=trans,
+        show_axes=True, mri_fiducials=True, dig='fiducials')
+    
+    title = 'Forward model'
+    mne.viz.set_3d_title(figure=fig, title=title, size=len(title))
+    
     return fwd
 
 def get_info(kind='easycap-M10'):
