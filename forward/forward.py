@@ -37,7 +37,6 @@ def create_forward_model(sampling='ico3', info=None, verbose=0, fixed_ori=True):
     trans = os.path.join(fs_dir, 'bem', 'fsaverage-trans.fif')
     src = os.path.join(fs_dir, 'bem', 'fsaverage-ico-5-src.fif')
     bem = os.path.join(fs_dir, 'bem', 'fsaverage-5120-5120-5120-bem-sol.fif')
-
  
 
     # Create our own info object, see e.g.:
@@ -45,6 +44,7 @@ def create_forward_model(sampling='ico3', info=None, verbose=0, fixed_ori=True):
         info = get_info()
         
     # Create and save Source Model
+    # The source space defines the position and orientation of the candidate source locations
     src = mne.setup_source_space(subject, spacing=sampling, surface='white',
                                         subjects_dir=subjects_dir, add_dist=False,
                                         n_jobs=-1, verbose=verbose)
@@ -59,11 +59,10 @@ def create_forward_model(sampling='ico3', info=None, verbose=0, fixed_ori=True):
                                             use_cps=True, verbose=verbose)
     fig = mne.viz.plot_alignment(
         info, src=src, eeg=['original', 'projected'], trans=trans,
-        show_axes=True, mri_fiducials=True, dig='fiducials')
+        show_axes=True)
     
     title = 'Forward model'
     mne.viz.set_3d_title(figure=fig, title=title, size=len(title))
-    
     return fwd
 
 def get_info(kind='easycap-M10'):

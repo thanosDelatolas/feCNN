@@ -8,3 +8,5 @@ pyvistaqt
 pyqt5-tools
 tensorflow
 joblib
+tqdm
+colorednoise
