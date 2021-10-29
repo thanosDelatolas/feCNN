@@ -3,6 +3,8 @@ from copy import deepcopy
 from . import simulation
 
 from . import util
+import numpy as np
+
 class Net:
     ''' The neural network class that creates and trains the model.
 
@@ -73,5 +75,52 @@ class Net:
 
         eeg = simulation.eeg_data
         sources = simulation.source_data
-        self.subject = sources.subject if type(sources) == mne.SourceEstimate \
-            else sources[0].subject
+        self.subject = sources.subject if type(sources) == mne.SourceEstimate  else sources[0].subject
+    
+    def scale_eeg(self, eeg):
+        ''' Scales the EEG prior to training/ predicting with the neural 
+        network.
+
+        Parameters
+        ----------
+        eeg : numpy.ndarray
+            A 3D matrix of the EEG data (samples, channels, time_points)
+        
+        Return
+        ------
+        eeg : numpy.ndarray
+            Scaled EEG
+        '''
+        eeg_out = deepcopy(eeg)
+        # Common average ref
+        for sample in range(eeg.shape[0]):
+            for time in range(eeg.shape[2]):
+                eeg_out[sample, :, time] -= np.mean(eeg_out[sample, :, time])
+                eeg_out[sample, :, time] /= eeg_out[sample, :, time].std()
+        
+        # Normalize
+        # for sample in range(eeg.shape[0]):
+        #     eeg[sample] /= eeg[sample].std()
+
+        return eeg_out
+            
+
+    def scale_source(self, source):
+        ''' Scales the sources prior to training the neural network.
+
+        Parameters
+        ----------
+        source : numpy.ndarray
+            A 3D matrix of the source data (samples, dipoles, time_points)
+        
+        Return
+        ------
+        source : numpy.ndarray
+            Scaled sources
+        '''
+        source_out = deepcopy(source)
+        for sample in range(source.shape[0]):
+            for time in range(source.shape[2]):
+                source_out[sample, :, time] /= np.max(np.abs(source_out[sample, :, time]))
+
+        return source_out

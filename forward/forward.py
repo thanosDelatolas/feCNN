@@ -65,7 +65,7 @@ def create_forward_model(sampling='ico3', info=None, verbose=0, fixed_ori=True):
     mne.viz.set_3d_title(figure=fig, title=title, size=len(title))
     return fwd
 
-def get_info(kind='easycap-M10'):
+def get_info(kind='standard_1020'):
     ''' Create some generic mne.Info object.
     
     Parameters
@@ -73,6 +73,8 @@ def get_info(kind='easycap-M10'):
     kind : str
         kind, for examples see:
             https://mne.tools/stable/generated/mne.channels.make_standard_montage.html#mne.channels.make_standard_montage
+        default: standard_1020 => 
+            Electrodes are named and positioned according to the international 10-20 system (94+3 locations)
 
     Return
     ------
