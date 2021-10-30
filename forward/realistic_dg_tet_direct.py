@@ -5,13 +5,20 @@
 
 
 # I. Import libraries
+import os
+import sys
+
+current = os.path.dirname(os.path.realpath(__file__))
+parent = os.path.dirname(current)
+sys.path.append(parent)
+
 import numpy as np
 import duneuropy as dp
-import os
+
 
 # II. Define input files
-folder_input = '/path/to/input/'
-folder_output = '/path/to/output/'
+folder_input = os.path.join(parent,'duneuropy/Data')
+folder_output = os.path.join(parent,'duneuropy/DataOut')
 grid_filename = os.path.join(folder_input, 'realistic_tet_mesh_6c.msh')
 tensor_filename = os.path.join(folder_input, 'realistic_6c.cond')
 electrode_filename = os.path.join(folder_input, 'realistic_electrodes_fitted.txt')
