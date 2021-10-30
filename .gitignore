@@ -7,7 +7,7 @@ __pycache__/
 *.so
 
 # But not this c extension...
-!Duneuro/duneuropy.so
+!duneuropy/duneuropy.so
 
 # Distribution / packaging
 .Python
@@ -130,3 +130,6 @@ dmypy.json
 .vscode
 
 temp
+
+duneuropy/Data/*
+duneuropy/DataOut/*

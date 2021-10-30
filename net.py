@@ -15,23 +15,7 @@ class Net:
     '''
 
     def __init__(self, fwd):
-        self.fwd = deepcopy(fwd)
-        self._embed_fwd(fwd)
-
-    def _embed_fwd(self, fwd):
-        ''' Saves crucial attributes from the Forward model.
-        
-        Parameters
-        ----------
-        fwd : mne.Forward
-            The forward model object.
-        '''
-        _, leadfield, _, _ = util.unpack_fwd(fwd)
-        self.fwd = deepcopy(fwd)
-        self.leadfield = leadfield
-        self.n_channels = leadfield.shape[0]
-        self.n_dipoles = leadfield.shape[1]
-
+        pass
     
     def fit(self,simulation, optimizer=None, learning_rate=0.001, 
         validation_split=0.1, epochs=50, metrics=None, 
