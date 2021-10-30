@@ -17,8 +17,9 @@ import numpy as np
 
 
 # II. Define input files
-folder_input = '../duneuropy/Data/'
-folder_output = '../duneuropy/DataOut/'
+folder_input = os.path.join(parent,'duneuropy/Data')
+folder_output = os.path.join(parent,'duneuropy/DataOut')
+
 filenames = {'skin_surf' : os.path.join(folder_input, 'skin.npy'),
              'white_surf' : os.path.join(folder_input, 'white.npy'),
              'gray_surf' : os.path.join(folder_input, 'gray.npy'),
