@@ -4,7 +4,7 @@
 
 ## Installation
 ```
-Install duneuro from [here](https://gitlab.dune-project.org/duneuro/duneuro/-/wikis/installation-instructions)
+Duneuro is already installed but you can check for new versions [here](http://duneuro.org/)
 ```
 
 ```
