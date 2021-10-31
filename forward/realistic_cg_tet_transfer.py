@@ -3,19 +3,24 @@
 # with different source models (Partial integration, St. Venant, Whitney and Subtraction)
 # using the transfer matrix apporach
 
-# I. Import libraries
-import numpy as np
-import duneuropy as dp
+import sys
 import os
 
-# II. Define input files
-folder_input = '/path/to/input/'
-folder_output = '/path/to/output/'
+current = os.path.dirname(os.path.realpath(__file__))
+parent = os.path.dirname(current)
+sys.path.append(parent)
+
+import numpy as np
+import duneuropy as dp
+
+# Define input files
+folder_input = os.path.join(parent,'duneuropy/Data')
+folder_output = os.path.join(parent,'duneuropy/DataOut')
 grid_filename = os.path.join(folder_input, 'realistic_tet_mesh_6c.msh')
 tensor_filename = os.path.join(folder_input, 'realistic_6c.cond')
 electrode_filename = os.path.join(folder_input, 'realistic_electrodes_fitted.txt')
 
-# III. Create MEEG driver
+# Create MEEG driver
 # We create the driver object which will read the mesh along with the conductivity tensors from the provided files
 config = {
     'type' : 'fitted',
@@ -32,7 +37,7 @@ config = {
 driver = dp.MEEGDriver3d(config)
 
 
-# IV. Read and set electrode positions
+# Read and set electrode positions
 # When projecting the electrodes, we choose the closest nodes
 electrodes = np.genfromtxt(electrode_filename,delimiter=None) 
 electrodes = [dp.FieldVector3D(t) for t in electrodes.tolist()]
@@ -105,7 +110,7 @@ for sm in source_model_configs:
     solutions[sm] = np.array(lf[0])
 
 
-# VI. Vizualization of output (mesh, the first dipole and the resulting potential of this dipole at the electrodes)
+# Vizualization of output (mesh, the first dipole and the resulting potential of this dipole at the electrodes)
 driver.write({
     'format' : 'vtk',
     'filename' : os.path.join(folder_output, 'realistic_cg_tet_transfer_headmodel')
