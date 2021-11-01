@@ -1,7 +1,6 @@
 # Compute EEG leadfield using the standard (CG-) FEM approach,
 # in a realistic volumetric tetrahedral 6 compartment head model
-# with different source models (Partial integration, St. Venant, Whitney and Subtraction)
-# using the transfer matrix apporach
+# with the Venant source model using the transfer matrix apporach
 
 import sys
 import os
@@ -13,12 +12,15 @@ sys.path.append(parent)
 import numpy as np
 import duneuropy as dp
 
+import scipy.io
+
 # Define input files
 folder_input = os.path.join(parent,'duneuropy/Data')
 folder_output = os.path.join(parent,'duneuropy/DataOut')
 grid_filename = os.path.join(folder_input, 'realistic_tet_mesh_6c.msh')
 tensor_filename = os.path.join(folder_input, 'realistic_6c.cond')
 electrode_filename = os.path.join(folder_input, 'realistic_electrodes_fitted.txt')
+dipoles_filename = os.path.join(folder_input, 'dipoles.mat')
 
 # Create MEEG driver
 # We create the driver object which will read the mesh along with the conductivity tensors from the provided files
@@ -66,48 +68,43 @@ np.save(filename, tm_eeg)
 # tm_eeg = np.load(filename, allow_pickle=True)
 
 # Create source model configurations (Partial integration St. Venant, Subtraction, Whitney)
-source_model_configs = {
-    'Partial integration' : {
-        'type' : 'partial_integration'
-    },
-    'Venant' : {
-        'type' : 'venant',
-        'numberOfMoments' : 3,
-        'referenceLength' : 20,
-        'weightingExponent' : 1,
-        'relaxationFactor' : 1e-6,
-        'restricted' : False,
-        'mixedMoments' : False,
-        'restrict' : True,
-        'initialization' : 'closest_vertex'
-    },
-    'Whitney' : {
-        'type' : 'whitney',
-        'referenceLength' : 20,
-        'restricted' : True,
-        'faceSources' : 'all',
-        'edgeSources'  : 'all',
-        'interpolation' : 'PBO'
-    },
-    'Subtraction' : {
-        'type' : 'subtraction',
-        'intorderadd' : 2,
-        'intorderadd_lb' : 2
-    }
+source_model_config = {
+    'type' : 'venant',
+    'numberOfMoments' : 3,
+    'referenceLength' : 20,
+    'weightingExponent' : 1,
+    'relaxationFactor' : 1e-6,
+    'restricted' : False,
+    'mixedMoments' : False,
+    'restrict' : True,
+    'initialization' : 'closest_vertex'
 }
 
-# Define test dipole
-dipoles = [dp.Dipole3d([23.4541, 30, 100.716], [1, 0, 0])]
+# Load dipoles 
+#dipoles = [dp.Dipole3d([23.4541, 30, 100.716], [1, 0, 0])]
+dipoles =  scipy.io.loadmat(dipoles_filename)['cd_matrix']
+
+dipPos = list()
+dipMom = list()
+for i in range(len(dipoles)):
+    dipPos.append(dp.FieldVector3D(dipoles[i][:3].tolist()))
+    dipMom.append(dp.FieldVector3D(dipoles[i][3:].tolist()))
+
+dipoles = [dp.Dipole3d(p,m) for p,m in zip(dipPos, dipMom)]
+
+pvtk = dp.PointVTKWriter3d(dipPos, True)
+pvtk.addVectorData('mom', dipMom)
+pvtk.write(os.path.join(folder_output,'dipoles'))
+
 
 # Apply the transfer matrix
-solutions = dict()
-for sm in source_model_configs:
-    lf = driver.applyEEGTransfer(tm_eeg, dipoles, {
-                    'source_model' : source_model_configs[sm],
+lf = driver.applyEEGTransfer(tm_eeg, dipoles, {
+                    'source_model' : source_model_config,
                     'post_process' : True,
                     'subtract_mean' : True
                 })
-    solutions[sm] = np.array(lf[0])
+solution = np.array(lf[0])
+    
 
 
 # Vizualization of output (mesh, the first dipole and the resulting potential of this dipole at the electrodes)
@@ -116,11 +113,11 @@ driver.write({
     'filename' : os.path.join(folder_output, 'realistic_cg_tet_transfer_headmodel')
 })
 
-pvtk = dp.PointVTKWriter3d(dipoles[0])
-pvtk.write(os.path.join(folder_output,'realistic_cg_tet_transfer_testdipole'))
+# pvtk = dp.PointVTKWriter3d(dipoles[0])
+# pvtk.write(os.path.join(folder_output,'realistic_cg_tet_transfer_testdipole'))
 
 pvtk = dp.PointVTKWriter3d(electrodes, True)
-pvtk.addScalarData('potential', solutions['Venant'][0]) 
+pvtk.addScalarData('potential', solution[0]) 
 pvtk.write(os.path.join(folder_output, 'realistic_cg_tet_transfer_lf_venant'))
 
 # print a list of relevant publications
