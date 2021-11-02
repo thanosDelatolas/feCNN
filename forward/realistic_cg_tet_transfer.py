@@ -17,10 +17,22 @@ import scipy.io
 # Define input files
 folder_input = os.path.join(parent,'duneuropy/Data')
 folder_output = os.path.join(parent,'duneuropy/DataOut')
-grid_filename = os.path.join(folder_input, 'realistic_tet_mesh_6c.msh')
-tensor_filename = os.path.join(folder_input, 'realistic_6c.cond')
+# grid_filename = os.path.join(folder_input, 'realistic_head_model.mat')
+# tensor_filename = os.path.join(folder_input, 'realistic_6c.cond')
+
+realistic_head_model_filename = os.path.join(folder_input, 'realistic_head_model.mat')
 electrode_filename = os.path.join(folder_input, 'realistic_electrodes_fitted.txt')
 dipoles_filename = os.path.join(folder_input, 'dipoles.mat')
+
+
+realistic_head_model = scipy.io.loadmat(realistic_head_model_filename)
+
+# cc = 3
+# cond_ratio       = 3.6;   # conductivity ratio according to Akhtari et al., 2002
+# cond_compacta    = (10^-4)*[8, 16, 24, 28, 33, 41, 55, 70, 83, 165, 330];
+# conductivity = [0.43 cond_compacta[cc] cond_ratio*cond_compacta[cc] 1.79 0.33 0.14]*0.001
+
+# conductivity = log(conductivity);
 
 # Create MEEG driver
 # We create the driver object which will read the mesh along with the conductivity tensors from the provided files
@@ -29,8 +41,9 @@ config = {
     'solver_type' : 'cg',
     'element_type' : 'tetrahedron',
     'volume_conductor' : {
-        'grid.filename' : grid_filename,
-        'tensors.filename' : tensor_filename
+        'grid.elements' : realistic_head_model['elements'],
+        'grid.nodes' : realistic_head_model['nodes'],
+        'tensors.labels' : realistic_head_model['labels']
     },
     'solver' : {
         'verbose' : 1
