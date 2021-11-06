@@ -37,13 +37,13 @@ cc=4
 
 conductivity = np.array([0.43, cond_compacta[cc], cond_ratio*cond_compacta[cc], 1.79, 0.33, 0.14])
 
-tensors = np.array(scipy.io.loadmat(tensor_filename)['tensors']).T
+tensors = scipy.io.loadmat(tensor_filename)['tensors'].T
 
 print('Elements:', '({0}, {1})'.format(len(elements),len(elements[0])))
 print('Nodes:','({0}, {1})'.format(len(nodes),len(nodes[0])))
 print('Labels:','({0}, {1})'.format(len(labels),len(labels[0])))
+print('Conductivities:','({0},)'.format(len(conductivity)))
 print('Tensors:',tensors.shape)
-
 
 
 

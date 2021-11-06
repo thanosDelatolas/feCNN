@@ -356,3 +356,14 @@ def scale_source(source):
             source_out[sample, :, time] /= np.max(np.abs(source_out[sample, :, time]))
 
     return source_out
+
+def read_electrodes(filename):
+    ''' Reads the electrodes positions from a .elc file
+    '''
+    with open(filename, 'r') as f:
+        lines = f.readlines()
+    startPositions = next(i for i,l in enumerate(lines) if l.startswith('Positions'))+1
+    endPositions = next(i for i,l in enumerate(lines) if l.startswith('NumberPolygons'))
+    positionLines = lines[startPositions:endPositions]
+    electrodePositions = [[float(y) for y in x.strip().split()] for x in positionLines]
+    return electrodePositions
