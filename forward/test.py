@@ -20,23 +20,31 @@ electrode_filename = os.path.join(folder_input, 'realistic_electrodes_fitted.txt
 dipoles_filename = os.path.join(folder_input, 'dipoles.mat')
 tensor_filename = os.path.join(folder_input, 'tensors.mat')
 
+ele_filename = os.path.join(folder_input, 'ele.mat')
 
 # head model properties
 realistic_head_model = scipy.io.loadmat(realistic_head_model_filename)
-labels = np.array(realistic_head_model['labels']) 
-labels = labels - np.ones(labels.shape)
-elements = np.array(realistic_head_model['elements'])[:-3]
-nodes =  np.array(realistic_head_model['nodes'])
+
+
+labels = realistic_head_model['labels'] - 1
+nodes =  realistic_head_model['nodes']
+elements =  scipy.io.loadmat(ele_filename)['ele']
+
 
 cond_ratio = 3.6;   #conductivity ratio according to Akhtari et al., 2002
-cond_compacta = (10**-4)*np.array([8, 16, 24, 28, 31, 41, 55, 70, 83, 167, 330])
+cond_compacta = (10**4)*np.array([8, 16, 24, 28, 31, 41, 55, 70, 83, 167, 330])
 cc=4
 
 conductivity = np.array([0.43, cond_compacta[cc], cond_ratio*cond_compacta[cc], 1.79, 0.33, 0.14])
 
-tensors = scipy.io.loadmat(tensor_filename)['tensors']
+tensors = np.array(scipy.io.loadmat(tensor_filename)['tensors']).T
 
-tensors = np.ones((3,3))
+print('Elements:', '({0}, {1})'.format(len(elements),len(elements[0])))
+print('Nodes:','({0}, {1})'.format(len(nodes),len(nodes[0])))
+print('Labels:','({0}, {1})'.format(len(labels),len(labels[0])))
+print('Tensors:',tensors.shape)
+
+
 
 
 # Create MEEG driver
@@ -47,13 +55,13 @@ config = {
     'element_type' : 'tetrahedron',
     'volume_conductor' : {
         'grid' : {
-            'elements' : elements,
+            'elements' :  elements,
             'nodes' : nodes
         },
         'tensors' : {
             'labels' : labels ,
             'conductivities' : conductivity,
-            #'tensors' : np.array(tensors)
+            #'tensors' : tensors
         }
     },
     'solver' : {
