@@ -4,6 +4,10 @@
 
 import sys
 import os
+import time
+import datetime
+
+start_time = time.time()
 
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
@@ -148,3 +152,7 @@ pvtk.write(os.path.join(folder_output, 'realistic_cg_tet_transfer_lf_venant'))
 
 # print a list of relevant publications
 driver.print_citations()
+
+end_time = time.time() - start_time
+
+print('Total time:',str(datetime.timedelta(seconds=end_time)))
