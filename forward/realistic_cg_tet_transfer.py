@@ -11,45 +11,34 @@ sys.path.append(parent)
 
 import numpy as np
 import duneuropy as dp
-import util
 
 import scipy.io
 
-# Define input files
+import util
+
+# Define the folders
 folder_input = os.path.join(parent,'duneuropy/Data')
 folder_output = os.path.join(parent,'duneuropy/DataOut')
-# grid_filename = os.path.join(folder_input, 'realistic_tet_mesh_6c.msh')
 
+# Define input files
 realistic_head_model_filename = os.path.join(folder_input, 'realistic_head_model.mat')
-#electrode_filename = os.path.join(folder_input, 'realistic_electrodes_fitted.txt')
+tensor_filename = os.path.join(folder_input, 'py-tensors.mat')
+ele_filename = os.path.join(folder_input, 'elements.mat')
+
 electrode_filename = os.path.join(folder_input, 'electrodes.elc')
 dipoles_filename = os.path.join(folder_input, 'dipoles.mat')
-tensor_filename = os.path.join(folder_input, 'tensors.mat')
 
-ele_filename = os.path.join(folder_input, 'ele.mat')
-
-# head model properties
+# load the head model data
 realistic_head_model = scipy.io.loadmat(realistic_head_model_filename)
-
-
 labels = realistic_head_model['labels'] - 1
 nodes =  realistic_head_model['nodes']
 elements =  scipy.io.loadmat(ele_filename)['ele']
+tensors = scipy.io.loadmat(tensor_filename)['tensors_py']
 
-
-cond_ratio = 3.6;   #conductivity ratio according to Akhtari et al., 2002
-cond_compacta = (10**4)*np.array([8, 16, 24, 28, 31, 41, 55, 70, 83, 167, 330])
-cc=4
-
-conductivity = np.array([0.43, cond_compacta[cc], cond_ratio*cond_compacta[cc], 1.79, 0.33, 0.14])
-
-tensors = scipy.io.loadmat(tensor_filename)['tensors'].T
-
-# print('Elements:', '({0}, {1})'.format(len(elements),len(elements[0])))
-# print('Nodes:','({0}, {1})'.format(len(nodes),len(nodes[0])))
-# print('Labels:','({0}, {1})'.format(len(labels),len(labels[0])))
-# print('Conductivities:','({0},)'.format(len(conductivity)))
-# print('Tensors:',tensors.shape)
+print('Elements:', '({0}, {1})'.format(len(elements),len(elements[0])))
+print('Nodes:','({0}, {1})'.format(len(nodes),len(nodes[0])))
+print('Labels:','({0}, {1})'.format(len(labels),len(labels[0])))
+print('Tensors:',tensors.shape)
 
 
 
@@ -58,7 +47,7 @@ tensors = scipy.io.loadmat(tensor_filename)['tensors'].T
 config = {
     'type' : 'fitted',
     'solver_type' : 'cg',
-    'element_type' : 'tetrahedron',
+    'element_type' : 'hexahedron',
     'volume_conductor' : {
         'grid' : {
             'elements' :  elements,
@@ -66,8 +55,7 @@ config = {
         },
         'tensors' : {
             'labels' : labels ,
-            'conductivities' : conductivity,
-            #'tensors' : tensors
+            'tensors' : tensors
         }
     },
     'solver' : {
@@ -75,7 +63,6 @@ config = {
     }
 }
 driver = dp.MEEGDriver3d(config)
-
 
 # Read and set electrode positions
 # When projecting the electrodes, we choose the closest nodes
