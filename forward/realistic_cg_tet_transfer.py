@@ -33,7 +33,8 @@ realistic_head_model = scipy.io.loadmat(realistic_head_model_filename)
 labels = realistic_head_model['labels'] - 1
 nodes =  realistic_head_model['nodes']
 elements =  scipy.io.loadmat(ele_filename)['ele']
-tensors = scipy.io.loadmat(tensor_filename)['tensors_py']
+tensors = np.array(scipy.io.loadmat(tensor_filename)['tensors_py'])
+tensors = tensors.transpose(2, 0, 1)
 
 print('Elements:', '({0}, {1})'.format(len(elements),len(elements[0])))
 print('Nodes:','({0}, {1})'.format(len(nodes),len(nodes[0])))
@@ -138,8 +139,8 @@ driver.write({
     'filename' : os.path.join(folder_output, 'realistic_cg_tet_transfer_headmodel')
 })
 
-# pvtk = dp.PointVTKWriter3d(dipoles[0])
-# pvtk.write(os.path.join(folder_output,'realistic_cg_tet_transfer_testdipole'))
+pvtk = dp.PointVTKWriter3d(dipoles)
+pvtk.write(os.path.join(folder_output,'realistic_cg_tet_transfer_dipoles'))
 
 pvtk = dp.PointVTKWriter3d(electrodes, True)
 pvtk.addScalarData('potential', solution[0]) 

@@ -26,7 +26,8 @@ realistic_head_model = scipy.io.loadmat(realistic_head_model_filename)
 labels = realistic_head_model['labels'] - 1
 nodes =  realistic_head_model['nodes']
 elements =  scipy.io.loadmat(ele_filename)['ele']
-tensors = scipy.io.loadmat(tensor_filename)['tensors_py']
+tensors = np.array(scipy.io.loadmat(tensor_filename)['tensors_py'])
+tensors = tensors.transpose(2, 0, 1)
 
 print('Elements:', '({0}, {1})'.format(len(elements),len(elements[0])))
 print('Nodes:','({0}, {1})'.format(len(nodes),len(nodes[0])))
@@ -59,7 +60,7 @@ driver = dp.MEEGDriver3d(config)
 
 
 
-# driver.write({
-#     'format' : 'vtk',
-#     'filename' : 'head-model'
-# })
+driver.write({
+    'format' : 'vtk',
+    'filename' : 'head-model'
+})
