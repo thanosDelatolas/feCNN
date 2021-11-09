@@ -1,6 +1,6 @@
 # Compute EEG leadfield using the standard (CG-) FEM approach,
 # in a realistic volumetric tetrahedral 6 compartment head model
-# with the Venant source model using the transfer matrix apporach
+# with the Venant source model using the transfer matrix approach
 
 import sys
 import os

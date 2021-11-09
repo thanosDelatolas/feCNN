@@ -18,9 +18,9 @@ folder_output = os.path.join(parent,'duneuropy/DataOut')
 realistic_head_model_filename = os.path.join(folder_input, 'realistic_head_model.mat')
 electrode_filename = os.path.join(folder_input, 'realistic_electrodes_fitted.txt')
 dipoles_filename = os.path.join(folder_input, 'dipoles.mat')
-tensor_filename = os.path.join(folder_input, 'tensors.mat')
+tensor_filename = os.path.join(folder_input, 'py-tensors.mat')
 
-ele_filename = os.path.join(folder_input, 'ele.mat')
+ele_filename = os.path.join(folder_input, 'elements.mat')
 
 # head model properties
 realistic_head_model = scipy.io.loadmat(realistic_head_model_filename)
@@ -37,7 +37,7 @@ cc=4
 
 conductivity = np.array([0.43, cond_compacta[cc], cond_ratio*cond_compacta[cc], 1.79, 0.33, 0.14])
 
-tensors = scipy.io.loadmat(tensor_filename)['tensors'].T
+tensors = scipy.io.loadmat(tensor_filename)['tensors_py']
 
 print('Elements:', '({0}, {1})'.format(len(elements),len(elements[0])))
 print('Nodes:','({0}, {1})'.format(len(nodes),len(nodes[0])))
@@ -52,7 +52,7 @@ print('Tensors:',tensors.shape)
 config = {
     'type' : 'fitted',
     'solver_type' : 'cg',
-    'element_type' : 'tetrahedron',
+    'element_type' : 'hexahedron',
     'volume_conductor' : {
         'grid' : {
             'elements' :  elements,
@@ -60,8 +60,7 @@ config = {
         },
         'tensors' : {
             'labels' : labels ,
-            'conductivities' : conductivity,
-            #'tensors' : tensors
+            'tensors' : tensors
         }
     },
     'solver' : {
@@ -74,5 +73,5 @@ driver = dp.MEEGDriver3d(config)
 
 driver.write({
     'format' : 'vtk',
-    'filename' : 'test'
+    'filename' : 'head-model'
 })
