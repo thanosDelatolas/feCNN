@@ -34,9 +34,9 @@ dipoles_filename = os.path.join(folder_input, 'dipoles.mat')
 
 # load the head model data
 realistic_head_model = scipy.io.loadmat(realistic_head_model_filename)
-labels = realistic_head_model['labels'] - 1
+labels = realistic_head_model['labels']
 nodes =  realistic_head_model['nodes']
-elements =  scipy.io.loadmat(ele_filename)['ele']
+elements =  realistic_head_model['elements']
 tensors = np.array(scipy.io.loadmat(tensor_filename)['tensors_py'])
 tensors = tensors.transpose(2, 0, 1)
 
@@ -53,6 +53,7 @@ config = {
     'type' : 'fitted',
     'solver_type' : 'cg',
     'element_type' : 'hexahedron',
+    'usesuperlu' : False,
     'volume_conductor' : {
         'grid' : {
             'elements' :  elements,
@@ -64,7 +65,7 @@ config = {
         }
     },
     'solver' : {
-        'verbose' : 1
+        'intorderadd' : 1 # order of integration for solver
     }
 }
 driver = dp.MEEGDriver3d(config)
@@ -74,8 +75,8 @@ driver = dp.MEEGDriver3d(config)
 electrodePositions = util.read_electrodes(electrode_filename)
 electrodes = [dp.FieldVector3D(x) for x in electrodePositions]
 electrode_config = {
-    'type' : 'closest_subentity_center',
-    'codims' : [3]
+    'type' : 'closest_subentity_center', 
+    'codims' : [3] # to use nodes, 2 for edges and 1 for faces
 }
 driver.setElectrodes(electrodes, electrode_config)
 
@@ -83,7 +84,7 @@ driver.setElectrodes(electrodes, electrode_config)
 # Compute the transfer matrix
 transfer_config = {
     'solver' : {
-        'reduction' : 1e-10
+        'reduction' : 1e-6  # lower value -> higher forward computation accurancy but 1e-6 is good enough
     }
 }
 tm = driver.computeEEGTransferMatrix(transfer_config)
@@ -100,14 +101,18 @@ np.save(filename, tm_eeg)
 # Create source model configurations (Partial integration St. Venant, Subtraction, Whitney)
 source_model_config = {
     'type' : 'venant',
+    'initialization' : 'closest_vertex',
+    'intorderadd' : 2,
+    'intorderadd_lb' : 2,
     'numberOfMoments' : 3,
     'referenceLength' : 20,
     'weightingExponent' : 1,
     'relaxationFactor' : 1e-6,
+    'restrict' : True,
     'restricted' : False,
     'mixedMoments' : False,
-    'restrict' : True,
-    'initialization' : 'closest_vertex'
+    'weightingExponent' : 1
+    
 }
 
 # Load dipoles 
@@ -131,7 +136,8 @@ pvtk.write(os.path.join(folder_output,'dipoles'))
 lf = driver.applyEEGTransfer(tm_eeg, dipoles, {
                     'source_model' : source_model_config,
                     'post_process' : True,
-                    'subtract_mean' : True
+                    'subtract_mean' : True,
+                    'only_post_process' : False
                 })
 solution = np.array(lf[0])
     
