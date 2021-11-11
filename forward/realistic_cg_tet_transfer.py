@@ -65,7 +65,7 @@ config = {
         }
     },
     'solver' : {
-        'intorderadd' : 1 # order of integration for solver
+        'verbose' : 1 # order of integration for solver
     }
 }
 driver = dp.MEEGDriver3d(config)
