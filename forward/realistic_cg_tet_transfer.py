@@ -156,9 +156,6 @@ solution = np.array(lf[0])
 filename = os.path.join(folder_output, 'solution.npy')
 np.save(filename, solution)
 
-filename = os.path.join(folder_output, 'solution_lf.npy')
-np.save(filename, lf)
-
 # Vizualization of output (mesh, the first dipole and the resulting potential of this dipole at the electrodes)
 driver.write({
     'format' : 'vtk',
