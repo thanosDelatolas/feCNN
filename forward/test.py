@@ -103,7 +103,7 @@ tm = driver.computeEEGTransferMatrix(transfer_config)
 tm_eeg = np.array(tm[0])
 
 # (optional) save the transfer matrix
-filename = os.path.join(folder_output, 'transfer_realistic_tet_cg.npy')
+filename = os.path.join(folder_output, 'transfer_matrix.npy')
 np.save(filename, tm_eeg)
 
 # Create source model configurations (Partial integration St. Venant, Subtraction, Whitney)
@@ -149,7 +149,11 @@ lf = driver.applyEEGTransfer(tm_eeg, dipoles, {
                 })
 solution = np.array(lf[0])
     
+filename = os.path.join(folder_output, 'solution.npy')
+np.save(filename, solution)
 
+filename = os.path.join(folder_output, 'solution_lf.npy')
+np.save(filename, lf)
 
 # Vizualization of output (mesh, the first dipole and the resulting potential of this dipole at the electrodes)
 driver.write({
@@ -157,8 +161,8 @@ driver.write({
     'filename' : os.path.join(folder_output, 'realistic_cg_tet_transfer_headmodel')
 })
 
-pvtk = dp.PointVTKWriter3d(dipoles)
-pvtk.write(os.path.join(folder_output,'realistic_cg_tet_transfer_dipoles'))
+# pvtk = dp.PointVTKWriter3d(dipoles)
+# pvtk.write(os.path.join(folder_output,'realistic_cg_tet_transfer_dipoles'))
 
 pvtk = dp.PointVTKWriter3d(electrodes, True)
 pvtk.addScalarData('potential', solution[0]) 
