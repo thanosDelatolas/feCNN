@@ -69,7 +69,9 @@ config = {
         },
         'tensors' : {
             'labels' : labels,
+            # isotropic conductivities for skin, skull_compacta, skull_spongiosa, csf, white_matter, gray_matter
             'conductivities' : conds[:-1],
+            # anisotropic conductivity for white_matter
             'tensors' : wm_tensors
         }
     },
