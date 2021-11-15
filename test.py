@@ -1,3 +1,5 @@
-import forward
+from forward import solve_forward
 
-forward.solve_forward()
+fwd = solve_forward()
+
+print(fwd.leadfield.shape)

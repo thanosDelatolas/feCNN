@@ -23,6 +23,7 @@ electrode_filename = os.path.join(folder_input, 'electrodes.elc')
 dipoles_filename = os.path.join(folder_input, 'dipoles.mat')
 tensor_filename = os.path.join(folder_input, 'wm_tensors.mat')
 
+
 def solve_forward():
     ''' Compute EEG leadfield using the standard (CG-) FEM approach,
     in a realistic volumetric hexahedron 6 compartment head model
@@ -179,3 +180,10 @@ def solve_forward():
         print('Total time:',str(datetime.timedelta(seconds=end_time)))
 
     print('Forward problem is solved.')
+    return Forward(electrode_filename, dipoles_filename, lf_filename)
+
+class Forward:
+    def __init__(self, electrode_filename, dipole_filename, leadfield_filename):
+        self.leadfield = np.load(leadfield_filename)
+        self.electrodes = util.read_electrodes(electrode_filename)
+        self.dipoles, _ = util.read_dipoles(dipole_filename)
