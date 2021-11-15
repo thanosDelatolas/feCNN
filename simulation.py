@@ -1,3 +1,6 @@
+from joblib import Parallel, delayed
+from tqdm import tqdm
+
 import colorednoise as cn
 
 import numpy as np
@@ -5,12 +8,13 @@ import random
 
 import util
 
+
 DEFAULT_SETTINGS = {
     'number_of_sources': (1, 20),
     'extents': (1, 50),
     'amplitudes': (1, 10),
     'shapes': 'both',
-    'duration_of_trial': 0.2,
+    'duration_of_trial': 0,
     'sample_frequency': 100,
     'target_snr': 4,
     'beta': (0, 3),
@@ -19,9 +23,29 @@ class Simulation:
     ''' Simulate EEG and sources data.
     '''
 
-    def __init__(self, fwd):
-        self.settings = DEFAULT_SETTINGS
+    def __init__(self, fwd, settings=DEFAULT_SETTINGS, parallel=False, n_jobs=-1):
+        self.settings = settings
+        self.check_settings()
+
         self.fwd = fwd
+        self.parallel = parallel
+        self.n_jobs = n_jobs
+
+    def simulate(self, n_samples=10000):
+        ''' Simulate sources and EEG data'''
+        self.source_data = np.array(self.simulate_sources(n_samples))
+        self.eeg_data = self.simulate_eeg()
+
+    def simulate_sources(self, n_samples):
+        if self.parallel:
+            source_data = np.stack(Parallel(n_jobs=self.n_jobs, backend='loky')
+                (delayed(self.simulate_source)() 
+                for _ in range(n_samples)))
+        else:
+            source_data = np.stack([self.simulate_source() 
+                for _ in tqdm(range(n_samples))], axis=0)
+
+        return source_data
 
     def simulate_source(self):
         ''' Returns a vector containing the dipole currents. Requires only a 
@@ -84,7 +108,7 @@ class Simulation:
 
         if self.settings['duration_of_trial'] > 0:
             signal_length = int(self.settings['sample_frequency']*self.settings['duration_of_trial'])
-            pulselen = self.settings['sample_frequency']/10
+            # pulselen = self.settings['sample_frequency']/10
             # pulse = self.get_pulse(pulselen)
             
             signals = []
@@ -94,11 +118,8 @@ class Simulation:
                 signal /= np.max(np.abs(signal))
 
                 signals.append(signal)
-            
-            sample_frequency = self.settings['sample_frequency']
 
         else : # else its a single instance
-            sample_frequency = 0
             signal_length = 1
             signals = [np.array([1])]*number_of_sources
         
@@ -128,6 +149,60 @@ class Simulation:
 
         return source
 
+    def simulate_eeg(self):
+        ''' Create EEG of specified number of trials based on sources and some SNR.
+        Parameters
+        -----------
+        sourceEstimates : list 
+                        list containing the simulated sources objects
+        fwd : Forward
+            the Forward object located in forward.py
+        target_snr : tuple/list/float, 
+                    desired signal to noise ratio. Can be a list or tuple of two 
+                    floats specifying a range.
+        beta : float
+            determines the frequency spectrum of the noise added to the signal: 
+            power = 1/f^beta. 
+            0 will yield white noise, 1 will yield pink noise (1/f spectrum)
+        n_jobs : int
+                Number of jobs to run in parallel. -1 will utilize all cores.
+
+        Return
+        -------
+        epochs : list
+                list of either mne.Epochs objects or list of raw EEG data 
+                (see argument <return_raw_data> to change output)
+        '''
+        n_simulation_trials = 20
+         
+        # Desired Dim of sources: (samples x dipoles x time points)
+        # unpack numpy array of source data
+        if isinstance(self.source_data, (list, tuple)):
+            sources = np.stack([source.data for source in self.source_data], axis=0)
+        else:
+            sources = self.source_data.data.T
+
+
+    def check_settings(self):
+        ''' Check if settings are complete and insert missing 
+            entries if there are any.
+        '''
+        # Check for wrong keys:
+        for key in self.settings.keys():
+            if not key in DEFAULT_SETTINGS.keys():
+                msg = f'key {key} is not part of allowed settings. See DEFAULT_SETTINGS for reference: {DEFAULT_SETTINGS}'
+                raise AttributeError(msg)
+        
+        # Check for missing keys and replace them from the DEFAULT_SETTINGS
+        for key in DEFAULT_SETTINGS.keys():
+            # Check if setting exists and is not None
+            if not (key in self.settings.keys() and self.settings[key] is not None):
+                self.settings[key] = DEFAULT_SETTINGS[key]
+        
+        if self.settings['duration_of_trial'] == 0:
+            self.temporal = False
+        else:
+            self.temporal = True
 
     @staticmethod
     def get_from_range(val, dtype=int):
@@ -156,3 +231,22 @@ class Simulation:
         elif isinstance(val, (int, float)):
             out = val
         return out
+
+
+    @staticmethod
+    def get_pulse(pulse_len):
+        ''' Returns a pulse of given length. A pulse is defined as 
+        half a revolution of a sine.
+        
+        Parameters
+        ----------
+        x : int
+            the number of data points
+
+        '''
+        pulse_len = int(pulse_len)
+        freq = (1/pulse_len) / 2
+        time = np.arange(pulse_len)
+
+        signal = np.sin(2*np.pi*freq*time)
+        return signal

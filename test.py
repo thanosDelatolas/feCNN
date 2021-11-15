@@ -7,7 +7,7 @@ print(fwd.leadfield.shape)
 
 simulation = Simulation(fwd)
 
-sim = simulation.simulate_source()
+sim = simulation.simulate(n_samples=100)
 
-print(sim)
+print(sim.shape)
 
