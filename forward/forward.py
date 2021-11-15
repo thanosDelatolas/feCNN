@@ -185,5 +185,5 @@ def solve_forward():
 class Forward:
     def __init__(self, electrode_filename, dipole_filename, leadfield_filename):
         self.leadfield = np.load(leadfield_filename)
-        self.electrodes = util.read_electrodes(electrode_filename)
-        self.dipoles, _ = util.read_dipoles(dipole_filename)
+        self.electrodes = np.array(util.read_electrodes(electrode_filename))
+        self.dipoles, _ = np.array(util.read_dipoles(dipole_filename))
