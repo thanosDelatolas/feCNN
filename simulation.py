@@ -39,11 +39,9 @@ class Simulation:
     def simulate_sources(self, n_samples):
         if self.parallel:
             source_data = np.stack(Parallel(n_jobs=self.n_jobs, backend='loky')
-                (delayed(self.simulate_source)() 
-                for _ in range(n_samples)))
+                (delayed(self.simulate_source)() for _ in range(n_samples)))
         else:
-            source_data = np.stack([self.simulate_source() 
-                for _ in tqdm(range(n_samples))], axis=0)
+            source_data = np.stack([self.simulate_source() for _ in tqdm(range(n_samples))], axis=0)
 
         return source_data
 
@@ -53,7 +51,7 @@ class Simulation:
 
         Parameters
         ----------
-        pos : numpy.ndarray
+        forward : From the forward object get the list of dipole positions
             (n_dipoles x 3), list of dipole positions.
         number_of_sources : int/tuple/list
             number of sources. Can be a single number or a list of two 
@@ -103,7 +101,7 @@ class Simulation:
        # Get amplitude gain for each source (amplitudes come in nAm)
         amplitudes = [self.get_from_range(self.settings['amplitudes'], dtype=float) * 1e-9 for _ in range(number_of_sources)]
 
-        src_centers = np.random.choice(np.arange(self.fwd.leadfield.shape[0]), \
+        src_centers = np.random.choice(np.arange(self.fwd.leadfield.shape[1]), \
             number_of_sources, replace=False)
 
         if self.settings['duration_of_trial'] > 0:
@@ -123,7 +121,7 @@ class Simulation:
             signal_length = 1
             signals = [np.array([1])]*number_of_sources
         
-        source = np.zeros((self.fwd.leadfield.shape[0], signal_length))
+        source = np.zeros((self.fwd.leadfield.shape[1], signal_length))
 
         ##############################################
         # Loop through source centers (i.e. seeds of source positions)
@@ -176,12 +174,58 @@ class Simulation:
         n_simulation_trials = 20
          
         # Desired Dim of sources: (samples x dipoles x time points)
-        # unpack numpy array of source data
-        if isinstance(self.source_data, (list, tuple)):
-            sources = np.stack([source.data for source in self.source_data], axis=0)
-        else:
-            sources = self.source_data.data.T
+        sources = self.source_data
 
+         # if there is no temporal dimension...
+        if len(sources.shape) < 3:
+            # ...add empty temporal dimension
+            sources = np.expand_dims(sources, axis=2)
+        
+        n_samples, _, _ = sources.shape
+        n_elec = self.fwd.leadfield.shape[0]
+        eeg_clean = self.project_sources(sources)
+
+        # for now, I have to add noise.
+        return eeg_clean
+
+    def project_sources(self, sources):
+        ''' Project sources through the leadfield to obtain the EEG data.
+        Parameters
+        ----------
+        sources : numpy.ndarray
+            3D array of shape (samples, dipoles, time points)
+        
+        Return the eeg signlas
+        ------
+
+        '''
+        leadfield = self.fwd.leadfield
+        n_samples, n_dipoles, n_timepoints = sources.shape
+        n_elec = leadfield.shape[0]
+
+        # eeg = np.zeros((n_samples, n_elec, n_timepoints))
+
+        # Swap axes to dipoles, samples, time_points
+        sources_tmp = np.swapaxes(sources, 0,1)
+        # Collapse last two dims into one
+        short_shape = (sources_tmp.shape[0], 
+            sources_tmp.shape[1]*sources_tmp.shape[2])
+        sources_tmp = sources_tmp.reshape(short_shape)
+        # Scale to allow for lower precision
+        scaler = 1/sources_tmp.max()
+        sources_tmp *= scaler
+
+        # Perform Matrix multiplication
+        result = np.matmul(
+            leadfield.astype(np.float32), sources_tmp.astype(np.float32))
+        
+        # Reshape result
+        result = result.reshape(result.shape[0], n_samples, n_timepoints)
+        # swap axes to correct order
+        result = np.swapaxes(result,0,1)
+        # Rescale
+        result /= scaler
+        return result
 
     def check_settings(self):
         ''' Check if settings are complete and insert missing 
