@@ -2,6 +2,7 @@ import mne
 import numpy as np
 from copy import deepcopy
 import scipy.io
+import pickle
 
     
 def gaussian(x, mu, sig):
@@ -141,13 +142,13 @@ def scale_eeg(eeg):
 
     return eeg_out
 
-def scale_source(source):
+def scale_sources(source):
     ''' Scales the sources prior to training the neural network.
 
     Parameters
     ----------
     source : numpy.ndarray
-        A 3D matrix of the source data (samples, dipoles, time_points)
+        A 3D matrix of the source data (dipoles, samples, time_points)
     
     Return
     ------
@@ -155,9 +156,9 @@ def scale_source(source):
         Scaled sources
     '''
     source_out = deepcopy(source)
-    for sample in range(source.shape[0]):
+    for sample in range(source.shape[1]):
         for time in range(source.shape[2]):
-            source_out[sample, :, time] /= np.max(np.abs(source_out[sample, :, time]))
+            source_out[:, sample, time] /= np.max(np.abs(source_out[:, sample, time]))
 
     return source_out
 
@@ -182,3 +183,9 @@ def read_dipoles(filename):
         dipMom.append(dipoles[i][3:].tolist())
     
     return dipPos, dipMom
+
+def save_object(obj, filename):
+    ''' Saves a python object to file
+    '''
+    with open(filename, 'wb') as outp:  # Overwrites any existing file.
+        pickle.dump(obj, outp, pickle.HIGHEST_PROTOCOL)

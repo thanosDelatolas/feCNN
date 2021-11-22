@@ -1,20 +1,19 @@
 from joblib import Parallel, delayed
 from tqdm import tqdm
-
-import colorednoise as cn
-
 import numpy as np
 import random
+import colorednoise as cn
 
 import util
 
 
+# Specifications about the sources.
 DEFAULT_SETTINGS = {
     'number_of_sources': (1, 20),
     'extents': (1, 50),
     'amplitudes': (1, 10),
     'shapes': 'both',
-    'duration_of_trial': 0,
+    'duration_of_trial': 0.1,
     'sample_frequency': 100,
     'target_snr': 4,
     'beta': (0, 3),
@@ -33,23 +32,28 @@ class Simulation:
 
     def simulate(self, n_samples=10000):
         ''' Simulate sources and EEG data'''
-        self.source_data = np.array(self.simulate_sources(n_samples))
+        self.source_data = self.simulate_sources(n_samples)
         self.eeg_data = self.simulate_eeg()
 
     def simulate_sources(self, n_samples):
+        print('Simulate Sources.')
         if self.parallel:
             source_data = np.stack(Parallel(n_jobs=self.n_jobs, backend='loky')
                 (delayed(self.simulate_source)() for _ in range(n_samples)))
         else:
             source_data = np.stack([self.simulate_source() for _ in tqdm(range(n_samples))], axis=0)
 
+        if self.settings['duration_of_trial'] > 0 :
+            source_data = np.transpose(source_data, (1,0,2))
+        else :
+            source_data = source_data.T
         return source_data
 
     def simulate_source(self):
         ''' Returns a vector containing the dipole currents. Requires only a 
         dipole position list and the simulation settings.
 
-        Parameters
+        Parameters (located in the settings dict).
         ----------
         forward : From the forward object get the list of dipole positions
             (n_dipoles x 3), list of dipole positions.
@@ -71,20 +75,14 @@ class Simulation:
         
         Return
         ------
-        source : numpy.ndarray, (n_dipoles x n_timepoints), the simulated 
-            source signal
-        simSettings : dict, specifications about the source.
-
-        Grova, C., Daunizeau, J., Lina, J. M., Bénar, C. G., Benali, H., & 
-            Gotman, J. (2006). Evaluation of EEG localization methods using 
-            realistic simulations of interictal spikes. Neuroimage, 29(3), 
-            734-753.
+        source : numpy.ndarray, (n_dipoles x n_samples x timepoints) or (n_dipoles x n_samples) if duration_of_tril is 0
+        , the simulated value of its dipole
         '''
 
         # Get a random sources number in range:
         number_of_sources = self.get_from_range(self.settings['number_of_sources'], dtype=int)
 
-        # Get amplitudes for each source
+        # Get the diameter for each source
         extents = [self.get_from_range(self.settings['extents'], dtype=float) for _ in range(number_of_sources)]
 
         # Decide shape of sources
@@ -97,12 +95,15 @@ class Simulation:
 
         elif self.settings['shapes'] == 'gaussian' or self.settings['shapes'] == 'flat':
             shapes = [self.settings['shapes']] * number_of_sources
-            
-       # Get amplitude gain for each source (amplitudes come in nAm)
+
+
+        # Get amplitude gain for each source (amplitudes come in nAm)
         amplitudes = [self.get_from_range(self.settings['amplitudes'], dtype=float) * 1e-9 for _ in range(number_of_sources)]
 
+        # Get source centers
         src_centers = np.random.choice(np.arange(self.fwd.leadfield.shape[1]), \
             number_of_sources, replace=False)
+        
 
         if self.settings['duration_of_trial'] > 0:
             signal_length = int(self.settings['sample_frequency']*self.settings['duration_of_trial'])
@@ -111,13 +112,16 @@ class Simulation:
             
             signals = []
             for _ in range(number_of_sources):
+                # Generate Gaussian 
                 signal = cn.powerlaw_psd_gaussian(self.get_from_range(self.settings['beta'], dtype=float), signal_length) 
                 
                 signal /= np.max(np.abs(signal))
 
                 signals.append(signal)
-
-        else : # else its a single instance
+            
+            sample_frequency = self.settings['sample_frequency']
+        else:  # else its a single instance
+            sample_frequency = 0
             signal_length = 1
             signals = [np.array([1])]*number_of_sources
         
@@ -145,14 +149,12 @@ class Simulation:
                 msg = BaseException("shape must be of type >string< and be either >gaussian< or >flat<.")
                 raise(msg)
 
-        return source
+        return np.squeeze(source)
 
     def simulate_eeg(self):
         ''' Create EEG of specified number of trials based on sources and some SNR.
         Parameters
         -----------
-        sourceEstimates : list 
-                        list containing the simulated sources objects
         fwd : Forward
             the Forward object located in forward.py
         target_snr : tuple/list/float, 
@@ -171,6 +173,7 @@ class Simulation:
                 list of either mne.Epochs objects or list of raw EEG data 
                 (see argument <return_raw_data> to change output)
         '''
+        print('Simulate EEG.')
         n_simulation_trials = 20
          
         # Desired Dim of sources: (samples x dipoles x time points)
@@ -183,48 +186,44 @@ class Simulation:
         
         n_samples, _, _ = sources.shape
         n_elec = self.fwd.leadfield.shape[0]
-        eeg_clean = self.project_sources(sources)
+        eeg_clean = np.array(self.project_sources(sources))
 
         # for now, I have to add noise.
-        return eeg_clean
+        return eeg_clean.squeeze()
 
     def project_sources(self, sources):
         ''' Project sources through the leadfield to obtain the EEG data.
         Parameters
         ----------
         sources : numpy.ndarray
-            3D array of shape (samples, dipoles, time points)
+            3D array of shape (n_dipoles x n_samples x timepoints)
         
         Return the eeg signlas
         ------
 
         '''
+        print('Project sources to EEG.')
         leadfield = self.fwd.leadfield
-        n_samples, n_dipoles, n_timepoints = sources.shape
+        n_dipoles ,n_samples, n_timepoints = sources.shape
         n_elec = leadfield.shape[0]
 
-        # eeg = np.zeros((n_samples, n_elec, n_timepoints))
-
-        # Swap axes to dipoles, samples, time_points
-        sources_tmp = np.swapaxes(sources, 0,1)
         # Collapse last two dims into one
-        short_shape = (sources_tmp.shape[0], 
-            sources_tmp.shape[1]*sources_tmp.shape[2])
-        sources_tmp = sources_tmp.reshape(short_shape)
+        short_shape = (sources.shape[0], sources.shape[1]*sources.shape[2])
+
+        sources_tmp = sources.reshape(short_shape)
+
         # Scale to allow for lower precision
         scaler = 1/sources_tmp.max()
         sources_tmp *= scaler
 
-        # Perform Matrix multiplication
-        result = np.matmul(
-            leadfield.astype(np.float32), sources_tmp.astype(np.float32))
-        
+        # Perform Matmul
+        result = np.matmul(leadfield.astype(np.float32), sources_tmp.astype(np.float32))
         # Reshape result
         result = result.reshape(result.shape[0], n_samples, n_timepoints)
-        # swap axes to correct order
-        result = np.swapaxes(result,0,1)
+
         # Rescale
         result /= scaler
+
         return result
 
     def check_settings(self):
@@ -242,11 +241,7 @@ class Simulation:
             # Check if setting exists and is not None
             if not (key in self.settings.keys() and self.settings[key] is not None):
                 self.settings[key] = DEFAULT_SETTINGS[key]
-        
-        if self.settings['duration_of_trial'] == 0:
-            self.temporal = False
-        else:
-            self.temporal = True
+
 
     @staticmethod
     def get_from_range(val, dtype=int):
@@ -294,3 +289,5 @@ class Simulation:
 
         signal = np.sin(2*np.pi*freq*time)
         return signal
+    
+    

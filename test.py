@@ -4,8 +4,8 @@ from simulation import Simulation
 
 fwd = solve_forward()
 
-simulation = Simulation(fwd)
-
-sim = simulation.simulate(n_samples=100)
-
+sim = Simulation(fwd)
+#s = sim.simulate_sources(n_samples=50)
+s1 = sim.simulate_source()
+print(s1.shape)
 
