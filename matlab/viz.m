@@ -8,17 +8,16 @@ import_fieldtrip();
 sensor_labels = split(sensor_labels{4});
 sensor_labels = sensor_labels(1:end-1);
 
-%scatter3(sensors(:,1),sensors(:,2),sensors(:,3),100,eeg_s,'.')
-
 eeg = readNPY('./data/eeg.npy');
 
 
 layout = '/home/thanos/fieldtrip/template/layout/elec1010.lay';
 
-[sensors_1010, lay] = create_elec_1010(sensor_labels, layout);
+[sensors_1010, lay] = compatible_elec(sensor_labels, layout);
 
 
 eeg_s = eeg(:,1);
+% scatter3(sensors(:,1),sensors(:,2),sensors(:,3),100,eeg_s,'.')
 
 idx = ismember(sensor_labels, lay.label)';
 
