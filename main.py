@@ -1,3 +1,3 @@
-from forward import create_forward_model
+from forward import solve_forward
 
-fwd = create_forward_model()
+fwd = solve_forward()
