@@ -210,19 +210,19 @@ class Simulation:
         # Collapse last two dims into one
         short_shape = (sources.shape[0], sources.shape[1]*sources.shape[2])
 
-        # sources_tmp = sources.reshape(short_shape)
+        sources_tmp = sources.reshape(short_shape)
 
-        # # Scale to allow for lower precision
-        # scaler = 1/sources_tmp.max()
-        # sources_tmp *= scaler
+        # Scale to allow for lower precision
+        scaler = 1/sources_tmp.max()
+        sources_tmp *= scaler
 
         # Perform Matmul
-        result = np.matmul(leadfield.astype(np.float32), sources.astype(np.float32))
+        result = np.matmul(leadfield.astype(np.float32), sources_tmp.astype(np.float32))
         # Reshape result
-        # result = result.reshape(result.shape[0], n_samples, n_timepoints)
+        result = result.reshape(result.shape[0], n_samples, n_timepoints)
 
-        # # Rescale
-        # result /= scaler
+        # Rescale
+        result /= scaler
 
         return result
 
