@@ -1,17 +1,15 @@
 clear; close all; clc;
 
-
 import_fieldtrip();
-
 
 [sensors,sensor_labels] = read_elc('./../duneuropy/Data/electrodes.elc');
 sensor_labels = split(sensor_labels{4});
 sensor_labels = sensor_labels(1:end-1);
 
-eeg = readNPY('./data/eeg.npy');
+eeg = double(readNPY('./data/eeg.npy'));
 
 
-layout = '/home/thanos/fieldtrip/template/layout/elec1010.lay';
+layout = '/home/thanos/fieldtrip/template/layout/EEG1010.lay';
 
 [sensors_1010, lay] = compatible_elec(sensor_labels, layout);
 
@@ -23,7 +21,19 @@ idx = ismember(sensor_labels, lay.label)';
 
 tlabels=lay.label(idx)';
 tpos=lay.pos(idx,:);
-figure; ft_plot_topo(sensors_1010(:,1),sensors_1010(:,2),eeg_s,'mask',lay.mask,'outline',lay.outline); colorbar;
-title('ft\_plot\_topo');
+[Zi, Yi, Xi ] = ft_plot_topo(sensors_1010(:,1),sensors_1010(:,2),eeg_s,'mask',lay.mask,'outline',lay.outline);
 
-figure; ft_plot_topo3d(sensors,eeg_s); title('ft\_plot\_topo3d'); colorbar;
+fac = 0.9;
+contourf(Xi,Yi,Zi);
+hold on;
+scatter(sensors_1010(:,1),sensors_1010(:,2),100,'k','.');
+hold on;
+plot(lay.outline{1}(:,1)*fac,lay.outline{1}(:,2)*fac,'k');
+plot(lay.outline{2}(:,1)*fac,lay.outline{2}(:,2)*fac,'k');
+plot(lay.outline{3}(:,1)*fac,lay.outline{3}(:,2)*fac,'k');
+plot(lay.outline{4}(:,1)*fac,lay.outline{4}(:,2)*fac,'k');
+title('ft\_plot\_topo');
+colorbar;
+%saveas(gcf,'../assets/sim.png')
+
+% figure; ft_plot_topo3d(sensors,eeg_s); title('ft\_plot\_topo3d'); colorbar;

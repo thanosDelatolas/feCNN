@@ -12,7 +12,7 @@ restoredefaultpath % restore default folder for matlab
 
 % set up the path of fieldtrip
 cd('/home/thanos/fieldtrip')
-addpath('/home/thanos/fieldtrip')
+addpath(pwd)
 ft_defaults
 cd(maindir)
 

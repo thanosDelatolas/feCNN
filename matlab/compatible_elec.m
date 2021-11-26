@@ -1,7 +1,7 @@
 function [electrodes, lay] = compatible_elec(labels, layout)
 % Creates compitable electrodes with the input layout and with the labels
 % labels ->  cell array
-% layout -> the path to the layout (e.g. elec1010.lay)
+% layout -> the path to the layout (e.g. EEG1010.lay)
 
 import_fieldtrip();
 cfg=[];
