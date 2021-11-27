@@ -14,7 +14,7 @@ layout = '/home/thanos/fieldtrip/template/layout/EEG1010.lay';
 [sensors_1010, lay] = compatible_elec(sensor_labels, layout);
 
 
-eeg_s = eeg(:,1);
+eeg_s = eeg(:,7);
 % scatter3(sensors(:,1),sensors(:,2),sensors(:,3),100,eeg_s,'.')
 
 idx = ismember(sensor_labels, lay.label)';

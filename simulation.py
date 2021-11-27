@@ -106,6 +106,8 @@ class Simulation:
         
 
         if self.settings['duration_of_trial'] > 0:
+            self.temporal = True
+
             signal_length = int(self.settings['sample_frequency']*self.settings['duration_of_trial'])
             # pulselen = self.settings['sample_frequency']/10
             # pulse = self.get_pulse(pulselen)
@@ -121,6 +123,8 @@ class Simulation:
             
             sample_frequency = self.settings['sample_frequency']
         else:  # else its a single instance
+            self.temporal = False
+
             sample_frequency = 0
             signal_length = 1
             signals = [np.array([1])]*number_of_sources
@@ -179,17 +183,30 @@ class Simulation:
         # Desired Dim of sources: (samples x dipoles x time points)
         sources = self.source_data
 
-         # if there is no temporal dimension...
-        if len(sources.shape) < 3:
+        
+        # if there is no temporal dimension...
+        if not self.temporal:
             # ...add empty temporal dimension
             sources = np.expand_dims(sources, axis=2)
-        
-        n_samples, _, _ = sources.shape
-        n_elec = self.fwd.leadfield.shape[0]
+
+        # calculate eeg 
         eeg_clean = np.array(self.project_sources(sources))
 
-        # for now, I have to add noise.
-        return eeg_clean.squeeze()
+        _, n_samples, _ = sources.shape
+        n_elec = self.fwd.leadfield.shape[0]
+
+        # eeg_noisy = self.add_noise_to_eeg(eeg_clean)
+
+        if self.temporal:
+            eeg = np.zeros((n_elec, n_samples))
+            for el in range(n_elec):
+                for sample in range(n_samples):
+                    eeg[el, sample] = np.mean(eeg_clean[el,sample,:])
+        else :
+            eeg = np.squeeze(eeg_clean)
+            
+       
+        return eeg
 
     def project_sources(self, sources):
         ''' Project sources through the leadfield to obtain the EEG data.
@@ -200,7 +217,6 @@ class Simulation:
         
         Return the eeg signlas
         ------
-
         '''
         print('Project sources to EEG.')
         leadfield = self.fwd.leadfield
@@ -225,6 +241,12 @@ class Simulation:
         result /= scaler
 
         return result
+
+    def add_noise_to_eeg(eeg):
+        ''' This function adds noise to the eeg signal
+        '''
+
+        print('Add noise to EEG ...')
 
     def check_settings(self):
         ''' Check if settings are complete and insert missing 
