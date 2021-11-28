@@ -6,7 +6,7 @@ import_fieldtrip();
 sensor_labels = split(sensor_labels{4});
 sensor_labels = sensor_labels(1:end-1);
 
-eeg = double(readNPY('./data/eeg.npy'));
+eeg = double(readNPY('./data/eeg_big_sim.npy'));
 
 
 layout = '/home/thanos/fieldtrip/template/layout/EEG1010.lay';

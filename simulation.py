@@ -13,7 +13,7 @@ DEFAULT_SETTINGS = {
     'extents': (1, 50),
     'amplitudes': (1, 10),
     'shapes': 'both',
-    'duration_of_trial': 0.2,
+    'duration_of_trial': 0,
     'sample_frequency': 100,
     'target_snr': 4,
     'beta': (0, 3),
@@ -55,8 +55,7 @@ class Simulation:
 
         Parameters (located in the settings dict).
         ----------
-        forward : From the forward object get the list of dipole positions
-            (n_dipoles x 3), list of dipole positions.
+        forward : The forward object located in forward.py
         number_of_sources : int/tuple/list
             number of sources. Can be a single number or a list of two 
             numbers specifying a range.
@@ -178,8 +177,7 @@ class Simulation:
                 (see argument <return_raw_data> to change output)
         '''
         print('Simulate EEG.')
-        n_simulation_trials = 20
-         
+
         # Desired Dim of sources: (samples x dipoles x time points)
         sources = self.source_data
 
