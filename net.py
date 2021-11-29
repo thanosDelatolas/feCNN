@@ -108,3 +108,19 @@ class EEGNet:
             Method returns the object itself.
 
         '''
+
+        if self.sim.eeg_data.shape != 2 :
+            raise AttributeError("EEG data must be 2D (n_elctrodes x n_samples")
+        elif self.sim.sources_data.shape != 2 :
+            raise AttributeError("Sources data must be 2D (n_dipoles x n_samples")
+
+        # Input data
+        x = self.sim.eeg_data
+
+        # Target data
+        y = self.sim.source_data
+
+        # early stoping
+        es = tf.keras.callbacks.EarlyStopping(monitor='val_loss', \
+            mode='min', patience=patience, restore_best_weights=True)
+        

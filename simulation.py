@@ -35,6 +35,28 @@ class Simulation:
         self.source_data = self.simulate_sources(n_samples)
         self.eeg_data = self.simulate_eeg()
 
+        n_elec = self.eeg_data.shape[0]
+        n_dipoles = self.source_data.shape[0]
+
+        # if temporal extract the peak point of sources and eeg data
+        if self.temporal:
+            eeg = np.zeros((n_elec, n_samples))
+            for el in range(n_elec):
+                for sample in range(n_samples):
+                    eeg[el, sample] = np.max(self.eeg_data[el,sample,:])
+            
+            sources = np.zeros((n_dipoles, n_samples))
+            for dipole in range(n_dipoles):
+                for sample in range(n_samples):
+                    sources[dipole, sample] = np.max(self.source_data[dipole,sample,:])
+            
+            self.source_data = sources
+            self.eeg_data = eeg
+            
+        else :
+            self.eeg_data = np.squeeze(self.eeg_data)
+            self.source_data = np.squeeze(self.source_data)
+
     def simulate_sources(self, n_samples):
         print('Simulate Sources.')
         if self.parallel:
@@ -120,7 +142,7 @@ class Simulation:
 
                 signals.append(signal)
             
-            sample_frequency = self.settings['sample_frequency']
+            # sample_frequency = self.settings['sample_frequency']
         else:  # else its a single instance
             self.temporal = False
 
@@ -190,21 +212,12 @@ class Simulation:
         # calculate eeg 
         eeg_clean = np.array(self.project_sources(sources))
 
-        _, n_samples, _ = sources.shape
+        n_dipoles, n_samples, _ = sources.shape
         n_elec = self.fwd.leadfield.shape[0]
 
-        # eeg_noisy = self.add_noise_to_eeg(eeg_clean)
-
-        if self.temporal:
-            eeg = np.zeros((n_elec, n_samples))
-            for el in range(n_elec):
-                for sample in range(n_samples):
-                    eeg[el, sample] = np.mean(eeg_clean[el,sample,:])
-        else :
-            eeg = np.squeeze(eeg_clean)
-            
+        # eeg_noisy = self.add_noise_to_eeg(eeg_clean)            
        
-        return eeg
+        return eeg_clean
 
     def project_sources(self, sources):
         ''' Project sources through the leadfield to obtain the EEG data.
