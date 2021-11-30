@@ -1,3 +1,4 @@
+from os import name
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
@@ -60,15 +61,14 @@ class EEGNet:
             # Build the artificial neural network model using Dense layers.
             self.model = keras.Sequential()
 
+            # add input layer
+            self.model.add(keras.Input(shape=(self.n_elec,), name='Input'))
             #  Number of neurons per hidden layer.
             n_neurons = 100
-            self.model.add(Dense(units=n_neurons, activation=self.activation_function))
+            self.model.add(Dense(units=n_neurons, activation=self.activation_function, name='Hidden'))
 
             # Add output layer
-            self.model.add(Dense(self.n_dipoles, activation='linear'))
-
-            # Build model with input layer
-            self.model.build(input_shape=(None, self.n_elec))
+            self.model.add(Dense(self.n_dipoles, activation='linear', name='Output'))
 
             self.model.summary()
 
@@ -116,10 +116,10 @@ class EEGNet:
             raise AttributeError("Sources data must be 2D (n_dipoles x n_samples")
 
         # Input data
-        x = self.sim.eeg_data
+        x = self.sim.eeg_data.T
 
         # Target data
-        y = self.sim.source_data
+        y = self.sim.source_data.T
 
         # early stoping
         es = tf.keras.callbacks.EarlyStopping(monitor='val_loss', \
