@@ -68,7 +68,7 @@ class EEGNet:
             self.model.add(Dense(self.n_dipoles, activation='linear'))
 
             # Build model with input layer
-            self.model.build(input_shape=(self.n_elec, self.n_samples))
+            self.model.build(input_shape=(None, self.n_elec))
 
             self.model.summary()
 
