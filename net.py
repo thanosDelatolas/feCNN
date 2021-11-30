@@ -5,6 +5,10 @@ from tensorflow.keras import layers
 from tensorflow.keras.layers import (Dense)
 from copy import deepcopy
 
+import datetime
+
+import losses
+
 class EEGNet:
     ''' The neural network class that creates and trains the model. 
     
@@ -28,14 +32,18 @@ class EEGNet:
 
     def __init__(self, fwd, sim, activation_function='swish', n_jobs=-1):
         self.leadfield = deepcopy(fwd.leadfield)
-        self.n_channels = self.leadfield.shape[0]
+        self.n_elec = self.leadfield.shape[0]
         self.n_dipoles = self.leadfield.shape[1]
 
         self.sim = deepcopy(sim)
 
+        # simulation's samples
+        self.n_samples = self.sim.eeg_data.shape[1]
         self.activation_function = activation_function
         self.n_jobs = n_jobs
         self.compiled = False
+
+        self.default_loss = losses.weighted_huber_loss
 
         if self.leadfield.shape[0] != self.sim.eeg_data.shape[0] or self.leadfield.shape[1] != self.sim.source_data.shape[0] :
             msg = 'Incompatible sim and fwd objects'
@@ -60,24 +68,22 @@ class EEGNet:
             self.model.add(Dense(self.n_dipoles, activation='linear'))
 
             # Build model with input layer
-            self.model.build(input_shape=(None, self.n_channels))
+            self.model.build(input_shape=(self.n_elec, self.n_samples))
 
             self.model.summary()
 
-    def fit(self, optimizer=None, learning_rate=0.001, 
-        validation_split=0.1, epochs=50, metrics=None, device=None, 
-        false_positive_penalty=2, delta=1., batch_size=128, loss=None, 
-        sample_weight=None, return_history=False, dropout=0.2, patience=7, 
-        tensorboard=False):
+    def fit(self, learning_rate=0.001, 
+        validation_split=0.1, epochs=50, metrics=None, 
+        false_positive_penalty=2, delta=1., batch_size=128, 
+        loss=None, patience=7  
+    ):
         ''' Train the neural network using training data (eeg) and labels (sources).
 
         The training data are stored in the simulation object
         
         Parameters
         ----------
-        
-        optimizer : tf.keras.optimizers
-            The optimizer that for backpropagation.
+
         learning_rate : float
             The learning rate for training the neural network
         validation_split : float
@@ -89,8 +95,6 @@ class EEGNet:
             are used once for training.
         metrics : list/str
             The metrics to be used for performance monitoring during training.
-        device : str
-            The device to use, e.g. a graphics card.
         false_positive_penalty : float
             Defines weighting of false-positive predictions. Increase for conservative 
             inverse solutions, decrease for liberal prediction.
@@ -99,9 +103,6 @@ class EEGNet:
             during backpropagation.
         loss : tf.keras.losses
             The loss function.
-        sample_weight : numpy.ndarray
-            Optional numpy array of sample weights.
-
         Return
         ------
         self : esinet.Net
@@ -109,9 +110,9 @@ class EEGNet:
 
         '''
 
-        if self.sim.eeg_data.shape != 2 :
+        if len(self.sim.eeg_data.shape) != 2 :
             raise AttributeError("EEG data must be 2D (n_elctrodes x n_samples")
-        elif self.sim.sources_data.shape != 2 :
+        elif len(self.sim.source_data.shape) != 2 :
             raise AttributeError("Sources data must be 2D (n_dipoles x n_samples")
 
         # Input data
@@ -123,4 +124,24 @@ class EEGNet:
         # early stoping
         es = tf.keras.callbacks.EarlyStopping(monitor='val_loss', \
             mode='min', patience=patience, restore_best_weights=True)
+
+        optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
+
+
+        if loss == None:
+            loss = self.default_loss(weight=false_positive_penalty, delta=delta)
         
+        if metrics is None:
+            metrics = [self.default_loss(weight=false_positive_penalty, delta=delta)]
+        
+        if not self.compiled:
+            self.model.compile(optimizer, loss, metrics=metrics)
+            self.compiled = True
+        
+       
+        callbacks = [es]
+
+        self.model.fit(x, y, 
+                epochs=epochs, batch_size=batch_size, shuffle=True, 
+                validation_split=validation_split, callbacks=callbacks)
+        return self
