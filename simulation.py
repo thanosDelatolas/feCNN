@@ -22,13 +22,18 @@ class Simulation:
     ''' Simulate EEG and sources data.
     '''
 
-    def __init__(self, fwd, settings=DEFAULT_SETTINGS, parallel=False, n_jobs=-1):
+    def __init__(self, fwd, settings=DEFAULT_SETTINGS, source_data=None, eeg_data=None,parallel=False, n_jobs=-1):
         self.settings = settings
         self.check_settings()
 
         self.fwd = fwd
         self.parallel = parallel
         self.n_jobs = n_jobs
+
+        # if source_data and eeg_data are already known from previous simulations
+        self.source_data = source_data
+        self.eeg_data = eeg_data
+            
 
     def simulate(self, n_samples=10000):
         ''' Simulate sources and EEG data'''
@@ -146,7 +151,7 @@ class Simulation:
         else:  # else its a single instance
             self.temporal = False
 
-            sample_frequency = 0
+            # sample_frequency = 0
             signal_length = 1
             signals = [np.array([1])]*number_of_sources
         

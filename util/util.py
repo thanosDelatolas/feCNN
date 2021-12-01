@@ -1,4 +1,3 @@
-import mne
 import numpy as np
 from copy import deepcopy
 import scipy.io
@@ -89,31 +88,6 @@ def get_triangle_neighbors(tris_lr):
     return neighbors
 
 
-
-def convert_simulation_temporal_to_single(sim):
-    sim_single = deepcopy(sim)
-    sim_single.temporal = False
-    sim_single.settings['duration_of_trial'] = 0
-
-    eeg_data_lstm = sim.eeg_data.get_data()
-    # Reshape EEG data
-    eeg_data_single = np.expand_dims(np.vstack(np.swapaxes(eeg_data_lstm, 1,2)), axis=-1)
-    # Pack into mne.EpochsArray object
-    epochs_single = mne.EpochsArray(eeg_data_single, sim.eeg_data.info, 
-        tmin=sim.eeg_data.tmin, verbose=0)
-    
-    # Reshape Source data
-    source_data = np.vstack(np.swapaxes(np.stack(
-        [source.data for source in sim.source_data], axis=0), 1,2)).T
-    # Pack into mne.SourceEstimate object
-    source_single = deepcopy(sim.source_data[0])
-    source_single.data = source_data
-    
-    # Copy new shaped data into the Simulation object:
-    sim_single.eeg_data = epochs_single
-    sim_single.source_data = source_single
-
-    return sim_single
 
 def scale_eeg(eeg):
     ''' Scales the EEG prior to training/ predicting with the neural 

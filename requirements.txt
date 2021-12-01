@@ -1,11 +1,6 @@
 numpy
 scipy
-mne
-notebook
 matplotlib
-pyvista
-pyvistaqt
-pyqt5-tools
 tensorflow
 joblib
 tqdm
