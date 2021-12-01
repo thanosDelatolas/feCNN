@@ -33,10 +33,22 @@ class Simulation:
         # if source_data and eeg_data are already known from previous simulations
         self.source_data = source_data
         self.eeg_data = eeg_data
+
+        if self.source_data is not None and self.eeg_data is not None and \
+            self.source_data.shape[1] == self.eeg_data.shape[1]:
+                self.simulated = True
+        else :
+            self.simulated = False
+            self.source_data = None
+            self.eeg_data = None
             
 
     def simulate(self, n_samples=10000):
         ''' Simulate sources and EEG data'''
+        if self.simulated :
+            print('The data are already simulated.')
+            return
+
         self.source_data = self.simulate_sources(n_samples)
         self.eeg_data = self.simulate_eeg()
 
@@ -61,8 +73,15 @@ class Simulation:
         else :
             self.eeg_data = np.squeeze(self.eeg_data)
             self.source_data = np.squeeze(self.source_data)
+        
+        self.simulated = True
 
     def simulate_sources(self, n_samples):
+        
+        if self.simulated :
+            print('The data are already simulated.')
+
+            return self.source_data
         print('Simulate Sources.')
         if self.parallel:
             source_data = np.stack(Parallel(n_jobs=self.n_jobs, backend='loky')
@@ -202,6 +221,10 @@ class Simulation:
         simulated eeg data : numpy.ndarray
             3D array of shape (n_elec x n_samples x timepoints)
         '''
+        if self.simulated :
+            print('The data are already simulated.')
+            return
+        
         print('Simulate EEG.')
 
         # Desired Dim of sources: (samples x dipoles x time points)

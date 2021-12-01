@@ -74,7 +74,7 @@ class EEGNet:
 
     def fit(self, learning_rate=0.001, 
         validation_split=0.1, epochs=50, metrics=None, 
-        false_positive_penalty=2, delta=1., batch_size=128, 
+        false_positive_penalty=2, delta=1., batch_size=100, 
         loss=None, patience=7  
     ):
         ''' Train the neural network using training data (eeg) and labels (sources).
