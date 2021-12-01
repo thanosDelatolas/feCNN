@@ -194,9 +194,8 @@ class Simulation:
 
         Return
         -------
-        epochs : list
-                list of either mne.Epochs objects or list of raw EEG data 
-                (see argument <return_raw_data> to change output)
+        simulated eeg data : numpy.ndarray
+            3D array of shape (n_elec x n_samples x timepoints)
         '''
         print('Simulate EEG.')
 
