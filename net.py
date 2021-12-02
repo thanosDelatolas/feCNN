@@ -122,8 +122,8 @@ class EEGNet:
         y = self.sim.source_data.T
 
         # early stoping
-        es = tf.keras.callbacks.EarlyStopping(monitor='val_loss', \
-            mode='min', patience=patience, restore_best_weights=True)
+        # es = tf.keras.callbacks.EarlyStopping(monitor='val_loss', \
+        #     mode='min', patience=patience, restore_best_weights=True)
 
         optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
 
@@ -139,9 +139,9 @@ class EEGNet:
             self.compiled = True
         
        
-        callbacks = [es]
+        # callbacks = [es]
 
         self.model.fit(x, y, 
                 epochs=epochs, batch_size=batch_size, shuffle=True, 
-                validation_split=validation_split, callbacks=callbacks)
+                validation_split=validation_split)
         return self
