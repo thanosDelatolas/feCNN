@@ -7,3 +7,4 @@ tqdm
 colorednoise
 pydot
 pydotplus
+sklearn

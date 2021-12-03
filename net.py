@@ -1,11 +1,12 @@
 from abc import abstractmethod
-from os import name
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
-
+from tensorflow.keras.models import load_model
 from tensorflow.keras.layers import (Dense)
-from copy import deepcopy
+from copy import Error, deepcopy
+
+import pickle
 
 import losses
 
@@ -44,6 +45,7 @@ class NN:
         self.default_loss = losses.weighted_huber_loss
 
         self.verbose = verbose
+        self.trained = False
 
     @abstractmethod
     def build_model(self):
@@ -52,7 +54,7 @@ class NN:
         pass
 
     @abstractmethod
-    def fit(self, learning_rate=0.001, 
+    def fit(self, learning_rate=0.01, 
         validation_split=0.1, epochs=50, metrics=None, 
         false_positive_penalty=2, delta=1., batch_size=100, 
         loss=None, patience=7  
@@ -85,11 +87,47 @@ class NN:
                 The loss function.
             Return
             ------
-            self : esinet.Net
+            self : Net
                 Method returns the object itself.
 
         '''
         pass
+    
+    @abstractmethod
+    def predict(self, eeg):
+        ''' Predict the sources from the eeg.
+
+            Parameters
+            ----------
+
+            eeg : numpy array
+                The eeg data to predict sources
+        '''
+        pass
+    
+    def save_nn(self, model_filename, save_sim=False, sim_filename='sim.pkl'):
+        if self.trained:
+            self.model.save(model_filename)
+
+            if save_sim:
+                with open(sim_filename, 'wb') as outp:  # Overwrites any existing file.
+                    pickle.dump(self.sim, outp, pickle.HIGHEST_PROTOCOL)
+
+        else:
+            print('The model must be trained first.')
+    
+    def load_nn(self, model_filename):
+        ''' This function loads the neural network.
+
+            !Important!
+            -----------
+            The simulation object must be the same with the one that it was used during trainning. 
+        '''
+        self.model = load_model(model_filename,  compile=False)
+        self.compiled = True
+        self.trained = True
+        print('Loaded model in', self.__class__.__name__,':')
+        self.model.summary()
     
 class EEGMLP(NN):
     '''  An MLP nueral network
@@ -127,7 +165,7 @@ class EEGMLP(NN):
                 img = './assets/MLP.png'
                 tf.keras.utils.plot_model(self.model, to_file=img, show_shapes=True)
 
-    def fit(self, learning_rate=0.001, 
+    def fit(self, learning_rate=0.01, 
         validation_split=0.1, epochs=50, metrics=None, 
         false_positive_penalty=2, delta=1., batch_size=100, 
         loss=None, patience=7  
@@ -140,6 +178,7 @@ class EEGMLP(NN):
 
         # Input data
         x = self.sim.eeg_data.T
+        
 
         # Target data
         y = self.sim.source_data.T
@@ -167,4 +206,16 @@ class EEGMLP(NN):
         self.model.fit(x, y, 
                 epochs=epochs, batch_size=batch_size, shuffle=True, 
                 validation_split=validation_split)
+        self.trained = True
         return self
+
+    
+    def predict(self, eeg):
+        ''' Predict the sources from the eeg.
+        '''
+        if self.trained:
+            predicted_sources = self.model.predict(eeg)
+            return predicted_sources
+        
+        else:
+            raise Error('The model must be trained first.')
