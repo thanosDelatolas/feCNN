@@ -5,3 +5,5 @@ tensorflow
 joblib
 tqdm
 colorednoise
+pydot
+pydotplus

@@ -1,3 +1,4 @@
+from abc import abstractmethod
 from os import name
 import tensorflow as tf
 from tensorflow import keras
@@ -6,16 +7,13 @@ from tensorflow.keras import layers
 from tensorflow.keras.layers import (Dense)
 from copy import deepcopy
 
-import datetime
-
 import losses
 
-class EEGNet:
+class NN:
     ''' The neural network class that creates and trains the model. 
     
     Attributes
     ----------
-    fwd : The forward object located in forward.py
     sim : The simulation object located in simulation.py
                  
     activation_function : str
@@ -31,12 +29,11 @@ class EEGNet:
     evaluate : evaluate the performance of the model
     '''
 
-    def __init__(self, fwd, sim, activation_function='swish', n_jobs=-1):
-        self.leadfield = deepcopy(fwd.leadfield)
-        self.n_elec = self.leadfield.shape[0]
-        self.n_dipoles = self.leadfield.shape[1]
-
+    def __init__(self, sim, activation_function='ReLU', n_jobs=-1, verbose=True):
         self.sim = deepcopy(sim)
+
+        self.n_elec = self.sim.fwd.leadfield.shape[0]
+        self.n_dipoles = self.sim.fwd.leadfield.shape[1]
 
         # simulation's samples
         self.n_samples = self.sim.eeg_data.shape[1]
@@ -46,15 +43,64 @@ class EEGNet:
 
         self.default_loss = losses.weighted_huber_loss
 
-        if self.leadfield.shape[0] != self.sim.eeg_data.shape[0] or self.leadfield.shape[1] != self.sim.source_data.shape[0] :
-            msg = 'Incompatible sim and fwd objects'
-            raise AttributeError(msg)
+        self.verbose = verbose
+
+    @abstractmethod
+    def build_model(self):
+        ''' Build the neural network architecture.       
+        '''
+        pass
+
+    @abstractmethod
+    def fit(self, learning_rate=0.001, 
+        validation_split=0.1, epochs=50, metrics=None, 
+        false_positive_penalty=2, delta=1., batch_size=100, 
+        loss=None, patience=7  
+    ):
+        ''' Train the neural network using training data (eeg) and labels (sources).
+
+            The training data are stored in the simulation object
+            
+            Parameters
+            ----------
+
+            learning_rate : float
+                The learning rate for training the neural network
+            validation_split : float
+                Proportion of data to keep as validation set.
+            delta : int/float
+                The delta parameter of the huber loss function
+            epochs : int
+                Number of epochs to train. In one epoch all training samples 
+                are used once for training.
+            metrics : list/str
+                The metrics to be used for performance monitoring during training.
+            false_positive_penalty : float
+                Defines weighting of false-positive predictions. Increase for conservative 
+                inverse solutions, decrease for liberal prediction.
+            batch_size : int
+                The number of samples to simultaneously calculate the error 
+                during backpropagation.
+            loss : tf.keras.losses
+                The loss function.
+            Return
+            ------
+            self : esinet.Net
+                Method returns the object itself.
+
+        '''
+        pass
+    
+class EEGMLP(NN):
+    '''  An MLP nueral network
+   
+    '''
     
     def build_model(self):
         ''' Build the neural network architecture using the 
         tensorflow.keras.Sequential() API. 
 
-        The architecture is  a simple single hidden layer fully connected ANN for single time instance data.
+        The architecture is an MLP with three hidden layers.
        
         '''
         if not self.compiled :
@@ -63,52 +109,29 @@ class EEGNet:
 
             # add input layer
             self.model.add(keras.Input(shape=(self.n_elec,), name='Input'))
-            #  Number of neurons per hidden layer.
-            n_neurons = 100
-            self.model.add(Dense(units=n_neurons, activation=self.activation_function, name='Hidden'))
+
+            # first hidden layer with 256 neurons.
+            self.model.add(Dense(units=256, activation=self.activation_function, name='Hidden-1'))
+
+            # second hidden layer with 512 neurons.
+            self.model.add(Dense(units=512, activation=self.activation_function, name='Hidden-2'))
+
+            # third hidden layer with 1024 neurons.
+            self.model.add(Dense(units=1024, activation=self.activation_function, name='Hidden-3'))            
 
             # Add output layer
             self.model.add(Dense(self.n_dipoles, activation='linear', name='Output'))
 
-            self.model.summary()
+            if self.verbose:
+                self.model.summary()
+                img = './assets/MLP.png'
+                tf.keras.utils.plot_model(self.model, to_file=img, show_shapes=True)
 
     def fit(self, learning_rate=0.001, 
         validation_split=0.1, epochs=50, metrics=None, 
         false_positive_penalty=2, delta=1., batch_size=100, 
         loss=None, patience=7  
     ):
-        ''' Train the neural network using training data (eeg) and labels (sources).
-
-        The training data are stored in the simulation object
-        
-        Parameters
-        ----------
-
-        learning_rate : float
-            The learning rate for training the neural network
-        validation_split : float
-            Proportion of data to keep as validation set.
-        delta : int/float
-            The delta parameter of the huber loss function
-        epochs : int
-            Number of epochs to train. In one epoch all training samples 
-            are used once for training.
-        metrics : list/str
-            The metrics to be used for performance monitoring during training.
-        false_positive_penalty : float
-            Defines weighting of false-positive predictions. Increase for conservative 
-            inverse solutions, decrease for liberal prediction.
-        batch_size : int
-            The number of samples to simultaneously calculate the error 
-            during backpropagation.
-        loss : tf.keras.losses
-            The loss function.
-        Return
-        ------
-        self : esinet.Net
-            Method returns the object itself.
-
-        '''
 
         if len(self.sim.eeg_data.shape) != 2 :
             raise AttributeError("EEG data must be 2D (n_elctrodes x n_samples")
