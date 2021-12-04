@@ -6,7 +6,7 @@ import_fieldtrip();
 sensor_labels = split(sensor_labels{4});
 sensor_labels = sensor_labels(1:end-1);
 
-eeg = double(readNPY('./data/eeg.npy'));
+eeg = double(readNPY('/media/thanos/Big Data/Thanos/TUC/Thesis/sim_data/sim_type_2/eeg_big_sim_1.npy'));
 
 % sources = double(readNPY('/data/sources.npy'));
 
