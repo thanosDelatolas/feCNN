@@ -88,54 +88,6 @@ def get_triangle_neighbors(tris_lr):
     return neighbors
 
 
-
-def scale_eeg(eeg):
-    ''' Scales the EEG prior to training/ predicting with the neural 
-    network.
-
-    Parameters
-    ----------
-    eeg : numpy.ndarray
-        A 3D matrix of the EEG data (samples, channels, time_points)
-    
-    Return
-    ------
-    eeg : numpy.ndarray
-        Scaled EEG
-    '''
-    eeg_out = deepcopy(eeg)
-    # Common average ref
-    for sample in range(eeg.shape[0]):
-        for time in range(eeg.shape[2]):
-            eeg_out[sample, :, time] -= np.mean(eeg_out[sample, :, time])
-            eeg_out[sample, :, time] /= eeg_out[sample, :, time].std()
-    
-    # Normalize
-    # for sample in range(eeg.shape[0]):
-    #     eeg[sample] /= eeg[sample].std()
-
-    return eeg_out
-
-def scale_sources(source):
-    ''' Scales the sources prior to training the neural network.
-
-    Parameters
-    ----------
-    source : numpy.ndarray
-        A 3D matrix of the source data (dipoles, samples, time_points)
-    
-    Return
-    ------
-    source : numpy.ndarray
-        Scaled sources
-    '''
-    source_out = deepcopy(source)
-    for sample in range(source.shape[1]):
-        for time in range(source.shape[2]):
-            source_out[:, sample, time] /= np.max(np.abs(source_out[:, sample, time]))
-
-    return source_out
-
 def read_electrodes(filename):
     ''' Reads the electrodes positions from a .elc file
     '''
@@ -163,3 +115,11 @@ def save_object(obj, filename):
     '''
     with open(filename, 'wb') as outp:  # Overwrites any existing file.
         pickle.dump(obj, outp, pickle.HIGHEST_PROTOCOL)
+
+
+def load_object(filename):
+    ''' Load an object which is saved as pickle.
+    '''
+    with open(filename, 'rb') as outp:  
+        obj = pickle.load(outp)
+    return obj

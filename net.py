@@ -7,6 +7,7 @@ from tensorflow.keras.layers import (Dense)
 from copy import Error, deepcopy
 
 import pickle
+import numpy as np
 
 import losses
 
@@ -57,7 +58,7 @@ class NN:
     def fit(self, learning_rate=0.01, 
         validation_split=0.1, epochs=50, metrics=None, 
         false_positive_penalty=2, delta=1., batch_size=100, 
-        loss=None, patience=7  
+        loss=None, patience=7
     ):
         ''' Train the neural network using training data (eeg) and labels (sources).
 
@@ -104,7 +105,65 @@ class NN:
                 The eeg data to predict sources
         '''
         pass
+
+    def evaluate_nmse(self, eeg, sources):
+        ''' Evaluate the model regarding normalized mean squared error
+        
+        Parameters
+        ----------         
+            eeg : numpy.ndarray
+                The simulated EEG data
+            sources : numpy.ndarray
+                The simulated EEG data
+
+        Return
+        ------
+        normalized_mean_squared_errors : numpy.ndarray
+            The normalized mean squared error of each sample
+        '''
+
+        if self.trained:
+            if eeg.shape[1]  != sources.shape[1]:
+                raise AttributeError('EEG and Sources data must have the same amount of samples.')
+            predicted_sources = self.predict(eeg=eeg.T).T
+
+            sources /= np.max(sources)
+            predicted_sources /= np.max(predicted_sources)
+            
+            normalized_mean_squared_errors = np.mean((predicted_sources - sources)**2, axis=0)
+            return normalized_mean_squared_errors
+            
+        else :
+            print('The model must be trained')
+
     
+    def evaluate_mse(self, eeg, sources):
+        ''' Evaluate the model regarding mean squared error
+        
+        Parameters
+        ----------         
+            eeg : numpy.ndarray
+                The simulated EEG data
+            sources : numpy.ndarray
+                The simulated EEG data
+
+        Return
+        ------
+            mean_squared_errors : numpy.ndarray
+            The mean squared error of each sample
+        '''
+        
+        if self.trained:
+
+            if eeg.shape[1]  != sources.shape[1]:
+                raise AttributeError('EEG and Sources data must have the same amount of samples.')
+
+            predicted_sources = self.predict(eeg=eeg.T).T        
+            mean_squared_errors = np.mean((predicted_sources - sources)**2, axis=0)
+
+            return mean_squared_errors
+        else :
+            print('The model must be trained first.')
     def save_nn(self, model_filename, save_sim=False, sim_filename='sim.pkl'):
         if self.trained:
             self.model.save(model_filename)
@@ -200,7 +259,6 @@ class EEGMLP(NN):
             self.model.compile(optimizer, loss, metrics=metrics)
             self.compiled = True
         
-       
         # callbacks = [es]
 
         self.model.fit(x, y, 
