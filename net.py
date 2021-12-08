@@ -4,7 +4,8 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.models import load_model
 from tensorflow.keras.layers import (Dense)
-from copy import Error, deepcopy
+from copy import deepcopy
+from sklearn.model_selection import train_test_split
 
 import pickle
 import numpy as np
@@ -18,7 +19,7 @@ class NN:
     ----------
     sim : The simulation object located in simulation.py
                  
-    activation_function : str
+    activation_function : str or tf.keras.activations
         The activation function used for each fully connected layer.
     n_jobs : int
         Number of jobs/ cores to use during parallel processing
@@ -56,9 +57,9 @@ class NN:
 
     @abstractmethod
     def fit(self, learning_rate=0.01, 
-        validation_split=0.1, epochs=50, metrics=None, 
+        validation_split=0.2, epochs=50, metrics=None, 
         false_positive_penalty=2, delta=1., batch_size=100, 
-        loss=None, patience=7
+        loss=None, patience=5
     ):
         ''' Train the neural network using training data (eeg) and labels (sources).
 
@@ -86,10 +87,12 @@ class NN:
                 during backpropagation.
             loss : tf.keras.losses
                 The loss function.
+            patience: int
+                Number of epochs with no improvement after which trainning will be stopped
             Return
             ------
-            self : Net
-                Method returns the object itself.
+            history : keras.callbacks.History
+                Method returns the history.
 
         '''
         pass
@@ -225,9 +228,9 @@ class EEGMLP(NN):
                 tf.keras.utils.plot_model(self.model, to_file=img, show_shapes=True)
 
     def fit(self, learning_rate=0.01, 
-        validation_split=0.1, epochs=50, metrics=None, 
+        validation_split=0.2, epochs=50, metrics=None, 
         false_positive_penalty=2, delta=1., batch_size=100, 
-        loss=None, patience=7  
+        loss=None, patience=5
     ):
 
         if len(self.sim.eeg_data.shape) != 2 :
@@ -236,15 +239,14 @@ class EEGMLP(NN):
             raise AttributeError("Sources data must be 2D (n_dipoles x n_samples")
 
         # Input data
-        x = self.sim.eeg_data.T
-        
+        x = self.sim.eeg_data.T        
 
         # Target data
-        y = self.sim.source_data.T
+        y = self.sim.source_data.T        
 
         # early stoping
-        # es = tf.keras.callbacks.EarlyStopping(monitor='val_loss', \
-        #     mode='min', patience=patience, restore_best_weights=True)
+        es = tf.keras.callbacks.EarlyStopping(monitor='val_loss', \
+            mode='min', patience=patience, restore_best_weights=True)
 
         optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
 
@@ -259,13 +261,16 @@ class EEGMLP(NN):
             self.model.compile(optimizer, loss, metrics=metrics)
             self.compiled = True
         
-        # callbacks = [es]
+        data_train, data_val, labels_train, labels_val = train_test_split(x, y, test_size=validation_split, shuffle=True)
 
-        self.model.fit(x, y, 
-                epochs=epochs, batch_size=batch_size, shuffle=True, 
-                validation_split=validation_split)
+        del x, y
+
+        history = self.model.fit(data_train, labels_train, 
+                epochs=epochs, batch_size=batch_size, shuffle=False, 
+                validation_data=(data_val, labels_val), callbacks=[es])
         self.trained = True
-        return self
+        
+        return history
 
     
     def predict(self, eeg):
@@ -276,4 +281,4 @@ class EEGMLP(NN):
             return predicted_sources
         
         else:
-            raise Error('The model must be trained first.')
+            raise AttributeError('The model must be trained first.')
