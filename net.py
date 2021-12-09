@@ -19,7 +19,7 @@ class NN:
         ----------
         sim : The simulation object located in simulation.py
 
-        eeg_topographies : ndarray (67,67,n_samples)
+        eeg_topographies : ndarray (n_samples,67,67)
             A set of topographies for each eeg signal in simulation. This argument is necessary for the CNN only.
 
         activation_function : str or tf.keras.activations
@@ -294,8 +294,8 @@ class EEG_CNN(NN):
         super().__init__(sim, activation_function, verbose)
 
         if len(eeg_topographies.shape) != 3 :
-            raise AttributeError('The set of topographies must be a 3D-array. (xpxiels x ypixels x n_samples)')
-        elif eeg_topographies.shape[2] != self.n_samples :
+            raise AttributeError('The set of topographies must be a 3D-array. (n_samples x xpxiels x ypixels)')
+        elif eeg_topographies.shape[0] != self.n_samples :
             raise AttributeError('Incompatible sim and topographies.')
         
         self.eeg_topographies = eeg_topographies
@@ -313,7 +313,7 @@ class EEG_CNN(NN):
             self.model = keras.Sequential()
 
             # add input layer
-            self.model.add(keras.Input(shape=(self.eeg_topographies.shape[0], self.eeg_topographies.shape[1],1), name='Input'))
+            self.model.add(keras.Input(shape=(self.eeg_topographies.shape[1], self.eeg_topographies.shape[2],1), name='Input'))
             self.model.add(Conv2D(128, kernel_size=(3, 3), activation='relu'))
             self.model.add(Dropout(0.25))
             self.model.add(Flatten())
@@ -327,3 +327,48 @@ class EEG_CNN(NN):
                 self.model.summary()
                 img = './assets/CNN.png'
                 tf.keras.utils.plot_model(self.model, to_file=img, show_shapes=True)
+    
+    def fit(self, learning_rate=0.01, 
+        validation_split=0.2, epochs=50, metrics=None, 
+        false_positive_penalty=2, delta=1., batch_size=100, 
+        loss=None, patience=5
+    ):
+
+        if len(self.sim.eeg_data.shape) != 2 :
+            raise AttributeError("EEG data must be 2D (n_elctrodes x n_samples")
+        elif len(self.sim.source_data.shape) != 2 :
+            raise AttributeError("Sources data must be 2D (n_dipoles x n_samples")
+
+        # Input data
+        x = self.eeg_topographies       
+
+        # Target data
+        y = self.sim.source_data.T        
+
+        # early stoping
+        es = tf.keras.callbacks.EarlyStopping(monitor='val_loss', \
+            mode='min', patience=patience, restore_best_weights=True)
+
+        optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
+
+
+        if loss == None:
+            loss = self.default_loss(weight=false_positive_penalty, delta=delta)
+        
+        if metrics is None:
+            metrics = [self.default_loss(weight=false_positive_penalty, delta=delta)]
+        
+        if not self.compiled:
+            print('hi')
+            self.model.compile(optimizer, loss, metrics=metrics)
+            self.compiled = True
+
+        data_train, data_val, labels_train, labels_val = train_test_split(x, y, test_size=validation_split, shuffle=True)
+
+        del x, y
+        history = self.model.fit(data_train, labels_train, 
+                epochs=epochs, batch_size=batch_size, shuffle=False, 
+                validation_data=(data_val, labels_val), callbacks=[es])
+        self.trained = True
+        
+        return history
