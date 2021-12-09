@@ -24,6 +24,8 @@ tlabels=lay.label(idx)';
 tpos=lay.pos(idx,:);
 [Zi, Yi, Xi ] = ft_plot_topo(sensors_1010(:,1),sensors_1010(:,2),eeg_s,'mask',lay.mask,'outline',lay.outline);
 
+%Zi = replace_nan(Zi);
+figure;
 fac = 0.9;
 contourf(Xi,Yi,Zi);
 hold on;

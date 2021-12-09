@@ -75,10 +75,10 @@ if any(isnan(dat))
 end
 
 % everything is added to the current figure
-holdflag = ishold;
-if ~holdflag
-  hold on
-end
+% holdflag = ishold;
+% if ~holdflag
+%   hold on
+% end
 
 % layout units can be arbitrary (e.g. pixels for .mat files)
 % so we need to compute the right scaling factor
@@ -209,55 +209,55 @@ if exist('maskimagetmp')
 end
 
 % plot the outline of the head, ears and nose
-for i=1:length(outline)
-  xval = outline{i}(:,1) * xScaling  + hpos;
-  yval = outline{i}(:,2) * yScaling + vpos;
-  ft_plot_vector(xval, yval, 'Color','k', 'LineWidth',2, 'tag', tag, 'parent', parent);
-end
-
-% Create isolines
-if strcmp(style,'iso') || strcmp(style,'surfiso')
-  if ~isempty(isolines)
-    [cont, h] = contour(Xi,Yi,Zi,isolines,'k');
-    set(h, 'tag', tag);
-    if ~isempty(parent)
-      set(h, 'Parent', parent);
-    end
-  end
-end
+% for i=1:length(outline)
+%   xval = outline{i}(:,1) * xScaling  + hpos;
+%   yval = outline{i}(:,2) * yScaling + vpos;
+%   ft_plot_vector(xval, yval, 'Color','k', 'LineWidth',2, 'tag', tag, 'parent', parent);
+% end
+% 
+% % Create isolines
+% if strcmp(style,'iso') || strcmp(style,'surfiso')
+%   if ~isempty(isolines)
+%     [cont, h] = contour(Xi,Yi,Zi,isolines,'k');
+%     set(h, 'tag', tag);
+%     if ~isempty(parent)
+%       set(h, 'Parent', parent);
+%     end
+%   end
+% end
 
 % Plot surface
-if strcmp(style,'surf') || strcmp(style,'surfiso')
-  deltax = xi(2)-xi(1); % length of grid entry
-  deltay = yi(2)-yi(1); % length of grid entry
-  h = surf(Xi-deltax/2,Yi-deltay/2,zeros(size(Zi)), Zi, 'EdgeColor', 'none', 'FaceColor', shading);
-  set(h, 'tag', tag);
-  if ~isempty(parent)
-    set(h, 'Parent', parent);
-  end
-  %if exist('maskimagetmp')
-  %  set(h, 'facealpha', 'flat');
-  %  set(h, 'alphadatamapping', 'scaled');
-  %  set(h, 'alphadata', maskimagetmp);
-  %end
-end
-
-% Plot filled contours
-if strcmp(style,'isofill') && ~isempty(isolines)
-  [cont,h] = contourf(Xi,Yi,Zi,isolines,'k'); 
-  set(h, 'tag', tag);
-  if ~isempty(parent)
-    set(h, 'Parent', parent);
-  end
-end
+% if strcmp(style,'surf') || strcmp(style,'surfiso')
+%   deltax = xi(2)-xi(1); % length of grid entry
+%   deltay = yi(2)-yi(1); % length of grid entry
+%   h = surf(Xi-deltax/2,Yi-deltay/2,zeros(size(Zi)), Zi, 'EdgeColor', 'none', 'FaceColor', shading);
+%   set(h, 'tag', tag);
+%   if ~isempty(parent)
+%     set(h, 'Parent', parent);
+%   end
+%   %if exist('maskimagetmp')
+%   %  set(h, 'facealpha', 'flat');
+%   %  set(h, 'alphadatamapping', 'scaled');
+%   %  set(h, 'alphadata', maskimagetmp);
+%   %end
+% end
+% 
+% % Plot filled contours
+% if strcmp(style,'isofill') && ~isempty(isolines)
+%   [cont,h] = contourf(Xi,Yi,Zi,isolines,'k'); 
+%   set(h, 'tag', tag);
+%   if ~isempty(parent)
+%     set(h, 'Parent', parent);
+%   end
+% end
 
 % remember the current input arguments, so that they can be
 % reused on a subsequent call in case the same input argument is given
 previous_argin     = current_argin;
 previous_maskimage = maskimage;
 
-if ~holdflag
-  hold off
-end
+% if ~holdflag
+%   hold off
+% end
 
 warning(ws); %revert to original state

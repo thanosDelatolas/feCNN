@@ -3,7 +3,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.models import load_model
-from tensorflow.keras.layers import (Dense)
+from tensorflow.keras.layers import (Dense, Dropout, Conv2D, Flatten, MaxPooling2D) 
 from copy import deepcopy
 from sklearn.model_selection import train_test_split
 
@@ -15,24 +15,25 @@ import losses
 class NN:
     ''' The neural network class that creates and trains the model. 
     
-    Attributes
-    ----------
-    sim : The simulation object located in simulation.py
-                 
-    activation_function : str or tf.keras.activations
-        The activation function used for each fully connected layer.
-    n_jobs : int
-        Number of jobs/ cores to use during parallel processing
+        Attributes
+        ----------
+        sim : The simulation object located in simulation.py
 
-    Methods
-    -------
-    fit : trains the neural network with the EEG and source data
-    train : trains the neural network with the EEG and source data
-    predict : perform prediciton on EEG data
-    evaluate : evaluate the performance of the model
+        eeg_topographies : ndarray (67,67,n_samples)
+            A set of topographies for each eeg signal in simulation. This argument is necessary for the CNN only.
+
+        activation_function : str or tf.keras.activations
+            The activation function used for each fully connected layer.
+
+        Methods
+        -------
+        fit : trains the neural network with the EEG and source data
+        train : trains the neural network with the EEG and source data
+        predict : perform prediciton on EEG data
+        evaluate : evaluate the performance of the model
     '''
 
-    def __init__(self, sim, activation_function='ReLU', n_jobs=-1, verbose=True):
+    def __init__(self, sim, activation_function='ReLU', verbose=True):
         self.sim = deepcopy(sim)
 
         self.n_elec = self.sim.fwd.leadfield.shape[0]
@@ -41,7 +42,6 @@ class NN:
         # simulation's samples
         self.n_samples = self.sim.eeg_data.shape[1]
         self.activation_function = activation_function
-        self.n_jobs = n_jobs
         self.compiled = False
 
         self.default_loss = losses.weighted_huber_loss
@@ -208,7 +208,7 @@ class EEGMLP(NN):
             self.model = keras.Sequential()
 
             # add input layer
-            self.model.add(keras.Input(shape=(self.n_elec,), name='Input'))
+            self.model.add(keras.Input(shape=(self.n_elec,), name='InputLayer'))
 
             # first hidden layer with 256 neurons.
             self.model.add(Dense(units=256, activation=self.activation_function, name='Hidden-1'))
@@ -220,7 +220,7 @@ class EEGMLP(NN):
             self.model.add(Dense(units=1024, activation=self.activation_function, name='Hidden-3'))            
 
             # Add output layer
-            self.model.add(Dense(self.n_dipoles, activation='linear', name='Output'))
+            self.model.add(Dense(self.n_dipoles, activation='linear', name='OutputLayer'))
 
             if self.verbose:
                 self.model.summary()
@@ -282,3 +282,48 @@ class EEGMLP(NN):
         
         else:
             raise AttributeError('The model must be trained first.')
+
+class EEG_CNN(NN):
+    ''' A CNN to solve the inverse problem.
+
+        The additional eeg_topographies argument is a set of topographies for each eeg signal
+        in simulations.
+    '''
+
+    def __init__(self, sim, eeg_topographies ,activation_function='ReLU', verbose=True):
+        super().__init__(sim, activation_function, verbose)
+
+        if len(eeg_topographies.shape) != 3 :
+            raise AttributeError('The set of topographies must be a 3D-array. (xpxiels x ypixels x n_samples)')
+        elif eeg_topographies.shape[2] != self.n_samples :
+            raise AttributeError('Incompatible sim and topographies.')
+        
+        self.eeg_topographies = eeg_topographies
+
+
+    def build_model(self):
+        ''' Build the neural network architecture using the 
+        tensorflow.keras.Sequential() API. 
+
+        The architecture is a CNN with three hidden layers.
+       
+        '''
+        if not self.compiled :
+            # Build the artificial neural network model using Dense layers.
+            self.model = keras.Sequential()
+
+            # add input layer
+            self.model.add(keras.Input(shape=(self.eeg_topographies.shape[0], self.eeg_topographies.shape[1],1), name='Input'))
+            self.model.add(Conv2D(128, kernel_size=(3, 3), activation='relu'))
+            self.model.add(Dropout(0.25))
+            self.model.add(Flatten())
+            self.model.add(Dense(1024, activation='relu'))
+            self.model.add(Dense(2048, activation='relu'))
+            self.model.add(Dense(4096, activation='relu'))
+            # Add output layer
+            self.model.add(Dense(self.n_dipoles, activation='linear', name='OutputLayer'))
+
+            if self.verbose:
+                self.model.summary()
+                img = './assets/CNN.png'
+                tf.keras.utils.plot_model(self.model, to_file=img, show_shapes=True)
