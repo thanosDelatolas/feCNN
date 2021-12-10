@@ -6,6 +6,7 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.layers import (Dense, Dropout, Conv2D, Flatten, MaxPooling2D) 
 from copy import deepcopy
 from sklearn.model_selection import train_test_split
+import datetime
 
 import pickle
 import numpy as np
@@ -57,7 +58,7 @@ class NN:
 
     @abstractmethod
     def fit(self, learning_rate=0.01, 
-        validation_split=0.2, epochs=50, metrics=None, 
+        validation_split=0.2, epochs=50, 
         false_positive_penalty=2, delta=1., batch_size=100, 
         loss=None, patience=5
     ):
@@ -77,8 +78,6 @@ class NN:
             epochs : int
                 Number of epochs to train. In one epoch all training samples 
                 are used once for training.
-            metrics : list/str
-                The metrics to be used for performance monitoring during training.
             false_positive_penalty : float
                 Defines weighting of false-positive predictions. Increase for conservative 
                 inverse solutions, decrease for liberal prediction.
@@ -91,8 +90,8 @@ class NN:
                 Number of epochs with no improvement after which trainning will be stopped
             Return
             ------
-            history : keras.callbacks.History
-                Method returns the history.
+            history, tensorboard dir : keras.callbacks.History, string
+                Method returns the history and the log dir for the tensorboard.
 
         '''
         pass
@@ -228,7 +227,7 @@ class EEGMLP(NN):
                 tf.keras.utils.plot_model(self.model, to_file=img, show_shapes=True)
 
     def fit(self, learning_rate=0.01, 
-        validation_split=0.2, epochs=50, metrics=None, 
+        validation_split=0.2, epochs=50, 
         false_positive_penalty=2, delta=1., batch_size=100, 
         loss=None, patience=5
     ):
@@ -238,6 +237,9 @@ class EEGMLP(NN):
         elif len(self.sim.source_data.shape) != 2 :
             raise AttributeError("Sources data must be 2D (n_dipoles x n_samples")
 
+        tensorboard_dir = 'logs/MLP-Model-{}'.format(datetime.datetime.now().strftime('%d/%m/%Y-%H:%M:%S'))
+        tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=tensorboard_dir)
+        
         # Input data
         x = self.sim.eeg_data.T        
 
@@ -246,7 +248,7 @@ class EEGMLP(NN):
 
         # early stoping
         es = tf.keras.callbacks.EarlyStopping(monitor='val_loss', \
-            mode='min', patience=patience, restore_best_weights=True)
+            mode='min', patience=patience, restore_best_weights=True, verbose=1)
 
         optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
 
@@ -254,9 +256,11 @@ class EEGMLP(NN):
         if loss == None:
             loss = self.default_loss(weight=false_positive_penalty, delta=delta)
         
-        if metrics is None:
-            metrics = [self.default_loss(weight=false_positive_penalty, delta=delta)]
-        
+        metrics = [tf.keras.metrics.MeanAbsoluteError(name="MAE"), 
+            tf.keras.metrics.RootMeanSquaredError(name="RMSE"),
+            tf.keras.metrics.MeanAbsolutePercentageError(name="MAPE")            
+        ]
+
         if not self.compiled:
             self.model.compile(optimizer, loss, metrics=metrics)
             self.compiled = True
@@ -267,10 +271,10 @@ class EEGMLP(NN):
 
         history = self.model.fit(data_train, labels_train, 
                 epochs=epochs, batch_size=batch_size, shuffle=False, 
-                validation_data=(data_val, labels_val), callbacks=[es])
+                validation_data=(data_val, labels_val), callbacks=[es, tensorboard_callback])
         self.trained = True
         
-        return history
+        return history, tensorboard_dir
 
     
     def predict(self, eeg):
@@ -298,7 +302,7 @@ class EEG_CNN(NN):
         elif eeg_topographies.shape[0] != self.n_samples :
             raise AttributeError('Incompatible sim and topographies.')
         
-        self.eeg_topographies = eeg_topographies
+        self.eeg_topographies = deepcopy(eeg_topographies)
 
 
     def build_model(self):
@@ -314,12 +318,12 @@ class EEG_CNN(NN):
 
             # add input layer
             self.model.add(keras.Input(shape=(self.eeg_topographies.shape[1], self.eeg_topographies.shape[2],1), name='Input'))
-            self.model.add(Conv2D(128, kernel_size=(3, 3), activation='relu'))
+            self.model.add(Conv2D(8, kernel_size=(3, 3), activation='relu'))
             self.model.add(Dropout(0.25))
             self.model.add(Flatten())
+            self.model.add(Dense(512, activation='relu'))
             self.model.add(Dense(1024, activation='relu'))
             self.model.add(Dense(2048, activation='relu'))
-            self.model.add(Dense(4096, activation='relu'))
             # Add output layer
             self.model.add(Dense(self.n_dipoles, activation='linear', name='OutputLayer'))
 
@@ -329,7 +333,7 @@ class EEG_CNN(NN):
                 tf.keras.utils.plot_model(self.model, to_file=img, show_shapes=True)
     
     def fit(self, learning_rate=0.01, 
-        validation_split=0.2, epochs=50, metrics=None, 
+        validation_split=0.2, epochs=50,
         false_positive_penalty=2, delta=1., batch_size=100, 
         loss=None, patience=5
     ):
@@ -339,6 +343,9 @@ class EEG_CNN(NN):
         elif len(self.sim.source_data.shape) != 2 :
             raise AttributeError("Sources data must be 2D (n_dipoles x n_samples")
 
+        tensorboard_dir = 'logs/CNN-Model-{}'.format(datetime.datetime.now().strftime('%d/%m/%Y-%H:%M:%S'))
+        tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=tensorboard_dir)
+
         # Input data
         x = self.eeg_topographies       
 
@@ -347,28 +354,26 @@ class EEG_CNN(NN):
 
         # early stoping
         es = tf.keras.callbacks.EarlyStopping(monitor='val_loss', \
-            mode='min', patience=patience, restore_best_weights=True)
+            mode='min', patience=patience, restore_best_weights=True,verbose=1)
 
         optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
 
 
         if loss == None:
             loss = self.default_loss(weight=false_positive_penalty, delta=delta)
-        
-        if metrics is None:
-            metrics = [self.default_loss(weight=false_positive_penalty, delta=delta)]
-        
+
+        metrics = [tf.keras.metrics.MeanAbsoluteError(name="MAE"), 
+            tf.keras.metrics.RootMeanSquaredError(name="RMSE"),
+            tf.keras.metrics.MeanAbsolutePercentageError(name="MAPE")            
+        ]
+
         if not self.compiled:
-            print('hi')
             self.model.compile(optimizer, loss, metrics=metrics)
             self.compiled = True
 
-        data_train, data_val, labels_train, labels_val = train_test_split(x, y, test_size=validation_split, shuffle=True)
-
-        del x, y
-        history = self.model.fit(data_train, labels_train, 
-                epochs=epochs, batch_size=batch_size, shuffle=False, 
-                validation_data=(data_val, labels_val), callbacks=[es])
+        history = self.model.fit(x, y, 
+                epochs=epochs, batch_size=batch_size, shuffle=True, 
+                validation_split=validation_split, callbacks=[es, tensorboard_callback])
         self.trained = True
         
-        return history
+        return history, tensorboard_dir
