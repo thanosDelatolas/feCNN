@@ -3,7 +3,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.models import load_model
-from tensorflow.keras.layers import (Dense, Dropout, Conv2D, Flatten, MaxPooling2D) 
+from tensorflow.keras.layers import (Dense, Dropout, Conv2D, Flatten, MaxPooling2D, Conv1D) 
 from copy import deepcopy
 from sklearn.model_selection import train_test_split
 import datetime
@@ -171,6 +171,23 @@ class NN:
         self.trained = True
         print('Loaded model in', self.__class__.__name__,':')
         self.model.summary()
+
+    @staticmethod
+    def lr_schedule(epoch):
+        '''
+            Returns a custom learning rate that decreases as epochs progress.
+        '''
+        learning_rate = 0.075
+        if epoch > 10:
+            learning_rate = 0.02
+        if epoch > 20:
+            learning_rate = 0.01
+        if epoch > 40:
+            learning_rate = 0.005
+
+        tf.summary.scalar('learning rate', data=learning_rate, step=epoch)
+        return learning_rate
+
     
 class EEGMLP(NN):
     '''  An MLP nueral network
@@ -326,18 +343,18 @@ class EEG_CNN(NN):
 
             # add input layer
             self.model.add(keras.Input(shape=(self.eeg_topographies.shape[1], self.eeg_topographies.shape[2],1), name='Input'))
-            self.model.add(Conv2D(8, kernel_size=(3, 3), activation='relu'))
+            self.model.add(Conv2D(8, kernel_size=(3, 3)))
             # self.model.add(Dropout(0.25))
             self.model.add(Flatten())
-            self.model.add(Dense(512, activation='relu'))
-            self.model.add(Dense(1024, activation='relu'))
-            self.model.add(Dense(2048, activation='relu'))
+            self.model.add(Dense(512, activation='sigmoid'))
+            self.model.add(Dense(1024, activation='sigmoid'))
+            self.model.add(Dense(2048, activation='sigmoid'))
             # Add output layer
             self.model.add(Dense(self.n_dipoles, activation='linear', name='OutputLayer'))
 
             if self.verbose:
                 self.model.summary()
-                img = './assets/CNN{}.png'
+                img = './assets/CNN.png'
                 tf.keras.utils.plot_model(self.model, to_file=img, show_shapes=True)
     
     def fit(self, learning_rate=0.01, 
@@ -364,16 +381,19 @@ class EEG_CNN(NN):
         es = tf.keras.callbacks.EarlyStopping(monitor='val_loss', \
             mode='min', patience=patience, restore_best_weights=True,verbose=1)
 
-        optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
-
+        #optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
+        optimizer = tf.keras.optimizers.SGD()
 
         if loss == None:
-            loss = self.default_loss(weight=false_positive_penalty, delta=delta)
+            # loss = self.default_loss(weight=false_positive_penalty, delta=delta)
+            loss = 'MSE'
 
         metrics = [tf.keras.metrics.MeanAbsoluteError(name="MAE"), 
             tf.keras.metrics.RootMeanSquaredError(name="RMSE"),
             #tf.keras.metrics.MeanAbsolutePercentageError(name="MAPE")            
         ]
+
+        lr_callback = keras.callbacks.LearningRateScheduler(NN.lr_schedule)
 
         if not self.compiled:
             self.model.compile(optimizer, loss, metrics=metrics)
@@ -381,7 +401,7 @@ class EEG_CNN(NN):
 
         history = self.model.fit(x, y, 
                 epochs=epochs, batch_size=batch_size, shuffle=True, 
-                validation_split=validation_split, callbacks=[es, tensorboard_callback])
+                validation_split=validation_split, callbacks=[es, tensorboard_callback, lr_callback])
         self.trained = True
         
         return history, tensorboard_dir
@@ -394,7 +414,7 @@ class EEG_CNN(NN):
         '''
 
         if self.trained:
-            
+
             if len(eeg.shape) != 3 :
                 raise AttributeError('The set of topographies must be a 3D-array. (n_samples x xpxiels x ypixels)')
             elif eeg.shape[0] != sources.shape[1] :
