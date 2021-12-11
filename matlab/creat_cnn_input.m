@@ -6,7 +6,7 @@ import_fieldtrip();
 sensor_labels = split(sensor_labels{4});
 sensor_labels = sensor_labels(1:end-1);
 
-eeg = double(readNPY('/media/thanos/Big Data/Thanos/TUC/Thesis/sim_data/sim_type_1/sim_100k_eeg.npy'));
+eeg = double(readNPY('/media/thanos/Big Data/Thanos/TUC/Thesis/sim_data/sim_type_2/eeg_big_sim_1_type_2.npy'));
 
 % sources = double(readNPY('/data/sources.npy'));
 
@@ -49,4 +49,4 @@ end
 toc;
 
 close(w_bar);
-save('eeg_topographies.mat', 'eeg_arr', '-v7.3')
+save('/media/thanos/Big Data/Thanos/TUC/Thesis/sim_data/sim_type_2/eeg_big_sim_1_topos_type_2.mat', 'eeg_arr', '-v7.3')

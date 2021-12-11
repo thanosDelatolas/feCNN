@@ -13,6 +13,8 @@ import numpy as np
 
 import losses
 
+time_str = datetime.datetime.now().strftime('%d_%m_%Y__%H:%M:%S')
+
 class NN:
     ''' The neural network class that creates and trains the model. 
     
@@ -96,18 +98,17 @@ class NN:
         '''
         pass
     
-    @abstractmethod
     def predict(self, eeg):
         ''' Predict the sources from the eeg.
-
-            Parameters
-            ----------
-
-            eeg : numpy array
-                The eeg data to predict sources
         '''
-        pass
+        if self.trained:
+            predicted_sources = self.model.predict(eeg)
+            return predicted_sources
+        
+        else:
+            raise AttributeError('The model must be trained first.')
 
+    @abstractmethod
     def evaluate_nmse(self, eeg, sources):
         ''' Evaluate the model regarding normalized mean squared error
         
@@ -124,21 +125,9 @@ class NN:
             The normalized mean squared error of each sample
         '''
 
-        if self.trained:
-            if eeg.shape[1]  != sources.shape[1]:
-                raise AttributeError('EEG and Sources data must have the same amount of samples.')
-            predicted_sources = self.predict(eeg=eeg.T).T
+        pass
 
-            sources /= np.max(sources)
-            predicted_sources /= np.max(predicted_sources)
-            
-            normalized_mean_squared_errors = np.mean((predicted_sources - sources)**2, axis=0)
-            return normalized_mean_squared_errors
-            
-        else :
-            print('The model must be trained')
-
-    
+    @abstractmethod
     def evaluate_mse(self, eeg, sources):
         ''' Evaluate the model regarding mean squared error
         
@@ -155,17 +144,10 @@ class NN:
             The mean squared error of each sample
         '''
         
-        if self.trained:
+        pass
 
-            if eeg.shape[1]  != sources.shape[1]:
-                raise AttributeError('EEG and Sources data must have the same amount of samples.')
 
-            predicted_sources = self.predict(eeg=eeg.T).T        
-            mean_squared_errors = np.mean((predicted_sources - sources)**2, axis=0)
 
-            return mean_squared_errors
-        else :
-            print('The model must be trained first.')
     def save_nn(self, model_filename, save_sim=False, sim_filename='sim.pkl'):
         if self.trained:
             self.model.save(model_filename)
@@ -237,7 +219,7 @@ class EEGMLP(NN):
         elif len(self.sim.source_data.shape) != 2 :
             raise AttributeError("Sources data must be 2D (n_dipoles x n_samples")
 
-        tensorboard_dir = 'logs/MLP-Model-{}'.format(datetime.datetime.now().strftime('%d/%m/%Y-%H:%M:%S'))
+        tensorboard_dir = 'logs/MLP-Model-{}'.format(time_str)
         tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=tensorboard_dir)
         
         # Input data
@@ -277,15 +259,41 @@ class EEGMLP(NN):
         return history, tensorboard_dir
 
     
-    def predict(self, eeg):
-        ''' Predict the sources from the eeg.
+    def evaluate_nmse(self, eeg, sources):
+        ''' Evaluate the model regarding normalized mean squared error
         '''
+
         if self.trained:
-            predicted_sources = self.model.predict(eeg)
-            return predicted_sources
+            if eeg.shape[1]  != sources.shape[1]:
+                raise AttributeError('EEG and Sources data must have the same amount of samples.')
+            predicted_sources = self.predict(eeg=eeg.T).T
+
+            sources /= np.max(sources)
+            predicted_sources /= np.max(predicted_sources)
+            
+            normalized_mean_squared_errors = np.mean((predicted_sources - sources)**2, axis=0)
+            return normalized_mean_squared_errors
+            
+        else :
+            print('The model must be trained')
+    
+    def evaluate_mse(self, eeg, sources):
+        ''' Evaluate the model regarding mean squared error
+
+        '''
         
-        else:
-            raise AttributeError('The model must be trained first.')
+        if self.trained:
+
+            if eeg.shape[1]  != sources.shape[1]:
+                raise AttributeError('EEG and Sources data must have the same amount of samples.')
+
+            predicted_sources = self.predict(eeg=eeg.T).T        
+            mean_squared_errors = np.mean((predicted_sources - sources)**2, axis=0)
+
+            return mean_squared_errors
+        else :
+            print('The model must be trained first.')
+
 
 class EEG_CNN(NN):
     ''' A CNN to solve the inverse problem.
@@ -329,7 +337,7 @@ class EEG_CNN(NN):
 
             if self.verbose:
                 self.model.summary()
-                img = './assets/CNN.png'
+                img = './assets/CNN{}.png'
                 tf.keras.utils.plot_model(self.model, to_file=img, show_shapes=True)
     
     def fit(self, learning_rate=0.01, 
@@ -343,7 +351,7 @@ class EEG_CNN(NN):
         elif len(self.sim.source_data.shape) != 2 :
             raise AttributeError("Sources data must be 2D (n_dipoles x n_samples")
 
-        tensorboard_dir = 'logs/CNN-Model-{}'.format(datetime.datetime.now().strftime('%d/%m/%Y-%H:%M:%S'))
+        tensorboard_dir = 'logs/CNN-Model-{}'.format(time_str)
         tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=tensorboard_dir)
 
         # Input data
@@ -377,3 +385,50 @@ class EEG_CNN(NN):
         self.trained = True
         
         return history, tensorboard_dir
+
+    
+    def evaluate_nmse(self, eeg, sources):
+        ''' Evaluate the model regarding normalized mean squared error
+        
+            The eeg parapameter must be the eeg- topographies.
+        '''
+
+        if self.trained:
+            
+            if len(eeg.shape) != 3 :
+                raise AttributeError('The set of topographies must be a 3D-array. (n_samples x xpxiels x ypixels)')
+            elif eeg.shape[0] != sources.shape[1] :
+                raise AttributeError('Incompatible sim and topographies.')
+
+            predicted_sources = self.predict(eeg=eeg).T
+
+            sources /= np.max(sources)
+            predicted_sources /= np.max(predicted_sources)
+            
+            normalized_mean_squared_errors = np.mean((predicted_sources - sources)**2, axis=0)
+            return normalized_mean_squared_errors
+            
+        else :
+            print('The model must be trained')
+
+    
+    def evaluate_mse(self, eeg, sources):
+        ''' Evaluate the model regarding mean squared error
+        
+            The eeg parameter must be the eeg-topographies
+        '''
+        
+        if self.trained:
+
+            if len(eeg.shape) != 3 :
+                raise AttributeError('The set of topographies must be a 3D-array. (n_samples x xpxiels x ypixels)')
+            elif eeg.shape[0] != sources.shape[1] :
+                raise AttributeError('Incompatible sim and topographies.')
+           
+
+            predicted_sources = self.predict(eeg=eeg).T        
+            mean_squared_errors = np.mean((predicted_sources - sources)**2, axis=0)
+
+            return mean_squared_errors
+        else :
+            print('The model must be trained first.')
