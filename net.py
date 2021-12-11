@@ -258,7 +258,7 @@ class EEGMLP(NN):
         
         metrics = [tf.keras.metrics.MeanAbsoluteError(name="MAE"), 
             tf.keras.metrics.RootMeanSquaredError(name="RMSE"),
-            tf.keras.metrics.MeanAbsolutePercentageError(name="MAPE")            
+            #tf.keras.metrics.MeanAbsolutePercentageError(name="MAPE")            
         ]
 
         if not self.compiled:
@@ -319,7 +319,7 @@ class EEG_CNN(NN):
             # add input layer
             self.model.add(keras.Input(shape=(self.eeg_topographies.shape[1], self.eeg_topographies.shape[2],1), name='Input'))
             self.model.add(Conv2D(8, kernel_size=(3, 3), activation='relu'))
-            self.model.add(Dropout(0.25))
+            # self.model.add(Dropout(0.25))
             self.model.add(Flatten())
             self.model.add(Dense(512, activation='relu'))
             self.model.add(Dense(1024, activation='relu'))
@@ -364,7 +364,7 @@ class EEG_CNN(NN):
 
         metrics = [tf.keras.metrics.MeanAbsoluteError(name="MAE"), 
             tf.keras.metrics.RootMeanSquaredError(name="RMSE"),
-            tf.keras.metrics.MeanAbsolutePercentageError(name="MAPE")            
+            #tf.keras.metrics.MeanAbsolutePercentageError(name="MAPE")            
         ]
 
         if not self.compiled:
