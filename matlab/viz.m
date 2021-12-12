@@ -6,7 +6,7 @@ import_fieldtrip();
 sensor_labels = split(sensor_labels{4});
 sensor_labels = sensor_labels(1:end-1);
 
-eeg = double(readNPY('/media/thanos/Big Data/Thanos/TUC/Thesis/sim_data/sim_type_2/eeg_big_sim_1.npy'));
+eeg = double(readNPY('/media/thanos/Big Data/Thanos/TUC/Thesis/sim_data/sim_type_2/eeg_big_sim_1_type_2.npy'));
 
 % sources = double(readNPY('/data/sources.npy'));
 
@@ -14,8 +14,10 @@ layout = '/home/thanos/fieldtrip/template/layout/EEG1010.lay';
 
 [sensors_1010, lay] = compatible_elec(sensor_labels, layout);
 
+n_samples = size(eeg,3);
+eeg_index = randi([1 n_samples],1,1);
 
-eeg_s = eeg(:,7);
+eeg_s = eeg(:,eeg_index);
 % scatter3(sensors(:,1),sensors(:,2),sensors(:,3),100,eeg_s,'.')
 
 idx = ismember(sensor_labels, lay.label)';
@@ -24,7 +26,7 @@ tlabels=lay.label(idx)';
 tpos=lay.pos(idx,:);
 [Zi, Yi, Xi ] = ft_plot_topo(sensors_1010(:,1),sensors_1010(:,2),eeg_s,'mask',lay.mask,'outline',lay.outline);
 
-%Zi = replace_nan(Zi);
+Zi = replace_nan(Zi);
 figure;
 fac = 0.9;
 contourf(Xi,Yi,Zi);
