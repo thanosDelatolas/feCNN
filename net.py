@@ -7,6 +7,7 @@ from tensorflow.keras.layers import (Dense, Dropout, Conv2D, Flatten, MaxPooling
 from copy import deepcopy
 from sklearn.model_selection import train_test_split
 import datetime
+import visualkeras
 
 import pickle
 import numpy as np
@@ -16,7 +17,7 @@ import losses
 time_str = datetime.datetime.now().strftime('%d_%m_%Y__%H:%M:%S')
 
 class NN:
-    ''' The neural network class that creates and trains the model. 
+    ''' The neural network class that creates and trains the  model. 
     
         Attributes
         ----------
@@ -223,7 +224,9 @@ class EEGMLP(NN):
             if self.verbose:
                 self.model.summary()
                 img = './assets/MLP.png'
+                img_keras = './assets/MLP-visual-keras.png'
                 tf.keras.utils.plot_model(self.model, to_file=img, show_shapes=True)
+                visualkeras.layered_view(self.model, legend=True,  to_file=img_keras)  
 
     def fit(self, learning_rate=0.01, 
         validation_split=0.2, epochs=50, 
@@ -343,7 +346,7 @@ class EEG_CNN(NN):
 
             # add input layer
             self.model.add(keras.Input(shape=(self.eeg_topographies.shape[1], self.eeg_topographies.shape[2],1), name='Input'))
-            self.model.add(Conv2D(8, kernel_size=(3, 3)))
+            self.model.add(Conv2D(8, kernel_size=(3, 3), activation='sigmoid'))
             # self.model.add(Dropout(0.25))
             self.model.add(Flatten())
             self.model.add(Dense(512, activation='sigmoid'))
@@ -355,7 +358,9 @@ class EEG_CNN(NN):
             if self.verbose:
                 self.model.summary()
                 img = './assets/CNN.png'
+                img_keras = './assets/CNN-visual-keras.png'
                 tf.keras.utils.plot_model(self.model, to_file=img, show_shapes=True)
+                visualkeras.layered_view(self.model, legend=True,  to_file=img_keras)  
     
     def fit(self, learning_rate=0.01, 
         validation_split=0.2, epochs=50,
