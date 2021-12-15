@@ -353,7 +353,7 @@ class EEG_CNN(NN):
             self.model.add(Dense(1024, activation='sigmoid'))
             self.model.add(Dense(2048, activation='sigmoid'))
             # Add output layer
-            self.model.add(Dense(self.n_dipoles, activation='linear', name='OutputLayer'))
+            self.model.add(Dense(self.n_dipoles, activation='relu', name='OutputLayer'))
 
             if self.verbose:
                 self.model.summary()

@@ -6,7 +6,7 @@ import_fieldtrip();
 sensor_labels = split(sensor_labels{4});
 sensor_labels = sensor_labels(1:end-1);
 
-eeg = double(readNPY('/media/thanos/Big Data/Thanos/TUC/Thesis/sim_data/sim_type_2/eeg_big_sim_1_type_2.npy'));
+eeg = double(readNPY('/media/thanos/Elements/thanos/sim_data/sim_type_2/sim_obj_10k_eeg_type_2.npy'));
 
 % sources = double(readNPY('/data/sources.npy'));
 
@@ -16,7 +16,7 @@ layout = '/home/thanos/fieldtrip/template/layout/EEG1010.lay';
 
 n_samples = size(eeg,2);
 
-eeg_arr = zeros(67,67, n_samples);
+eeg_topos = zeros(67,67, n_samples);
 % eeg_Xi = zeros(67,67, n_samples);
 % eeg_Yi = zeros(67,67, n_samples);
 
@@ -38,7 +38,7 @@ for ii=1:n_samples
 %     eeg_val.Yi = Yi;
 %     eeg_val.Xi = Xi;
     
-    eeg_arr(:,:,ii) = Zi;
+    eeg_topos(:,:,ii) = Zi;
 %     eeg_Xi(:,:,ii) = Xi;
 %     eeg_Yi(:,:,ii) = Yi;
     
@@ -49,4 +49,4 @@ end
 toc;
 
 close(w_bar);
-save('/media/thanos/Big Data/Thanos/TUC/Thesis/sim_data/sim_type_2/eeg_big_sim_1_topos_type_2.mat', 'eeg_arr', '-v7.3')
+save('/media/thanos/Elements/thanos/sim_data/sim_type_2/eeg_topographies_type_2.mat', 'eeg_topos', '-v7.3')
