@@ -386,8 +386,8 @@ class EEG_CNN(NN):
         es = tf.keras.callbacks.EarlyStopping(monitor='val_loss', \
             mode='min', patience=patience, restore_best_weights=True,verbose=1)
 
-        #optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
-        optimizer = tf.keras.optimizers.SGD()
+        optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
+        #optimizer = tf.keras.optimizers.SGD(learning_rate=learning_rate)
 
         if loss == None:
             # loss = self.default_loss(weight=false_positive_penalty, delta=delta)
@@ -398,7 +398,7 @@ class EEG_CNN(NN):
             #tf.keras.metrics.MeanAbsolutePercentageError(name="MAPE")            
         ]
 
-        lr_callback = keras.callbacks.LearningRateScheduler(NN.lr_schedule)
+        # lr_callback = keras.callbacks.LearningRateScheduler(NN.lr_schedule)
 
         if not self.compiled:
             self.model.compile(optimizer, loss, metrics=metrics)
@@ -406,7 +406,7 @@ class EEG_CNN(NN):
 
         history = self.model.fit(x, y, 
                 epochs=epochs, batch_size=batch_size, shuffle=True, 
-                validation_split=validation_split, callbacks=[es, tensorboard_callback, lr_callback])
+                validation_split=validation_split, callbacks=[es, tensorboard_callback])
         self.trained = True
         
         return history, tensorboard_dir

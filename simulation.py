@@ -9,9 +9,9 @@ import util
 
 # Specifications about the sources.
 DEFAULT_SETTINGS = {
-    'number_of_sources': (1, 20),
+    'number_of_sources': (1, 10),
     'extents': (1, 50),
-    'amplitudes': (1, 10),
+    'amplitudes': (5, 10),
     'shapes': 'both',
     'duration_of_trial': 0,
     'sample_frequency': 100,
