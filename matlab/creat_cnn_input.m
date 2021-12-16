@@ -32,7 +32,7 @@ for ii=1:n_samples
     tpos=lay.pos(idx,:);
     [Zi, Yi, Xi ] = ft_plot_topo(sensors_1010(:,1),sensors_1010(:,2),eeg_s,'mask',lay.mask,'outline',lay.outline);
 
-    Zi = replace_nan(Zi);
+    Zi = -replace_nan(Zi);
     
 %     eeg_val.Zi = Zi;
 %     eeg_val.Yi = Yi;

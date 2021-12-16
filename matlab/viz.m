@@ -6,9 +6,13 @@ import_fieldtrip();
 sensor_labels = split(sensor_labels{4});
 sensor_labels = sensor_labels(1:end-1);
 
-eeg = double(readNPY('/home/thanos/Downloads/eeg_100_type_1.npy'));
+eeg = double(readNPY('/home/thanos/Downloads/eeg.npy'));
 
-sources = double(readNPY('/home/thanos/Downloads/sources_100_type_1.npy'));
+sources = double(readNPY('/home/thanos/Downloads/sources.npy'));
+
+le = double(readNPY('../duneuropy/DataOut/leadfield.npy'));
+% 
+% eeg_m = le' * sources;
 
 
 layout = '/home/thanos/fieldtrip/template/layout/EEG1010.lay';
@@ -18,8 +22,12 @@ layout = '/home/thanos/fieldtrip/template/layout/EEG1010.lay';
 n_samples = size(eeg,2);
 sample = randi([1 n_samples],1,1);
 
+%sample = 10;
+
 eeg_s = eeg(:,sample);
-% scatter3(sensors(:,1),sensors(:,2),sensors(:,3),100,eeg_s,'.')
+
+% eeg_m_s = eeg_m(:, sample);
+% scatter3(sensors(:,1),sensors(:,2),sensors(:,3),73,eeg_s,'.')
 
 idx = ismember(sensor_labels, lay.label)';
 
@@ -33,7 +41,7 @@ Zi = replace_nan(Zi);
 figure;
 subplot(1,2,1)
 fac = 0.9;
-contourf(Xi,Yi,Zi);
+contourf(Xi,Yi,-Zi);
 hold on;
 scatter(sensors_1010(:,1),sensors_1010(:,2),100,'k','.');
 hold on;
@@ -53,6 +61,8 @@ loc = cd_matrix(:,1:3);
 subplot(1,2,2);
 scatter3(loc(:,1),loc(:,2),loc(:,3),100,source,'.')
 title(sprintf('Simulated source space for sample: %d',sample));
+colorbar;
+view([-103.9 -6.8])
 set(gcf,'Position',[60 180 1600 500])
 
 

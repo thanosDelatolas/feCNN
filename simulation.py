@@ -9,14 +9,10 @@ import util
 
 # Specifications about the sources.
 DEFAULT_SETTINGS = {
-    'number_of_sources': (1, 10),
-    'extents': (1, 50),
-    'amplitudes': (5, 10),
-    'shapes': 'both',
-    'duration_of_trial': 0,
-    'sample_frequency': 100,
-    'target_snr': 4,
-    'beta': (0, 3),
+    'number_of_sources': 1 , # (1,5) , int/tuple/list
+    'extents': (21, 80), # int/float/tuple/list,   diameter of sources (in mm)
+    'amplitudes': (5, 10), #  int/float/tuple/list, the electrical current of the source in nAm
+    'shapes': 'gaussian', # str,  How the amplitudes evolve over space. Can be 'gaussian' for now.
 }
 class Simulation:
     ''' Simulate EEG and sources data.
@@ -55,24 +51,8 @@ class Simulation:
         n_elec = self.eeg_data.shape[0]
         n_dipoles = self.source_data.shape[0]
 
-        # if temporal extract the peak point of sources and eeg data
-        if self.temporal:
-            eeg = np.zeros((n_elec, n_samples))
-            for el in range(n_elec):
-                for sample in range(n_samples):
-                    eeg[el, sample] = np.max(self.eeg_data[el,sample,:])
-            
-            sources = np.zeros((n_dipoles, n_samples))
-            for dipole in range(n_dipoles):
-                for sample in range(n_samples):
-                    sources[dipole, sample] = np.max(self.source_data[dipole,sample,:])
-            
-            self.source_data = sources
-            self.eeg_data = eeg
-            
-        else :
-            self.eeg_data = np.squeeze(self.eeg_data)
-            self.source_data = np.squeeze(self.source_data)
+        self.eeg_data = np.squeeze(self.eeg_data)
+        self.source_data = np.squeeze(self.source_data)
         
         self.simulated = True
 
@@ -89,10 +69,7 @@ class Simulation:
         else:
             source_data = np.stack([self.simulate_source() for _ in tqdm(range(n_samples))], axis=0)
 
-        if self.settings['duration_of_trial'] > 0 :
-            source_data = np.transpose(source_data, (1,0,2))
-        else :
-            source_data = source_data.T
+        source_data = source_data.T
         return source_data
 
     def simulate_source(self):
@@ -109,19 +86,13 @@ class Simulation:
             diameter of sources (in mm). Can be a single number or a list of 
             two numbers specifying a range.
         amplitudes : int/float/tuple/list
-            the current of the source in nAm
+            the electrical current of the source in nAm
         shapes : str
-            How the amplitudes evolve over space. Can be 'gaussian' or 'flat' 
-            (i.e. uniform) or 'both'.
-        duration_of_trial : int/float
-            specifies the duration of a trial.
-        sample_frequency : int
-            specifies the sample frequency of the data.
+            How the amplitudes evolve over space. Can be 'gaussian' for now.
         
         Return
         ------
-        source : numpy.ndarray, (n_dipoles x n_samples x timepoints) or (n_dipoles x n_samples) if duration_of_tril is 0
-        , the simulated value of its dipole
+        source : numpy.ndarray, (n_dipoles x n_samples), the simulated value of its dipole
         '''
 
         # Get a random sources number in range:
@@ -131,15 +102,10 @@ class Simulation:
         extents = [self.get_from_range(self.settings['extents'], dtype=float) for _ in range(number_of_sources)]
 
         # Decide shape of sources
-        if self.settings['shapes'] == 'both':
-            shapes = ['gaussian', 'flat']*number_of_sources
-            np.random.shuffle(shapes)
-            shapes = shapes[:number_of_sources]
-            if type(shapes) == str:
-                shapes = [shapes]
-
-        elif self.settings['shapes'] == 'gaussian' or self.settings['shapes'] == 'flat':
+        if self.settings['shapes'] == 'gaussian':
             shapes = [self.settings['shapes']] * number_of_sources
+        else :
+            raise AttributeError('Only Gaussian shape is supported!')
 
 
         # Get amplitude gain for each source (amplitudes come in nAm)
@@ -148,31 +114,9 @@ class Simulation:
         # Get source centers
         src_centers = np.random.choice(np.arange(self.fwd.leadfield.shape[1]), \
             number_of_sources, replace=False)
-        
 
-        if self.settings['duration_of_trial'] > 0:
-            self.temporal = True
-
-            signal_length = int(self.settings['sample_frequency']*self.settings['duration_of_trial'])
-            # pulselen = self.settings['sample_frequency']/10
-            # pulse = self.get_pulse(pulselen)
-            
-            signals = []
-            for _ in range(number_of_sources):
-                # Generate Gaussian 
-                signal = cn.powerlaw_psd_gaussian(self.get_from_range(self.settings['beta'], dtype=float), signal_length) 
-                
-                signal /= np.max(np.abs(signal))
-
-                signals.append(signal)
-            
-            # sample_frequency = self.settings['sample_frequency']
-        else:  # else its a single instance
-            self.temporal = False
-
-            # sample_frequency = 0
-            signal_length = 1
-            signals = [np.array([1])]*number_of_sources
+        signal_length = 1
+        signals = [np.array([1])]*number_of_sources
         
         source = np.zeros((self.fwd.leadfield.shape[1], signal_length))
 
@@ -186,16 +130,8 @@ class Simulation:
                 sd = np.clip(np.max(dists[d]) / 2, a_min=0.1, a_max=np.inf)  # <- works better
                 activity = np.expand_dims(util.gaussian(dists, 0, sd) * amplitude, axis=1) * signal
                 source += activity
-            elif shape == 'flat':
-                activity = util.repeat_newcol(amplitude * signal, len(d)).T
-                if len(activity.shape) == 1:
-                    if len(d) == 1:
-                        activity = np.expand_dims(activity, axis=0)    
-                    else:
-                        activity = np.expand_dims(activity, axis=1)
-                source[d, :] += activity 
             else:
-                msg = BaseException("shape must be of type >string< and be either >gaussian< or >flat<.")
+                msg = BaseException("shape must be of type >string< and be >gaussian<")
                 raise(msg)
 
         return np.squeeze(source)
@@ -206,13 +142,6 @@ class Simulation:
         -----------
         fwd : Forward
             the Forward object located in forward.py
-        target_snr : tuple/list/float, 
-                    desired signal to noise ratio. Can be a list or tuple of two 
-                    floats specifying a range.
-        beta : float
-            determines the frequency spectrum of the noise added to the signal: 
-            power = 1/f^beta. 
-            0 will yield white noise, 1 will yield pink noise (1/f spectrum)
         n_jobs : int
                 Number of jobs to run in parallel. -1 will utilize all cores.
 
@@ -230,17 +159,9 @@ class Simulation:
         # Desired Dim of sources: (samples x dipoles x time points)
         sources = self.source_data
 
-        
-        # if there is no temporal dimension...
-        if not self.temporal:
-            # ...add empty temporal dimension
-            sources = np.expand_dims(sources, axis=2)
-
         # calculate eeg 
         eeg_clean = np.array(self.project_sources(sources))
 
-        n_dipoles, n_samples, _ = sources.shape
-        n_elec = self.fwd.leadfield.shape[0]
 
         # eeg_noisy = self.add_noise_to_eeg(eeg_clean)            
        
@@ -258,25 +179,16 @@ class Simulation:
         '''
         print('Project sources to EEG.')
         leadfield = self.fwd.leadfield
-        n_dipoles ,n_samples, n_timepoints = sources.shape
-        n_elec = leadfield.shape[0]
-
-        # Collapse last two dims into one
-        short_shape = (sources.shape[0], sources.shape[1]*sources.shape[2])
-
-        sources_tmp = sources.reshape(short_shape)
 
         # Scale to allow for lower precision
-        scaler = 1/sources_tmp.max()
-        sources_tmp *= scaler
+        # scaler = 1/sources_tmp.max()
+        # sources_tmp *= scaler
 
         # Perform Matmul
-        result = np.matmul(leadfield.astype(np.float32), sources_tmp.astype(np.float32))
-        # Reshape result
-        result = result.reshape(result.shape[0], n_samples, n_timepoints)
+        result = np.matmul(leadfield.astype(np.float32), sources.astype(np.float32))
 
         # Rescale
-        result /= scaler
+        # result /= scaler
 
         return result
 
