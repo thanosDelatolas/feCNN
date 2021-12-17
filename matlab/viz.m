@@ -10,7 +10,9 @@ eeg = double(readNPY('/home/thanos/Downloads/eeg.npy'));
 
 sources = double(readNPY('/home/thanos/Downloads/sources.npy'));
 
-le = double(readNPY('../duneuropy/DataOut/leadfield.npy'));
+load('../duneuropy/Data/dipoles.mat')
+
+%le = double(readNPY('../duneuropy/DataOut/leadfield.npy'));
 % 
 % eeg_m = le' * sources;
 
@@ -22,7 +24,6 @@ layout = '/home/thanos/fieldtrip/template/layout/EEG1010.lay';
 n_samples = size(eeg,2);
 sample = randi([1 n_samples],1,1);
 
-%sample = 10;
 
 eeg_s = eeg(:,sample);
 
@@ -37,11 +38,11 @@ tpos=lay.pos(idx,:);
 [Zi, Yi, Xi ] = ft_plot_topo(sensors_1010(:,1),sensors_1010(:,2),eeg_s,'mask',lay.mask,'outline',lay.outline);
 
 
-Zi = replace_nan(Zi);
+Zi = -replace_nan(Zi);
 figure;
 subplot(1,2,1)
 fac = 0.9;
-contourf(Xi,Yi,-Zi);
+contourf(Xi,Yi,Zi);
 hold on;
 scatter(sensors_1010(:,1),sensors_1010(:,2),100,'k','.');
 hold on;
@@ -55,7 +56,7 @@ colorbar;
 
 % figure; ft_plot_topo3d(sensors,eeg_s); title('ft\_plot\_topo3d'); colorbar;
 
-load('../duneuropy/Data/dipoles.mat')
+
 source = sources(:, sample);
 loc = cd_matrix(:,1:3);
 subplot(1,2,2);

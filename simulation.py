@@ -1,5 +1,5 @@
 from joblib import Parallel, delayed
-from tqdm import tqdm
+from tqdm.autonotebook import tqdm
 import numpy as np
 import random
 import colorednoise as cn
@@ -14,6 +14,7 @@ DEFAULT_SETTINGS = {
     'amplitudes': (5, 10), #  int/float/tuple/list, the electrical current of the source in nAm
     'shapes': 'gaussian', # str,  How the amplitudes evolve over space. Can be 'gaussian' for now.
 }
+
 class Simulation:
     ''' Simulate EEG and sources data.
     '''
@@ -37,7 +38,33 @@ class Simulation:
             self.simulated = False
             self.source_data = None
             self.eeg_data = None
-            
+    
+    
+    def create_train_dataset(self, times_each_dipole):
+        ''' This method creates the trainning dataset which has 50460 * times_each_dipole  source spaces. 
+            Each dipole is selected times_each_dipole as a seed location while the electrical current of the dipole 
+            and the extent of the activation are selected randomly.
+
+            The shape of the simulated sources will be times_each_dipole * 50460, 50460.
+
+            Hence, times_each_dipole * 50460 different source spaces will be created.
+        '''
+        if self.simulated:
+            print('The data are already simulated.')
+            return
+
+        n_dipoles = self.fwd.leadfield.shape[1]
+        n_samples = times_each_dipole * n_dipoles
+        print('Sources Simulation')
+        sources = np.stack([self.simulate_source(src_center=dipole % n_dipoles) \
+            for dipole in tqdm(range(n_samples))], axis=0)
+        
+        self.source_data = sources
+        # The eeg data will be created from matlab
+        #self.eeg_data = self.simulate_eeg()
+        
+        self.simulated = True
+        
 
     def simulate(self, n_samples=10000):
         ''' Simulate sources and EEG data'''
@@ -46,15 +73,9 @@ class Simulation:
             return
 
         self.source_data = self.simulate_sources(n_samples)
-        self.eeg_data = self.simulate_eeg()
-
-        n_elec = self.eeg_data.shape[0]
-        n_dipoles = self.source_data.shape[0]
-
-        self.eeg_data = np.squeeze(self.eeg_data)
-        self.source_data = np.squeeze(self.source_data)
-        
+        self.eeg_data = self.simulate_eeg()        
         self.simulated = True
+
 
     def simulate_sources(self, n_samples):
         
@@ -72,7 +93,7 @@ class Simulation:
         source_data = source_data.T
         return source_data
 
-    def simulate_source(self):
+    def simulate_source(self, src_center=-1):
         ''' Returns a vector containing the dipole currents. Requires only a 
         dipole position list and the simulation settings.
 
@@ -89,10 +110,11 @@ class Simulation:
             the electrical current of the source in nAm
         shapes : str
             How the amplitudes evolve over space. Can be 'gaussian' for now.
-        
+        src_center : int, 
+            if src_center is already decided. If not -1 then it will be chosen randomly.
         Return
         ------
-        source : numpy.ndarray, (n_dipoles x n_samples), the simulated value of its dipole
+        source : numpy.ndarray, (n_dipoles,), the simulated value of its dipole
         '''
 
         # Get a random sources number in range:
@@ -112,8 +134,11 @@ class Simulation:
         amplitudes = [self.get_from_range(self.settings['amplitudes'], dtype=float) * 1e-9 for _ in range(number_of_sources)]
 
         # Get source centers
-        src_centers = np.random.choice(np.arange(self.fwd.leadfield.shape[1]), \
-            number_of_sources, replace=False)
+        if src_center != -1 :
+            src_centers = np.random.choice(np.arange(self.fwd.leadfield.shape[1]), \
+                number_of_sources, replace=False)
+        else :
+            src_centers = [src_center]
 
         signal_length = 1
         signals = [np.array([1])]*number_of_sources
