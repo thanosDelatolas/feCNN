@@ -54,14 +54,13 @@ class Simulation:
             return
 
         n_dipoles = self.fwd.leadfield.shape[1]
-        n_samples = times_each_dipole * n_dipoles
+        n_samples = int(times_each_dipole * n_dipoles)
         print('Sources Simulation')
         sources = np.stack([self.simulate_source(src_center=dipole % n_dipoles) \
             for dipole in tqdm(range(n_samples))], axis=0)
         
-        self.source_data = sources
-        # The eeg data will be created from matlab
-        #self.eeg_data = self.simulate_eeg()
+        self.source_data = sources.T      
+        self.eeg_data = self.simulate_eeg()
         
         self.simulated = True
         
@@ -204,6 +203,9 @@ class Simulation:
         '''
         print('Project sources to EEG.')
         leadfield = self.fwd.leadfield
+
+        if leadfield.shape[1] != sources.shape[0] :
+            sources = sources.T
 
         # Scale to allow for lower precision
         # scaler = 1/sources_tmp.max()

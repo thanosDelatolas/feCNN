@@ -1,3 +1,4 @@
+%% load data
 clear; close all; clc;
 
 import_fieldtrip();
@@ -6,20 +7,20 @@ import_fieldtrip();
 sensor_labels = split(sensor_labels{4});
 sensor_labels = sensor_labels(1:end-1);
 
-eeg = double(readNPY('/home/thanos/Downloads/eeg.npy'));
+eeg = double(readNPY('/media/thanos/Elements/thanos/sim_data/sim_type_1/eeg_2TeD.npy'));
 
-sources = double(readNPY('/home/thanos/Downloads/sources.npy'));
+sources = double(readNPY('/media/thanos/Elements/thanos/sim_data/sim_type_1/sources_2TeD.npy'));
 
 load('../duneuropy/Data/dipoles.mat')
 
 %le = double(readNPY('../duneuropy/DataOut/leadfield.npy'));
-% 
-% eeg_m = le' * sources;
 
 
 layout = '/home/thanos/fieldtrip/template/layout/EEG1010.lay';
 
 [sensors_1010, lay] = compatible_elec(sensor_labels, layout);
+
+%% Visualize random dipole
 
 n_samples = size(eeg,2);
 sample = randi([1 n_samples],1,1);
@@ -27,7 +28,7 @@ sample = randi([1 n_samples],1,1);
 
 eeg_s = eeg(:,sample);
 
-% eeg_m_s = eeg_m(:, sample);
+
 % scatter3(sensors(:,1),sensors(:,2),sensors(:,3),73,eeg_s,'.')
 
 idx = ismember(sensor_labels, lay.label)';
@@ -36,7 +37,6 @@ tlabels=lay.label(idx)';
 tpos=lay.pos(idx,:);
 
 [Zi, Yi, Xi ] = ft_plot_topo(sensors_1010(:,1),sensors_1010(:,2),eeg_s,'mask',lay.mask,'outline',lay.outline);
-
 
 Zi = -replace_nan(Zi);
 figure;
