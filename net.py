@@ -3,7 +3,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.models import load_model
-from tensorflow.keras.layers import (Dense, Dropout, Conv2D, Flatten, MaxPooling2D, Conv1D) 
+from tensorflow.keras.layers import (Dense, Dropout, Conv2D, Flatten, MaxPooling2D, Conv1D, BatchNormalization) 
 from copy import deepcopy
 from sklearn.model_selection import train_test_split
 import datetime
@@ -38,7 +38,8 @@ class NN:
     '''
 
     def __init__(self, sim, activation_function='ReLU', verbose=True):
-        self.sim = deepcopy(sim)
+        #self.sim = deepcopy(sim)
+        self.sim = sim
 
         self.n_elec = self.sim.fwd.leadfield.shape[0]
         self.n_dipoles = self.sim.fwd.leadfield.shape[1]
@@ -178,13 +179,9 @@ class NN:
         '''
             Returns a custom learning rate that decreases as epochs progress.
         '''
-        learning_rate = 0.075
-        if epoch > 10:
-            learning_rate = 0.02
-        if epoch > 20:
-            learning_rate = 0.01
+        learning_rate = 0.01
         if epoch > 40:
-            learning_rate = 0.005
+            learning_rate = 0.001
 
         tf.summary.scalar('learning rate', data=learning_rate, step=epoch)
         return learning_rate
@@ -349,9 +346,13 @@ class EEG_CNN(NN):
             self.model.add(Conv2D(8, kernel_size=(3, 3), activation='sigmoid'))
             # self.model.add(Dropout(0.25))
             self.model.add(Flatten())
+            self.model.add(BatchNormalization())
             self.model.add(Dense(512, activation='sigmoid'))
+            self.model.add(BatchNormalization())
             self.model.add(Dense(1024, activation='sigmoid'))
+            self.model.add(BatchNormalization())
             self.model.add(Dense(2048, activation='sigmoid'))
+            self.model.add(BatchNormalization())
             # Add output layer
             self.model.add(Dense(self.n_dipoles, activation='relu', name='OutputLayer'))
 
@@ -386,8 +387,6 @@ class EEG_CNN(NN):
         es = tf.keras.callbacks.EarlyStopping(monitor='val_loss', \
             mode='min', patience=patience, restore_best_weights=True,verbose=1)
 
-        optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
-        #optimizer = tf.keras.optimizers.SGD(learning_rate=learning_rate)
 
         if loss == None:
             # loss = self.default_loss(weight=false_positive_penalty, delta=delta)
@@ -398,7 +397,10 @@ class EEG_CNN(NN):
             #tf.keras.metrics.MeanAbsolutePercentageError(name="MAPE")            
         ]
 
-        # lr_callback = keras.callbacks.LearningRateScheduler(NN.lr_schedule)
+        optimizer = tf.keras.optimizers.Adam()
+        #optimizer = tf.keras.optimizers.SGD(learning_rate=learning_rate)
+
+        lr_callback = keras.callbacks.LearningRateScheduler(NN.lr_schedule)
 
         if not self.compiled:
             self.model.compile(optimizer, loss, metrics=metrics)
@@ -406,7 +408,7 @@ class EEG_CNN(NN):
 
         history = self.model.fit(x, y, 
                 epochs=epochs, batch_size=batch_size, shuffle=True, 
-                validation_split=validation_split, callbacks=[es, tensorboard_callback])
+                validation_split=validation_split, callbacks=[es, tensorboard_callback, lr_callback])
         self.trained = True
         
         return history, tensorboard_dir
