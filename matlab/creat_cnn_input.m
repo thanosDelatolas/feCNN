@@ -6,9 +6,9 @@ import_fieldtrip();
 sensor_labels = split(sensor_labels{4});
 sensor_labels = sensor_labels(1:end-1);
 
-eeg = double(readNPY('/media/thanos/Elements/thanos/sim_data/sim_type_1/eeg_2TeD.npy'));
+eeg = double(readNPY('../../../Downloads/eeg.npy'));
 
-%sources = double(readNPY('/media/thanos/Elements/thanos/sim_data/sim_type_1/sources_2TeD.npy'));
+%sources = double(readNPY('../../../Downloads/sources.npy'));
 
 layout = '/home/thanos/fieldtrip/template/layout/EEG1010.lay';
 
@@ -50,6 +50,6 @@ end
 toc;
 
 close(w_bar);
-save('/media/thanos/Elements/thanos/sim_data/sim_type_1/eeg_2TeD_topos.mat', 'eeg_topos', '-v7.3')
-save('/media/thanos/Elements/thanos/sim_data/sim_type_1/eeg_2TeD_topos_xi.mat', 'eeg_Xi', '-v7.3')
-save('/media/thanos/Elements/thanos/sim_data/sim_type_1/eeg_2TeD_topos_yi.mat', 'eeg_Yi', '-v7.3')
+save('../../../Downloads/eeg_topos_eval.mat', 'eeg_topos', '-v7.3')
+save('../../../Downloads/eeg_topos_eval_xi.mat', 'eeg_Xi', '-v7.3')
+save('../../../Downloads/eeg_topos_eval_yi.mat', 'eeg_Yi', '-v7.3')

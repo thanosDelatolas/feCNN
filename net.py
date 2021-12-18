@@ -61,7 +61,7 @@ class NN:
         pass
 
     @abstractmethod
-    def fit(self, learning_rate=0.01, 
+    def fit(self, learning_rate=0.001, 
         validation_split=0.2, epochs=50, 
         false_positive_penalty=2, delta=1., batch_size=100, 
         loss=None, patience=5
@@ -225,7 +225,7 @@ class EEGMLP(NN):
                 tf.keras.utils.plot_model(self.model, to_file=img, show_shapes=True)
                 visualkeras.layered_view(self.model, legend=True,  to_file=img_keras)  
 
-    def fit(self, learning_rate=0.01, 
+    def fit(self, learning_rate=0.001, 
         validation_split=0.2, epochs=50, 
         false_positive_penalty=2, delta=1., batch_size=100, 
         loss=None, patience=5
@@ -363,7 +363,7 @@ class EEG_CNN(NN):
                 tf.keras.utils.plot_model(self.model, to_file=img, show_shapes=True)
                 visualkeras.layered_view(self.model, legend=True,  to_file=img_keras)  
     
-    def fit(self, learning_rate=0.01, 
+    def fit(self, learning_rate=0.001, 
         validation_split=0.2, epochs=50,
         false_positive_penalty=2, delta=1., batch_size=100, 
         loss=None, patience=5
@@ -389,18 +389,18 @@ class EEG_CNN(NN):
 
 
         if loss == None:
-            # loss = self.default_loss(weight=false_positive_penalty, delta=delta)
-            loss = 'MSE'
+            loss = self.default_loss(weight=false_positive_penalty, delta=delta)
+            # loss = 'MSE'
 
         metrics = [tf.keras.metrics.MeanAbsoluteError(name="MAE"), 
-            tf.keras.metrics.RootMeanSquaredError(name="RMSE"),
-            #tf.keras.metrics.MeanAbsolutePercentageError(name="MAPE")            
+            tf.keras.metrics.MeanAbsolutePercentageError(name="MAPE"),
+            self.default_loss(weight=false_positive_penalty, delta=delta)           
         ]
 
-        optimizer = tf.keras.optimizers.Adam()
-        #optimizer = tf.keras.optimizers.SGD(learning_rate=learning_rate)
+        #optimizer = tf.keras.optimizers.Adam()
+        optimizer = tf.keras.optimizers.SGD(learning_rate=learning_rate)
 
-        lr_callback = keras.callbacks.LearningRateScheduler(NN.lr_schedule)
+        #lr_callback = keras.callbacks.LearningRateScheduler(NN.lr_schedule)
 
         if not self.compiled:
             self.model.compile(optimizer, loss, metrics=metrics)
@@ -408,7 +408,7 @@ class EEG_CNN(NN):
 
         history = self.model.fit(x, y, 
                 epochs=epochs, batch_size=batch_size, shuffle=True, 
-                validation_split=validation_split, callbacks=[es, tensorboard_callback, lr_callback])
+                validation_split=validation_split, callbacks=[es, tensorboard_callback])
         self.trained = True
         
         return history, tensorboard_dir
