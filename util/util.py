@@ -123,3 +123,10 @@ def load_object(filename):
     with open(filename, 'rb') as outp:  
         obj = pickle.load(outp)
     return obj
+
+
+def scale_array(array):
+        ''' Scales an array.
+        Usually, prior to training the neural network
+        '''
+        return array/np.max(array)

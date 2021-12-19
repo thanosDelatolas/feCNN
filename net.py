@@ -13,6 +13,7 @@ import pickle
 import numpy as np
 
 import losses
+import util
 
 time_str = datetime.datetime.now().strftime('%d_%m_%Y__%H:%M:%S')
 
@@ -26,9 +27,6 @@ class NN:
         eeg_topographies : ndarray (n_samples,67,67)
             A set of topographies for each eeg signal in simulation. This argument is necessary for the CNN only.
 
-        activation_function : str or tf.keras.activations
-            The activation function used for each fully connected layer.
-
         Methods
         -------
         fit : trains the neural network with the EEG and source data
@@ -37,7 +35,7 @@ class NN:
         evaluate : evaluate the performance of the model
     '''
 
-    def __init__(self, sim, activation_function='ReLU', verbose=True):
+    def __init__(self, sim, verbose=True):
         #self.sim = deepcopy(sim)
         self.sim = sim
 
@@ -46,7 +44,6 @@ class NN:
 
         # simulation's samples
         self.n_samples = self.sim.eeg_data.shape[1]
-        self.activation_function = activation_function
         self.compiled = False
 
         self.default_loss = losses.weighted_huber_loss
@@ -110,24 +107,6 @@ class NN:
         else:
             raise AttributeError('The model must be trained first.')
 
-    @abstractmethod
-    def evaluate_nmse(self, eeg, sources):
-        ''' Evaluate the model regarding normalized mean squared error
-        
-        Parameters
-        ----------         
-            eeg : numpy.ndarray
-                The simulated EEG data
-            sources : numpy.ndarray
-                The simulated EEG data
-
-        Return
-        ------
-        normalized_mean_squared_errors : numpy.ndarray
-            The normalized mean squared error of each sample
-        '''
-
-        pass
 
     @abstractmethod
     def evaluate_mse(self, eeg, sources):
@@ -186,6 +165,7 @@ class NN:
         tf.summary.scalar('learning rate', data=learning_rate, step=epoch)
         return learning_rate
 
+
     
 class EEGMLP(NN):
     '''  An MLP nueral network
@@ -207,13 +187,13 @@ class EEGMLP(NN):
             self.model.add(keras.Input(shape=(self.n_elec,), name='InputLayer'))
 
             # first hidden layer with 256 neurons.
-            self.model.add(Dense(units=256, activation=self.activation_function, name='Hidden-1'))
+            self.model.add(Dense(units=256, activation='relu', name='Hidden-1'))
 
             # second hidden layer with 512 neurons.
-            self.model.add(Dense(units=512, activation=self.activation_function, name='Hidden-2'))
+            self.model.add(Dense(units=512, activation='relu', name='Hidden-2'))
 
             # third hidden layer with 1024 neurons.
-            self.model.add(Dense(units=1024, activation=self.activation_function, name='Hidden-3'))            
+            self.model.add(Dense(units=1024, activation='relu', name='Hidden-3'))            
 
             # Add output layer
             self.model.add(Dense(self.n_dipoles, activation='linear', name='OutputLayer'))
@@ -276,24 +256,6 @@ class EEGMLP(NN):
         return history, tensorboard_dir
 
     
-    def evaluate_nmse(self, eeg, sources):
-        ''' Evaluate the model regarding normalized mean squared error
-        '''
-
-        if self.trained:
-            if eeg.shape[1]  != sources.shape[1]:
-                raise AttributeError('EEG and Sources data must have the same amount of samples.')
-            predicted_sources = self.predict(eeg=eeg.T).T
-
-            sources /= np.max(sources)
-            predicted_sources /= np.max(predicted_sources)
-            
-            normalized_mean_squared_errors = np.mean((predicted_sources - sources)**2, axis=0)
-            return normalized_mean_squared_errors
-            
-        else :
-            print('The model must be trained')
-    
     def evaluate_mse(self, eeg, sources):
         ''' Evaluate the model regarding mean squared error
 
@@ -319,8 +281,8 @@ class EEG_CNN(NN):
         in simulations.
     '''
 
-    def __init__(self, sim, eeg_topographies ,activation_function='ReLU', verbose=True):
-        super().__init__(sim, activation_function, verbose)
+    def __init__(self, sim, eeg_topographies, verbose=True):
+        super().__init__(sim, verbose)
 
         if len(eeg_topographies.shape) != 3 :
             raise AttributeError('The set of topographies must be a 3D-array. (n_samples x xpxiels x ypixels)')
@@ -343,15 +305,14 @@ class EEG_CNN(NN):
 
             # add input layer
             self.model.add(keras.Input(shape=(self.eeg_topographies.shape[1], self.eeg_topographies.shape[2],1), name='Input'))
-            self.model.add(Conv2D(8, kernel_size=(3, 3), activation='sigmoid'))
-            # self.model.add(Dropout(0.25))
-            self.model.add(Flatten())
+            self.model.add(Conv2D(8, kernel_size=(3, 3), activation='relu'))
             self.model.add(BatchNormalization())
-            self.model.add(Dense(512, activation='sigmoid'))
+            self.model.add(Flatten())            
+            self.model.add(Dense(512, activation='relu'))
             self.model.add(BatchNormalization())
-            self.model.add(Dense(1024, activation='sigmoid'))
+            self.model.add(Dense(1024, activation='relu'))
             self.model.add(BatchNormalization())
-            self.model.add(Dense(2048, activation='sigmoid'))
+            self.model.add(Dense(2048, activation='relu'))
             self.model.add(BatchNormalization())
             # Add output layer
             self.model.add(Dense(self.n_dipoles, activation='relu', name='OutputLayer'))
@@ -392,51 +353,28 @@ class EEG_CNN(NN):
             loss = self.default_loss(weight=false_positive_penalty, delta=delta)
             # loss = 'MSE'
 
-        metrics = [tf.keras.metrics.MeanAbsoluteError(name="MAE"), 
-            tf.keras.metrics.MeanAbsolutePercentageError(name="MAPE"),
+        metrics = [tf.keras.metrics.MeanAbsolutePercentageError(name="MAPE"),
             self.default_loss(weight=false_positive_penalty, delta=delta)           
         ]
 
-        #optimizer = tf.keras.optimizers.Adam()
-        optimizer = tf.keras.optimizers.SGD(learning_rate=learning_rate)
-
         #lr_callback = keras.callbacks.LearningRateScheduler(NN.lr_schedule)
+        optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
 
         if not self.compiled:
             self.model.compile(optimizer, loss, metrics=metrics)
             self.compiled = True
 
-        history = self.model.fit(x, y, 
+
+        y_scaled = util.scale_array(y)
+        x_scaled = util.scale_array(x)
+
+        # scale topos and sources
+        history = self.model.fit(x_scaled, y_scaled, 
                 epochs=epochs, batch_size=batch_size, shuffle=True, 
                 validation_split=validation_split, callbacks=[es, tensorboard_callback])
         self.trained = True
         
         return history, tensorboard_dir
-
-    
-    def evaluate_nmse(self, eeg, sources):
-        ''' Evaluate the model regarding normalized mean squared error
-        
-            The eeg parapameter must be the eeg- topographies.
-        '''
-
-        if self.trained:
-
-            if len(eeg.shape) != 3 :
-                raise AttributeError('The set of topographies must be a 3D-array. (n_samples x xpxiels x ypixels)')
-            elif eeg.shape[0] != sources.shape[1] :
-                raise AttributeError('Incompatible sim and topographies.')
-
-            predicted_sources = self.predict(eeg=eeg).T
-
-            sources /= np.max(sources)
-            predicted_sources /= np.max(predicted_sources)
-            
-            normalized_mean_squared_errors = np.mean((predicted_sources - sources)**2, axis=0)
-            return normalized_mean_squared_errors
-            
-        else :
-            print('The model must be trained')
 
     
     def evaluate_mse(self, eeg, sources):
