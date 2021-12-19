@@ -97,7 +97,7 @@ class Simulation:
         dipole position list and the simulation settings.
 
         Parameters (located in the settings dict).
-        ----------
+        ----------src_center
         forward : The forward object located in forward.py
         number_of_sources : int/tuple/list
             number of sources. Can be a single number or a list of two 
@@ -133,11 +133,13 @@ class Simulation:
         amplitudes = [self.get_from_range(self.settings['amplitudes'], dtype=float) * 1e-9 for _ in range(number_of_sources)]
 
         # Get source centers
-        if src_center != -1 :
+        if src_center == -1 :
             src_centers = np.random.choice(np.arange(self.fwd.leadfield.shape[1]), \
                 number_of_sources, replace=False)
         else :
             src_centers = [src_center]
+
+        print(src_centers)
 
         signal_length = 1
         signals = [np.array([1])]*number_of_sources
@@ -146,8 +148,8 @@ class Simulation:
 
         ##############################################
         # Loop through source centers (i.e. seeds of source positions)
-        for i, (src_center, shape, amplitude, signal) in enumerate(zip(src_centers, shapes, amplitudes, signals)):
-            dists = np.sqrt(np.sum((self.fwd.dipoles - self.fwd.dipoles[src_center, :])**2, axis=1))
+        for i, (center, shape, amplitude, signal) in enumerate(zip(src_centers, shapes, amplitudes, signals)):
+            dists = np.sqrt(np.sum((self.fwd.dipoles - self.fwd.dipoles[center, :])**2, axis=1))
             d = np.where(dists<extents[i]/2)[0]
 
             if shape == 'gaussian':

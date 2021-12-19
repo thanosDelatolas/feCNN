@@ -3,12 +3,12 @@ clear; close all; clc;
 
 load('../duneuropy/Data/dipoles.mat')
 
-sources = readNPY('/home/thanos/Downloads/eval_100/sources.npy');
-predicted_sources = readNPY('/home/thanos/Downloads/eval_100/predicted_sources.npy');
+sources = readNPY('/media/thanos/Elements/thanos/sim_data/sim_type_1/eval_100/sources.npy');
+predicted_sources = readNPY('../../../Downloads/predicted_sources.npy');
 
-load('/home/thanos/Downloads/eval_100/eeg_topos_eval.mat')
-load('/home/thanos/Downloads/eval_100/eeg_topos_eval_xi.mat')
-load('/home/thanos/Downloads/eval_100/eeg_topos_eval_yi.mat')
+load('/media/thanos/Elements/thanos/sim_data/sim_type_1/eval_100/eeg_topos_eval.mat')
+load('/media/thanos/Elements/thanos/sim_data/sim_type_1/eval_100/eeg_topos_eval_xi.mat')
+load('/media/thanos/Elements/thanos/sim_data/sim_type_1/eval_100/eeg_topos_eval_yi.mat')
 
 %% visualize
 
