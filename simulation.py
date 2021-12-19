@@ -138,9 +138,7 @@ class Simulation:
                 number_of_sources, replace=False)
         else :
             src_centers = [src_center]
-
-        print(src_centers)
-
+            
         signal_length = 1
         signals = [np.array([1])]*number_of_sources
         

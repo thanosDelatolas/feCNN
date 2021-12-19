@@ -353,7 +353,7 @@ class EEG_CNN(NN):
             loss = self.default_loss(weight=false_positive_penalty, delta=delta)
             # loss = 'MSE'
 
-        metrics = [tf.keras.metrics.MeanAbsolutePercentageError(name="MAPE"),
+        metrics = [#tf.keras.metrics.MeanAbsolutePercentageError(name="MAPE"),
             self.default_loss(weight=false_positive_penalty, delta=delta)           
         ]
 
