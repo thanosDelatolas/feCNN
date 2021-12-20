@@ -326,7 +326,7 @@ class EEG_CNN(NN):
     
     def fit(self, learning_rate=0.001, 
         validation_split=0.2, epochs=50,
-        false_positive_penalty=2, delta=1., batch_size=100, 
+        false_positive_penalty=20, delta=1., batch_size=100, 
         loss=None, patience=5
     ):
 
@@ -364,9 +364,9 @@ class EEG_CNN(NN):
             self.model.compile(optimizer, loss, metrics=metrics)
             self.compiled = True
 
-
-        y_scaled = util.scale_array(y)
+        
         x_scaled = util.scale_array(x)
+        y_scaled = util.scale_array(y)
 
         # scale topos and sources
         history = self.model.fit(x_scaled, y_scaled, 

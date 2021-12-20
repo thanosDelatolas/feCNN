@@ -129,4 +129,7 @@ def scale_array(array):
         ''' Scales an array.
         Usually, prior to training the neural network
         '''
-        return array/np.max(array)
+        for i in range(array.shape[0]):
+            array[i,:]/= np.max(array[i])
+            
+        return array
