@@ -196,7 +196,7 @@ class EEGMLP(NN):
             self.model.add(Dense(units=1024, activation='relu', name='Hidden-3'))            
 
             # Add output layer
-            self.model.add(Dense(self.n_dipoles, activation='linear', name='OutputLayer'))
+            self.model.add(Dense(self.n_dipoles, activation='relu', name='OutputLayer'))
 
             if self.verbose:
                 self.model.summary()
@@ -235,8 +235,8 @@ class EEGMLP(NN):
         if loss == None:
             loss = self.default_loss(weight=false_positive_penalty, delta=delta)
         
-        metrics = [tf.keras.metrics.MeanAbsoluteError(name="MAE"), 
-            tf.keras.metrics.RootMeanSquaredError(name="RMSE"),
+        metrics = [#tf.keras.metrics.MeanAbsoluteError(name="MAE"), 
+            self.default_loss(weight=false_positive_penalty, delta=delta)
             #tf.keras.metrics.MeanAbsolutePercentageError(name="MAPE")            
         ]
 
@@ -305,8 +305,8 @@ class EEG_CNN(NN):
 
             # add input layer
             self.model.add(keras.Input(shape=(self.eeg_topographies.shape[1], self.eeg_topographies.shape[2],1), name='Input'))
-            self.model.add(Conv2D(8, kernel_size=(3, 3), activation='relu'))
-            self.model.add(BatchNormalization())
+            self.model.add(Conv2D(32, kernel_size=(3, 3), activation='relu'))
+            #self.model.add(BatchNormalization())
             self.model.add(Flatten())            
             self.model.add(Dense(512, activation='relu'))
             self.model.add(BatchNormalization())
@@ -326,7 +326,7 @@ class EEG_CNN(NN):
     
     def fit(self, learning_rate=0.001, 
         validation_split=0.2, epochs=50,
-        false_positive_penalty=20, delta=1., batch_size=100, 
+        false_positive_penalty=10, delta=1., batch_size=100, 
         loss=None, patience=5
     ):
 
