@@ -148,7 +148,8 @@ class NN:
             The simulation object must be the same with the one that it was used during trainning. 
         '''
         self.model = load_model(model_filename,  compile=False)
-        self.compiled = False
+        self.compiled = True
+        self.trained = True
         print('Loaded model in', self.__class__.__name__,':')
         self.model.summary()
 
