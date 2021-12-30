@@ -40,7 +40,7 @@ class NN:
         self.sim = sim
 
         self.n_elec = self.sim.fwd.leadfield.shape[0]
-        self.n_dipoles = self.sim.fwd.leadfield.shape[1]
+        self.n_dipoles = self.sim.source_data.shape[0]  # self.sim.fwd.leadfield.shape[1] (not for region dataset)
 
         # simulation's samples
         self.n_samples = self.sim.eeg_data.shape[1]
@@ -60,7 +60,7 @@ class NN:
     @abstractmethod
     def fit(self, learning_rate=0.001, 
         validation_split=0.2, epochs=50, 
-        false_positive_penalty=2, delta=1., batch_size=100, 
+        false_positive_penalty=2, delta=1., batch_size=32, 
         loss=None, patience=5
     ):
         ''' Train the neural network using training data (eeg) and labels (sources).
@@ -207,7 +207,7 @@ class EEGMLP(NN):
 
     def fit(self, learning_rate=0.001, 
         validation_split=0.2, epochs=50, 
-        false_positive_penalty=2, delta=1., batch_size=100, 
+        false_positive_penalty=2, delta=1., batch_size=32, 
         loss=None, patience=5
     ):
 
@@ -326,7 +326,7 @@ class EEG_CNN(NN):
     
     def fit(self, learning_rate=0.001, 
         validation_split=0.2, epochs=50,
-        false_positive_penalty=10, delta=1., batch_size=100, 
+        false_positive_penalty=10, delta=1., batch_size=32, 
         loss=None, patience=5
     ):
 
@@ -397,3 +397,97 @@ class EEG_CNN(NN):
             return mean_squared_errors
         else :
             print('The model must be trained first.')
+
+    
+class Region_CNN(EEG_CNN):
+    ''' A CNN to solve the inverse problem for a specific region.
+        The region must be in the simulation object
+    '''
+    def __init__(self, sim, eeg_topographies, verbose=True):
+        super().__init__(sim, eeg_topographies, verbose)
+
+
+    def build_model(self):
+        ''' Build the neural network architecture using the 
+        tensorflow.keras.Sequential() API. 
+
+        The architecture is a CNN with three hidden layers.
+        
+        '''
+        if not self.compiled :
+            # Build the artificial neural network model using Dense layers.
+            self.model = keras.Sequential()
+
+            # add input layer
+            self.model.add(keras.Input(shape=(self.eeg_topographies.shape[1], self.eeg_topographies.shape[2],1), name='Input'))
+            self.model.add(Conv2D(32, kernel_size=(3, 3), activation='relu'))
+            #self.model.add(BatchNormalization())
+            self.model.add(Flatten())            
+            self.model.add(Dense(1024, activation='relu'))
+            self.model.add(BatchNormalization())
+            self.model.add(Dense(1024, activation='relu'))
+            self.model.add(BatchNormalization())
+            self.model.add(Dense(1024, activation='relu'))
+            self.model.add(BatchNormalization())
+            # Add output layer
+            self.model.add(Dense(self.n_dipoles, activation='relu', name='OutputLayer'))
+
+            if self.verbose:
+                self.model.summary()
+                img = './assets/Region-CNN.png'
+                img_keras = './assets/Region-CNN-visual-keras.png'
+                tf.keras.utils.plot_model(self.model, to_file=img, show_shapes=True)
+                visualkeras.layered_view(self.model, legend=True,  to_file=img_keras)  
+    
+
+    def fit(self, learning_rate=0.001, 
+        validation_split=0.2, epochs=50,
+        false_positive_penalty=10, delta=1., batch_size=32, 
+        loss=None, patience=5
+    ):
+
+        if len(self.sim.eeg_data.shape) != 2 :
+            raise AttributeError("EEG data must be 2D (n_elctrodes x n_samples")
+        elif len(self.sim.source_data.shape) != 2 :
+            raise AttributeError("Sources data must be 2D (n_dipoles x n_samples")
+
+        tensorboard_dir = 'logs/Region-CNN-Model-{}'.format(time_str)
+        tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=tensorboard_dir)
+
+        # Input data
+        x = self.eeg_topographies       
+
+        # Target data
+        y = self.sim.source_data.T        
+
+        # early stoping
+        es = tf.keras.callbacks.EarlyStopping(monitor='val_loss', \
+            mode='min', patience=patience, restore_best_weights=True,verbose=1)
+
+
+        if loss == None:
+            loss = self.default_loss(weight=false_positive_penalty, delta=delta)
+            # loss = 'MSE'
+
+        metrics = [#tf.keras.metrics.MeanAbsolutePercentageError(name="MAPE"),
+            self.default_loss(weight=false_positive_penalty, delta=delta)           
+        ]
+
+        #lr_callback = keras.callbacks.LearningRateScheduler(NN.lr_schedule)
+        optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
+
+        if not self.compiled:
+            self.model.compile(optimizer, loss, metrics=metrics)
+            self.compiled = True
+
+        
+        x_scaled = util.scale_array(x)
+        y_scaled = util.scale_array(y)
+
+        # scale topos and sources
+        history = self.model.fit(x_scaled, y_scaled, 
+                epochs=epochs, batch_size=batch_size, shuffle=True, 
+                validation_split=validation_split, callbacks=[es, tensorboard_callback])
+        self.trained = True
+        
+        return history, tensorboard_dir

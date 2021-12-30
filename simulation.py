@@ -40,7 +40,7 @@ class Simulation:
             self.eeg_data = None
     
     
-    def create_train_dataset(self, times_each_dipole):
+    def create_dipoles_dataset(self, times_each_dipole):
         ''' This method creates the trainning dataset which has 50460 * times_each_dipole  source spaces. 
             Each dipole is selected times_each_dipole as a seed location while the electrical current of the dipole 
             and the extent of the activation are selected randomly.
@@ -63,8 +63,25 @@ class Simulation:
         self.eeg_data = self.simulate_eeg()
         
         self.simulated = True
-        
+    
+    def create_region_dataset(self,first_dipole, last_dipole, n_samples=100000):
+        ''' This method creates a simulation for a spesific region. 
+        '''
+        if self.simulated:
+            print('The data are already simulated.')
+            return
 
+        assert last_dipole > first_dipole
+        
+        print('Creating simulation for dipoles',first_dipole,'to',last_dipole)
+        sources = np.stack([self.simulate_source(src_center= (dipole % (last_dipole - first_dipole + 1)) + first_dipole) \
+            for dipole in tqdm(range(n_samples))], axis=0)
+        
+        self.source_data = sources.T      
+        self.eeg_data = self.simulate_eeg()
+        
+        self.simulated = True
+        
     def simulate(self, n_samples=10000):
         ''' Simulate sources and EEG data'''
         if self.simulated :
@@ -115,7 +132,7 @@ class Simulation:
         ------
         source : numpy.ndarray, (n_dipoles,), the simulated value of its dipole
         '''
-
+        
         # Get a random sources number in range:
         number_of_sources = self.get_from_range(self.settings['number_of_sources'], dtype=int)
 

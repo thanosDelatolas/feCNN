@@ -7,9 +7,9 @@ import_fieldtrip();
 sensor_labels = split(sensor_labels{4});
 sensor_labels = sensor_labels(1:end-1);
 
-eeg = double(readNPY('/media/thanos/Elements/thanos/sim_data/sim_type_1/eeg_2TeD.npy'));
+eeg = double(readNPY('../../../Downloads/eeg_regions.npy'));
 
-sources = double(readNPY('/media/thanos/Elements/thanos/sim_data/sim_type_1/sources_2TeD.npy'));
+sources = double(readNPY(''));
 
 load('../duneuropy/Data/dipoles.mat')
 
