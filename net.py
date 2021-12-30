@@ -198,8 +198,8 @@ class EEGMLP(NN):
             # Add output layer
             self.model.add(Dense(self.n_dipoles, activation='relu', name='OutputLayer'))
 
+            self.model.summary()
             if self.verbose:
-                self.model.summary()
                 img = './assets/MLP.png'
                 img_keras = './assets/MLP-visual-keras.png'
                 tf.keras.utils.plot_model(self.model, to_file=img, show_shapes=True)
@@ -289,7 +289,7 @@ class EEG_CNN(NN):
         elif eeg_topographies.shape[0] != self.n_samples :
             raise AttributeError('Incompatible sim and topographies.')
         
-        self.eeg_topographies = deepcopy(eeg_topographies)
+        self.eeg_topographies = eeg_topographies
 
 
     def build_model(self):
@@ -317,8 +317,9 @@ class EEG_CNN(NN):
             # Add output layer
             self.model.add(Dense(self.n_dipoles, activation='relu', name='OutputLayer'))
 
+            self.model.summary()
+            
             if self.verbose:
-                self.model.summary()
                 img = './assets/CNN.png'
                 img_keras = './assets/CNN-visual-keras.png'
                 tf.keras.utils.plot_model(self.model, to_file=img, show_shapes=True)
@@ -420,11 +421,9 @@ class Region_CNN(EEG_CNN):
 
             # add input layer
             self.model.add(keras.Input(shape=(self.eeg_topographies.shape[1], self.eeg_topographies.shape[2],1), name='Input'))
-            self.model.add(Conv2D(32, kernel_size=(3, 3), activation='relu'))
+            self.model.add(Conv2D(8, kernel_size=(3, 3), activation='relu'))
             #self.model.add(BatchNormalization())
             self.model.add(Flatten())            
-            self.model.add(Dense(1024, activation='relu'))
-            self.model.add(BatchNormalization())
             self.model.add(Dense(1024, activation='relu'))
             self.model.add(BatchNormalization())
             self.model.add(Dense(1024, activation='relu'))
@@ -432,8 +431,9 @@ class Region_CNN(EEG_CNN):
             # Add output layer
             self.model.add(Dense(self.n_dipoles, activation='relu', name='OutputLayer'))
 
+            self.model.summary()
+
             if self.verbose:
-                self.model.summary()
                 img = './assets/Region-CNN.png'
                 img_keras = './assets/Region-CNN-visual-keras.png'
                 tf.keras.utils.plot_model(self.model, to_file=img, show_shapes=True)
