@@ -429,6 +429,8 @@ class Region_CNN(EEG_CNN):
             self.model.add(BatchNormalization())
             self.model.add(Dense(1024, activation='relu'))
             self.model.add(BatchNormalization())
+            self.model.add(Dense(1024, activation='relu'))
+            self.model.add(BatchNormalization())
             # Add output layer
             self.model.add(Dense(self.n_dipoles, activation='relu', name='OutputLayer'))
 
