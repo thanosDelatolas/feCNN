@@ -147,7 +147,7 @@ class Simulation:
 
 
         # Get amplitude gain for each source (amplitudes come in nAm)
-        amplitudes = [self.get_from_range(self.settings['amplitudes'], dtype=float) * 1e-9 for _ in range(number_of_sources)]
+        amplitudes = [self.get_from_range(self.settings['amplitudes'], dtype=float) * 1e-1 for _ in range(number_of_sources)]
 
         # Get source centers
         if src_center == -1 :
