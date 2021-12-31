@@ -189,12 +189,13 @@ class EEGMLP(NN):
             # first hidden layer with 256 neurons.
             self.model.add(Dense(units=256, activation='relu', name='Hidden-1'))
 
+            self.model.add(BatchNormalization())
             # second hidden layer with 512 neurons.
             self.model.add(Dense(units=512, activation='relu', name='Hidden-2'))
-
+            self.model.add(BatchNormalization())
             # third hidden layer with 1024 neurons.
             self.model.add(Dense(units=1024, activation='relu', name='Hidden-3'))            
-
+            self.model.add(BatchNormalization())
             # Add output layer
             self.model.add(Dense(self.n_dipoles, activation='relu', name='OutputLayer'))
 
