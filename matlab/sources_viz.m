@@ -3,15 +3,17 @@ clear; close all; clc;
 
 load('../duneuropy/Data/dipoles.mat')
 
-sources = readNPY('/media/thanos/Elements/thanos/sim_data/sim_type_1/region_dataset/Region 1/region_1_sources.npy');
+sources = readNPY('/media/thanos/Elements/thanos/sim_data/sim_type_1/region_dataset/Region 2/region_2_sources.npy');
 predicted_sources = readNPY('../../../Downloads/pred_sources.npy');
 
-load('/media/thanos/Elements/thanos/sim_data/sim_type_1/region_dataset/Region 1/region_1_eeg_topos.mat')
-load('/media/thanos/Elements/thanos/sim_data/sim_type_1/region_dataset/Region 1/region_1_eeg_topos_xi.mat')
-load('/media/thanos/Elements/thanos/sim_data/sim_type_1/region_dataset/Region 1/region_1_eeg_topos_yi.mat')
+load('/media/thanos/Elements/thanos/sim_data/sim_type_1/Regions-Evaluate-Sources/Region 2/region_2_topos_eval.mat')
+load('/media/thanos/Elements/thanos/sim_data/sim_type_1/Regions-Evaluate-Sources/Region 2/region_2_xi_eval.mat')
+load('/media/thanos/Elements/thanos/sim_data/sim_type_1/Regions-Evaluate-Sources/Region 2/region_2_yi_eval.mat')
 
 %% visualize
 
+first_dipole=4900;
+last_dipole=10100;
 % close all;
 
 n_samples = size(predicted_sources,2);
@@ -34,12 +36,12 @@ title('EEG topography.');
 
 
 subplot(1,3,2)
-scatter3(loc(1:5100,1),loc(1:5100,2),loc(1:5100,3),5100,source,'.')
+scatter3(loc(first_dipole:last_dipole-1,1),loc(first_dipole:last_dipole-1,2),loc(first_dipole:last_dipole-1,3),5200,source,'.')
 title('Simulated source');
 view([121.7 21.2]);
 
 subplot(1,3,3)
-scatter3(loc(1:5100,1),loc(1:5100,2),loc(1:5100,3),5100,pred,'.')
+scatter3(loc(first_dipole:last_dipole-1,1),loc(first_dipole:last_dipole-1,2),loc(first_dipole:last_dipole-1,3),5200,pred,'.')
 title('Predicted source');
 view([121.7 21.2]);
 
