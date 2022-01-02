@@ -59,9 +59,9 @@ class NN:
 
     @abstractmethod
     def fit(self, learning_rate=0.001, 
-        validation_split=0.2, epochs=50, 
+        validation_split=0.2, epochs=500,
         false_positive_penalty=2, delta=1., batch_size=32, 
-        loss=None, patience=5
+        loss=None, patience=120
     ):
         ''' Train the neural network using training data (eeg) and labels (sources).
 
@@ -207,9 +207,9 @@ class EEGMLP(NN):
                 visualkeras.layered_view(self.model, legend=True,  to_file=img_keras)  
 
     def fit(self, learning_rate=0.001, 
-        validation_split=0.2, epochs=50, 
+        validation_split=0.2, epochs=500,
         false_positive_penalty=2, delta=1., batch_size=32, 
-        loss=None, patience=5
+        loss=None, patience=120
     ):
 
         if len(self.sim.eeg_data.shape) != 2 :
@@ -444,9 +444,9 @@ class Region_CNN(EEG_CNN):
     
 
     def fit(self, learning_rate=0.001, 
-        validation_split=0.2, epochs=50,
-        false_positive_penalty=10, delta=1., batch_size=32, 
-        loss=None, patience=5
+        validation_split=0.2, epochs=500,
+        false_positive_penalty=2, delta=1., batch_size=32, 
+        loss=None, patience=120
     ):
 
         if len(self.sim.eeg_data.shape) != 2 :
@@ -469,8 +469,8 @@ class Region_CNN(EEG_CNN):
 
 
         if loss == None:
-            loss = self.default_loss(weight=false_positive_penalty, delta=delta)
-            # loss = 'MSE'
+            #loss = self.default_loss(weight=false_positive_penalty, delta=delta)
+            loss = 'mse'
 
         metrics = [#tf.keras.metrics.MeanAbsolutePercentageError(name="MAPE"),
             self.default_loss(weight=false_positive_penalty, delta=delta)           
@@ -484,11 +484,11 @@ class Region_CNN(EEG_CNN):
             self.compiled = True
 
         
-        x_scaled = util.scale_array(x)
-        y_scaled = util.scale_array(y)
+        # x_scaled = util.scale_array(x)
+        # y_scaled = util.scale_array(y)
 
         # scale topos and sources
-        history = self.model.fit(x_scaled, y_scaled, 
+        history = self.model.fit(x, y, 
                 epochs=epochs, batch_size=batch_size, shuffle=True, 
                 validation_split=validation_split, callbacks=[es, tensorboard_callback])
         self.trained = True
