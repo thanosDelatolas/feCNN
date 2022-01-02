@@ -60,8 +60,8 @@ class NN:
     @abstractmethod
     def fit(self, learning_rate=0.001, 
         validation_split=0.2, epochs=500,
-        false_positive_penalty=2, delta=1., batch_size=32, 
-        loss=None, patience=120
+        false_positive_penalty=2, delta=1., batch_size=64, 
+        loss=None, patience=250
     ):
         ''' Train the neural network using training data (eeg) and labels (sources).
 
@@ -209,7 +209,7 @@ class EEGMLP(NN):
     def fit(self, learning_rate=0.001, 
         validation_split=0.2, epochs=500,
         false_positive_penalty=2, delta=1., batch_size=32, 
-        loss=None, patience=120
+        loss=None, patience=250
     ):
 
         if len(self.sim.eeg_data.shape) != 2 :
@@ -327,9 +327,9 @@ class EEG_CNN(NN):
                 visualkeras.layered_view(self.model, legend=True,  to_file=img_keras)  
     
     def fit(self, learning_rate=0.001, 
-        validation_split=0.2, epochs=50,
-        false_positive_penalty=10, delta=1., batch_size=32, 
-        loss=None, patience=5
+        validation_split=0.2, epochs=500,
+        false_positive_penalty=10, delta=1., batch_size=64, 
+        loss=None, patience=250
     ):
 
         if len(self.sim.eeg_data.shape) != 2 :
@@ -445,8 +445,8 @@ class Region_CNN(EEG_CNN):
 
     def fit(self, learning_rate=0.001, 
         validation_split=0.2, epochs=500,
-        false_positive_penalty=2, delta=1., batch_size=32, 
-        loss=None, patience=120
+        false_positive_penalty=2, delta=1., batch_size=64, 
+        loss=None, patience=250
     ):
 
         if len(self.sim.eeg_data.shape) != 2 :
