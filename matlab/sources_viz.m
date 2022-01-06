@@ -3,17 +3,18 @@ clear; close all; clc;
 
 load('../duneuropy/Data/dipoles.mat')
 
-sources = readNPY('/media/thanos/Elements/thanos/sim_data/sim_type_1/region_dataset/Region 2/region_2_sources.npy');
+sources = readNPY('/media/thanos/Elements/thanos/sim_data/sim_type_1/region_dataset/Region 8/region_8_sources.npy');
 predicted_sources = readNPY('../../../Downloads/pred_sources.npy');
 
-load('/media/thanos/Elements/thanos/sim_data/sim_type_1/Regions-Evaluate-Sources/Region 2/region_2_topos_eval.mat')
-load('/media/thanos/Elements/thanos/sim_data/sim_type_1/Regions-Evaluate-Sources/Region 2/region_2_xi_eval.mat')
-load('/media/thanos/Elements/thanos/sim_data/sim_type_1/Regions-Evaluate-Sources/Region 2/region_2_yi_eval.mat')
+load('/media/thanos/Elements/thanos/sim_data/sim_type_1/region_dataset/Region 8/region_8_eeg_topos.mat')
+load('/media/thanos/Elements/thanos/sim_data/sim_type_1/region_dataset/Region 8/region_8_eeg_topos_xi.mat')
+load('/media/thanos/Elements/thanos/sim_data/sim_type_1/region_dataset/Region 8/region_8_eeg_topos_yi.mat')
+
 
 %% visualize
 
-first_dipole=4900;
-last_dipole=10100;
+first_dipole=34900;
+last_dipole=40100;
 % close all;
 
 n_samples = size(predicted_sources,2);

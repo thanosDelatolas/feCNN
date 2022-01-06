@@ -20,20 +20,24 @@ folder_output = os.path.join(parent,'duneuropy/DataOut')
 # Define input files
 realistic_head_model_filename = os.path.join(folder_input, 'realistic_head_model.mat')
 electrode_filename = os.path.join(folder_input, 'electrodes.elc')
-dipoles_filename = os.path.join(folder_input, 'dipoles.mat')
 tensor_filename = os.path.join(folder_input, 'wm_tensors.mat')
 
 
-def solve_forward():
+def solve_forward(downsampled_dipoles=False):
     ''' Compute EEG leadfield using the standard (CG-) FEM approach,
     in a realistic volumetric hexahedron 6 compartment head model
     with the Venant source model using the transfer matrix approach
 
     Approximate execution time: 53 minutes.
     '''
-    lf_filename = os.path.join(folder_output, 'leadfield.npy')
+    if downsampled_dipoles:
+        lf_filename = os.path.join(folder_output, 'leadfield_downsampled.npy')
+        dipoles_filename = os.path.join(folder_input, 'dipoles_downsampled.mat')
+    else :
+        lf_filename = os.path.join(folder_output, 'leadfield.npy')
+        dipoles_filename = os.path.join(folder_input, 'dipoles.mat')
     if not os.path.exists(lf_filename):
-
+        
         start_time = time.time()
         # load the head model data
         realistic_head_model = scipy.io.loadmat(realistic_head_model_filename)

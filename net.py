@@ -309,11 +309,11 @@ class EEG_CNN(NN):
             self.model.add(Conv2D(32, kernel_size=(3, 3), activation='relu'))
             #self.model.add(BatchNormalization())
             self.model.add(Flatten())            
-            self.model.add(Dense(512, activation='relu'))
+            self.model.add(Dense(1024, activation='relu'))
             self.model.add(BatchNormalization())
             self.model.add(Dense(1024, activation='relu'))
             self.model.add(BatchNormalization())
-            self.model.add(Dense(2048, activation='relu'))
+            self.model.add(Dense(1024, activation='relu'))
             self.model.add(BatchNormalization())
             # Add output layer
             self.model.add(Dense(self.n_dipoles, activation='relu', name='OutputLayer'))
@@ -352,8 +352,8 @@ class EEG_CNN(NN):
 
 
         if loss == None:
-            loss = self.default_loss(weight=false_positive_penalty, delta=delta)
-            # loss = 'MSE'
+            #loss = self.default_loss(weight=false_positive_penalty, delta=delta)
+            loss = 'mse'
 
         metrics = [#tf.keras.metrics.MeanAbsolutePercentageError(name="MAPE"),
             self.default_loss(weight=false_positive_penalty, delta=delta)           
@@ -367,11 +367,11 @@ class EEG_CNN(NN):
             self.compiled = True
 
         
-        x_scaled = util.scale_array(x)
-        y_scaled = util.scale_array(y)
+        # x_scaled = util.scale_array(x)
+        # y_scaled = util.scale_array(y)
 
         # scale topos and sources
-        history = self.model.fit(x_scaled, y_scaled, 
+        history = self.model.fit(x, y, 
                 epochs=epochs, batch_size=batch_size, shuffle=True, 
                 validation_split=validation_split, callbacks=[es, tensorboard_callback])
         self.trained = True
@@ -494,3 +494,4 @@ class Region_CNN(EEG_CNN):
         self.trained = True
         
         return history, tensorboard_dir
+

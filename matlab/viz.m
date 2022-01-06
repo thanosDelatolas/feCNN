@@ -7,11 +7,11 @@ import_fieldtrip();
 sensor_labels = split(sensor_labels{4});
 sensor_labels = sensor_labels(1:end-1);
 
-eeg = double(readNPY('../../../Downloads/eeg_regions.npy'));
+eeg = double(readNPY('/media/thanos/Elements/thanos/sim_data/sim_type_1/downsampled_dipoles/eeg_20TeD.npy'));
 
-sources = double(readNPY(''));
+sources = double(readNPY('/media/thanos/Elements/thanos/sim_data/sim_type_1/downsampled_dipoles/sources_20TeD.npy'));
 
-load('../duneuropy/Data/dipoles.mat')
+load('../duneuropy/Data/dipoles_downsampled.mat')
 
 %le = double(readNPY('../duneuropy/DataOut/leadfield.npy'));
 
@@ -52,6 +52,7 @@ plot(lay.outline{3}(:,1)*fac,lay.outline{3}(:,2)*fac,'k');
 plot(lay.outline{4}(:,1)*fac,lay.outline{4}(:,2)*fac,'k');
 title(sprintf('Topography for sample: %d',sample));
 colorbar;
+%colormap(spring(20))
 %saveas(gcf,'../assets/sim.png')
 
 % figure; ft_plot_topo3d(sensors,eeg_s); title('ft\_plot\_topo3d'); colorbar;
@@ -63,6 +64,7 @@ subplot(1,2,2);
 scatter3(loc(:,1),loc(:,2),loc(:,3),100,source,'.')
 title(sprintf('Simulated source space for sample: %d',sample));
 colorbar;
+%colormap(spring(20))
 view([-103.9 -6.8])
 set(gcf,'Position',[60 180 1600 500])
 
