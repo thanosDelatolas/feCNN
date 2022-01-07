@@ -2,6 +2,7 @@ clear;
 close all;
 clc;
 
+import_fieldtrip();
 
 data_name              = '/media/thanos/Elements/thanos/sep_sef/sep_sef.ds';      
 
@@ -40,8 +41,8 @@ data_eeg           = ft_preprocessing(cfg,data_eeg);
 data_meg           = ft_preprocessing(cfg,data_meg);
 
 
-data_meg = rmfield(data_meg, 'elec')
-data_eeg = rmfield(data_eeg, 'grad')
+data_meg = rmfield(data_meg, 'elec');
+data_eeg = rmfield(data_eeg, 'grad');
 
 cfg        = [];
 cfg.metric = 'zvalue';  % use by default zvalue method
@@ -153,3 +154,5 @@ cfg.fontsize   = 14;
 
 figure;
 ft_topoplotER(cfg, EEG_avg);
+set(gcf, 'Position',[1 1 1200 800])
+
