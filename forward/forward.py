@@ -31,8 +31,8 @@ def solve_forward(downsampled_dipoles=True):
     Approximate execution time: 53 minutes.
     '''
     if downsampled_dipoles:
-        lf_filename = os.path.join(folder_output, 'leadfield_downsampled.npy')
-        dipoles_filename = os.path.join(folder_input, 'dipoles_downsampled.mat')
+        lf_filename = os.path.join(folder_output, 'leadfield_downsampled_10k.npy')
+        dipoles_filename = os.path.join(folder_input, 'dipoles_downsampled_10k.mat')
     else :
         lf_filename = os.path.join(folder_output, 'leadfield.npy')
         dipoles_filename = os.path.join(folder_input, 'dipoles.mat')
@@ -116,8 +116,8 @@ def solve_forward(downsampled_dipoles=True):
         tm_eeg = np.array(tm[0])
 
         # (optional) save the transfer matrix
-        filename = os.path.join(folder_output, 'transfer_matrix.npy')
-        np.save(filename, tm_eeg)
+        # filename = os.path.join(folder_output, 'transfer_matrix.npy')
+        # np.save(filename, tm_eeg)
 
         # Create source model configurations (Partial integration St. Venant, Subtraction, Whitney)
         source_model_config = {
