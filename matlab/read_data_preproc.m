@@ -21,12 +21,6 @@ cfg.channel            = 'eeg1010';             % define channel type
 data_eeg               = ft_preprocessing(cfg); % read raw data
 data_eeg               = ft_redefinetrial(cfg_tr_def, data_eeg);
 
-cfg                    = [];
-cfg.dataset            = data_name;
-cfg.channel            = 'MEG';             % define channel type
-data_meg               = ft_preprocessing(cfg); % read raw data
-data_meg               = ft_redefinetrial(cfg_tr_def, data_meg);
-
 
 
 cfg                = [];
@@ -38,10 +32,8 @@ cfg.dftfilter      = 'yes';        % enable notch filtering to eliminate power l
 cfg.dftfreq        = [50 100 150]; % set up the frequencies for notch filtering
 cfg.baselinewindow = [-0.1 -0.02];    % define the baseline window
 data_eeg           = ft_preprocessing(cfg,data_eeg);
-data_meg           = ft_preprocessing(cfg,data_meg);
 
 
-data_meg = rmfield(data_meg, 'elec');
 data_eeg = rmfield(data_eeg, 'grad');
 
 cfg        = [];
@@ -50,15 +42,13 @@ cfg.method = 'summary'; % use by default summary method
 
 data_eeg       = ft_rejectvisual(cfg,data_eeg);
 
-data_meg       = ft_rejectvisual(cfg,data_meg);
-
 
 cfg                   = [];
 cfg.preproc.demean    = 'yes';    % enable demean to remove mean value from each single trial
 cfg.covariance        = 'yes';    % calculate covariance matrix of the data
 cfg.covariancewindow  = [-0.1 0]; % calculate the covariance matrix for a specific time window
 EEG_avg               = ft_timelockanalysis(cfg, data_eeg);
-MEG_avg               = ft_timelockanalysis(cfg, data_meg);
+
 
 cfg               = [];
 cfg.reref         = 'yes';
@@ -72,7 +62,6 @@ EEG_avg           = ft_preprocessing(cfg,EEG_avg);
 cfg = [];
 cfg.method = 'amplitude';
 EEG_gmfp = ft_globalmeanfield(cfg, EEG_avg);
-MEG_gmfp = ft_globalmeanfield(cfg, MEG_avg);
 
 figure;
 
@@ -86,23 +75,13 @@ h1 = plot(EEG_avg.time,signal_EEG,'color',[0,0,0.5]);
 hold on;
 h2 = plot(EEG_avg.time,scale*EEG_gmfp.avg,'color',[1,0,0],'linewidth',1);
 
-figure;
 
-pol = -1;     % correct polarity
-scale = 10^6; % scale for eeg data micro volts
-
-signal_MEG = scale*pol*MEG_avg.avg; % add single trials in a new value
-
-% plot single trial together with global mean field power
-h1 = plot(MEG_avg.time,signal_MEG,'color',[0,0,0.5]);
-hold on;
-h2 = plot(MEG_avg.time,scale*MEG_gmfp.avg,'color',[1,0,0],'linewidth',1);
 
 mx = max(max(signal_EEG));
 mn = min(min(signal_EEG));
 
 % select time of interest for the source reconstruction later on
-idx = find(EEG_avg.time>0.024 & EEG_avg.time<=0.026);
+idx = find(EEG_avg.time>0.024 & EEG_avg.time<=0.027);
 toi = EEG_avg.time(idx);
 
 [mxx,idxm] = max(max(abs(EEG_avg.avg(:,idx))));
@@ -122,35 +101,14 @@ ft_multiplotER(cfg, EEG_avg);
 set(gcf, 'Position',[1 1 1200 800])
 
 
-mx = max(max(signal_MEG));
-mn = min(min(signal_MEG));
-
-% select time of interest for the source reconstruction later on
-idx = find(EEG_avg.time>0.024 & EEG_avg.time<=0.026);
-toi = EEG_avg.time(idx);
-
-[mxx,idxm] = max(max(abs(EEG_avg.avg(:,idx))));
-MEG_toi_mean_trial = toi(idxm);
-
-cfg          = [];
-cfg.fontsize = 6;
-cfg.layout   = 'CTF275.lay';
-cfg.fontsize = 14;
-cfg.ylim     = [-1e-13 1e-13];
-cfg.xlim     = [-0.1 0.2];
-
-figure;
-ft_multiplotER(cfg, MEG_avg);
-
-set(gcf, 'Position',[1 1 1200 800])
 
 cfg            = [];
-cfg.zlim       = 'maxmin';
-cfg.comment    = 'xlim';
-cfg.commentpos = 'title';
-cfg.xlim       = [EEG_toi_mean_trial EEG_toi_mean_trial+0.01*EEG_toi_mean_trial];
+%cfg.zlim       = 'maxmin';
+% cfg.comment    = 'xlim';
+% cfg.commentpos = 'title';
+cfg.xlim       = [0.0245 0.0455];%[EEG_toi_mean_trial EEG_toi_mean_trial+0.01*EEG_toi_mean_trial];
 cfg.layout     = 'elec1010.lay';
-cfg.fontsize   = 14;
+%cfg.fontsize   = 14;
 
 figure;
 ft_topoplotER(cfg, EEG_avg);

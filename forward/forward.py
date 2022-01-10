@@ -23,7 +23,7 @@ electrode_filename = os.path.join(folder_input, 'electrodes.elc')
 tensor_filename = os.path.join(folder_input, 'wm_tensors.mat')
 
 
-def solve_forward(downsampled_dipoles=False):
+def solve_forward(downsampled_dipoles=True):
     ''' Compute EEG leadfield using the standard (CG-) FEM approach,
     in a realistic volumetric hexahedron 6 compartment head model
     with the Venant source model using the transfer matrix approach
