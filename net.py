@@ -367,11 +367,11 @@ class EEG_CNN(NN):
             self.compiled = True
 
         
-        # x_scaled = util.scale_array(x)
-        # y_scaled = util.scale_array(y)
+        x_scaled = util.normalize_array(x)
+        y_scaled = util.normalize_array(y)
 
         # scale topos and sources
-        history = self.model.fit(x, y, 
+        history = self.model.fit(x_scaled, y_scaled, 
                 epochs=epochs, batch_size=batch_size, shuffle=True, 
                 validation_split=validation_split, callbacks=[es, tensorboard_callback])
         self.trained = True

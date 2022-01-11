@@ -125,11 +125,8 @@ def load_object(filename):
     return obj
 
 
-def scale_array(array):
+def normalize_array(array):
         ''' Scales an array.
         Usually, prior to training the neural network
         '''
-        for i in range(array.shape[0]):
-            array[i,:]/= np.max(array[i])
-            
-        return array
+        return (array-np.min(array))/(np.max(array)-min(array))
