@@ -8,7 +8,7 @@ layout = '/home/thanos/fieldtrip/template/layout/EEG1010.lay';
 eeg_s = EEG_avg.avg(:,151);
 
 [Zi, Yi, Xi ] = ft_plot_topo(sensors_1010(:,1),sensors_1010(:,2),eeg_s,'mask',lay.mask,'outline',lay.outline);
-Zi = -replace_nan(Zi);
+Zi = replace_nan(Zi);
 
 figure;
 contourf(Xi,Yi,Zi)

@@ -7,13 +7,12 @@ import_fieldtrip();
 sensor_labels = split(sensor_labels{4});
 sensor_labels = sensor_labels(1:end-1);
 
-eeg = double(readNPY('/media/thanos/Elements/thanos/sim_data/sim_type_1/downsampled_dipoles/eeg_20TeD.npy'));
+eeg = double(readNPY('/media/thanos/Elements/thanos/sim_data/sim_type_1/downsampled_dipoles-10k/eeg_10TeD.npy'));
 
-sources = double(readNPY('/media/thanos/Elements/thanos/sim_data/sim_type_1/downsampled_dipoles/sources_20TeD.npy'));
+sources = double(readNPY('/media/thanos/Elements/thanos/sim_data/sim_type_1/downsampled_dipoles-10k/sources_10TeD.npy'));
 
-load('../duneuropy/Data/dipoles_downsampled.mat')
+load('../duneuropy/Data/dipoles_downsampled_10k.mat')
 
-%le = double(readNPY('../duneuropy/DataOut/leadfield.npy'));
 
 
 layout = '/home/thanos/fieldtrip/template/layout/EEG1010.lay';
