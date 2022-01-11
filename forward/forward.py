@@ -31,8 +31,8 @@ def solve_forward(downsampled_dipoles=True):
     Approximate execution time: 53 minutes.
     '''
     if downsampled_dipoles:
-        lf_filename = os.path.join(folder_output, 'leadfield_downsampled_10k.npy')
-        dipoles_filename = os.path.join(folder_input, 'dipoles_downsampled_10k.mat')
+        lf_filename = os.path.join(folder_output, 'leadfield_downsampled_5k.npy')
+        dipoles_filename = os.path.join(folder_input, 'dipoles_downsampled_5k.mat')
     else :
         lf_filename = os.path.join(folder_output, 'leadfield.npy')
         dipoles_filename = os.path.join(folder_input, 'dipoles.mat')
