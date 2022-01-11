@@ -129,4 +129,4 @@ def normalize_array(array):
         ''' Scales an array.
         Usually, prior to training the neural network
         '''
-        return (array-np.min(array))/(np.max(array)-min(array))
+        return (array-np.min(array))/(np.max(array)-np.min(array))
