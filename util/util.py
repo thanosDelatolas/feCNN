@@ -126,7 +126,15 @@ def load_object(filename):
 
 
 def normalize_array(array):
-        ''' Scales an array.
-        Usually, prior to training the neural network
-        '''
-        return (array-np.min(array))/(np.max(array)-np.min(array))
+    ''' Scales an array.
+    Usually, prior to training the neural network
+    '''
+    return (array-np.min(array))/(np.max(array)-np.min(array))
+
+def normalize_dataset(dataset):
+    ''' All the datasets in this thesis are in shape n_samples x shape of each datatype.
+    This function normilizes the dataset to values in the range of 0-1
+    '''
+
+    return np.stack([normalize_array(dataset[sample]) \
+        for sample in range(len(dataset))])
