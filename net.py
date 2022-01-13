@@ -367,7 +367,7 @@ class EEG_CNN(NN):
             self.compiled = True
 
         
-        x_scaled = util.normalize_dataset(x)
+        x_scaled = util.standardize_dataset(x)
         #y_scaled = util.normalize_array(y)
 
         # scale topos and sources
