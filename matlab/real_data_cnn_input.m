@@ -20,10 +20,14 @@ save('../../../Downloads/eeg_topo_yi_real.mat', 'Yi');
 
 %% 
 
+load('../../../Downloads/eeg_topo_real.mat');
+load('../../../Downloads/eeg_topo_xi_real.mat');
+load('../../../Downloads/eeg_topo_yi_real.mat');
+
 
 load('../duneuropy/Data/dipoles_downsampled_5k.mat')
 
-pred = readNPY('../../../Downloads/pred_sources.npy');
+pred = readNPY('../../../Downloads/pred_sources_real.npy');
 
 loc = cd_matrix(:,1:3);
 

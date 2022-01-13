@@ -126,10 +126,17 @@ def load_object(filename):
 
 
 def normalize_array(array):
-    ''' Scales an array.
+    ''' Normalizes an array.
     Usually, prior to training the neural network
     '''
     return (array-np.min(array))/(np.max(array)-np.min(array))
+
+def stand_array(array):
+    ''' Standardizes an array.
+    Usually, prior to training the neural network
+    '''
+    return (array-np.mean(array) ) / np.std(array)
+
 
 def normalize_dataset(dataset):
     ''' All the datasets in this thesis are in shape n_samples x shape of each datatype.
@@ -137,4 +144,12 @@ def normalize_dataset(dataset):
     '''
 
     return np.stack([normalize_array(dataset[sample]) \
+        for sample in range(len(dataset))])
+
+def standardize_dataset(dataset):
+    ''' All the datasets in this thesis are in shape n_samples x shape of each datatype.
+    This function standardizes the dataset. (X-mean)/std
+    '''
+
+    return np.stack([stand_array(dataset[sample]) \
         for sample in range(len(dataset))])
