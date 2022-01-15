@@ -6,7 +6,7 @@ import_fieldtrip();
 sensor_labels = split(sensor_labels{4});
 sensor_labels = sensor_labels(1:end-1);
 
-eeg = double(readNPY('/media/thanos/Elements/thanos/sim_data/sim_type_1/downsampled_dipoles-10k/1e-5/eeg_10TeD.npy'));
+eeg = double(readNPY('/media/thanos/Elements/thanos/sim_data/sim_type_1/downsampled_dipoles-5k/1e-1/eeg_20TeD.npy'));
 
 %sources = double(readNPY('../../../Downloads/sources.npy'));
 
@@ -25,7 +25,7 @@ w_bar = waitbar(0, 'Creating CNN input...');
 
 tic;
 for ii=1:n_samples
-    eeg_s = eeg(:,ii);
+    eeg_s = (eeg(:,ii) - mean(eeg(:,ii)))/std(eeg(:,ii));
 
     idx = ismember(sensor_labels, lay.label)';
 
@@ -50,6 +50,15 @@ end
 toc;
 
 close(w_bar);
-save('/media/thanos/Elements/thanos/sim_data/sim_type_1/downsampled_dipoles-10k/1e-5/eeg_10TeD_topos.mat', 'eeg_topos', '-v7.3')
-save('/media/thanos/Elements/thanos/sim_data/sim_type_1/downsampled_dipoles-10k/1e-5/eeg_10TeD_topos_xi.mat', 'eeg_Xi', '-v7.3')
-save('/media/thanos/Elements/thanos/sim_data/sim_type_1/downsampled_dipoles-10k/1e-5/eeg_10TeD_topos_yi.mat', 'eeg_Yi', '-v7.3')
+save('/media/thanos/Elements/thanos/sim_data/sim_type_1/downsampled_dipoles-5k/1e-1/stand/eeg_20TeD_topos.mat', 'eeg_topos', '-v7.3')
+save('/media/thanos/Elements/thanos/sim_data/sim_type_1/downsampled_dipoles-5k/1e-1/stand/eeg_20TeD_topos_xi.mat', 'eeg_Xi', '-v7.3')
+save('/media/thanos/Elements/thanos/sim_data/sim_type_1/downsampled_dipoles-5k/1e-1/stand/eeg_20TeD_topos_yi.mat', 'eeg_Yi', '-v7.3')
+
+
+%% visualize
+
+sample = randi([1 n_samples],1,1);
+figure;
+contourf(eeg_Xi(:,:,sample),eeg_Yi(:,:,sample),eeg_topos(:,:,sample));
+colorbar;
+title(sprintf('Topography for sample: %d',sample));

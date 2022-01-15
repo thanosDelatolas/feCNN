@@ -42,6 +42,7 @@ view([121.7 21.2]);
 subplot(1,3,3)
 scatter3(loc(:,1),loc(:,2),loc(:,3),100,pred,'.')
 title('Predicted source');
+colorbar;
 view([121.7 21.2]);
 
 suptitle(sprintf('Sample %d',source_idx))
