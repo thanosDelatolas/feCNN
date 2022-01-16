@@ -306,11 +306,12 @@ class EEG_CNN(NN):
 
             # add input layer
             self.model.add(keras.Input(shape=(self.eeg_topographies.shape[1], self.eeg_topographies.shape[2],1), name='Input'))
-            self.model.add(Conv2D(32, kernel_size=(3, 3), activation='relu'))
+            self.model.add(Conv2D(8, kernel_size=(3, 3), activation='relu'))
             #self.model.add(BatchNormalization())
             self.model.add(Flatten())            
             self.model.add(Dense(1024, activation='relu'))
             self.model.add(BatchNormalization())
+            self.model.add(Dropout(0.25))
             self.model.add(Dense(1024, activation='relu'))
             self.model.add(BatchNormalization())
             self.model.add(Dense(1024, activation='relu'))
@@ -367,11 +368,11 @@ class EEG_CNN(NN):
             self.compiled = True
 
         
-        x_scaled = util.standardize_dataset(x)
+        #x_scaled = util.standardize_dataset(x)
         #y_scaled = util.normalize_array(y)
 
         # scale topos and sources
-        history = self.model.fit(x_scaled, y, 
+        history = self.model.fit(x, y, 
                 epochs=epochs, batch_size=batch_size, shuffle=True, 
                 validation_split=validation_split, callbacks=[es, tensorboard_callback])
         self.trained = True

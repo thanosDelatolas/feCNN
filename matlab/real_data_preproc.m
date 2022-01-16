@@ -17,7 +17,7 @@ cfg_tr_def             = ft_definetrial(cfg);   % read the list of the specific 
 % segment data according to the trial definition
 cfg                    = [];
 cfg.dataset            = data_name;
-cfg.channel            = 'eeg1010';             % define channel type
+cfg.channel            = 'EEG1010';             % define channel type
 data_eeg               = ft_preprocessing(cfg); % read raw data
 data_eeg               = ft_redefinetrial(cfg_tr_def, data_eeg);
 
@@ -90,7 +90,7 @@ EEG_toi_mean_trial = toi(idxm);
 
 cfg          = [];
 cfg.fontsize = 6;
-cfg.layout   = 'elec1010.lay';
+cfg.layout   = 'EEG1010.lay';
 cfg.fontsize = 14;
 cfg.ylim     = [-5e-6 5e-6];
 cfg.xlim     = [-0.1 0.2];
@@ -107,7 +107,7 @@ cfg            = [];
 % cfg.comment    = 'xlim';
 % cfg.commentpos = 'title';
 cfg.xlim       = [0.0245 0.0455];%[EEG_toi_mean_trial EEG_toi_mean_trial+0.01*EEG_toi_mean_trial];
-cfg.layout     = 'elec1010.lay';
+cfg.layout     = 'EEG1010.lay';
 %cfg.fontsize   = 14;
 
 figure;
