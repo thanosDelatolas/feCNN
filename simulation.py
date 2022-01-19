@@ -147,7 +147,7 @@ class Simulation:
 
 
         # Get amplitude gain for each source (amplitudes come in nAm)
-        amplitudes = [self.get_from_range(self.settings['amplitudes'], dtype=float) * 1e-5 for _ in range(number_of_sources)]
+        amplitudes = [self.get_from_range(self.settings['amplitudes'], dtype=float) * 1e-15 for _ in range(number_of_sources)]
 
         # Get source centers
         if src_center == -1 :
@@ -203,10 +203,10 @@ class Simulation:
         # calculate eeg 
         eeg_clean = np.array(self.project_sources(sources))
 
-
-        # eeg_noisy = self.add_noise_to_eeg(eeg_clean)            
+        # add noise to eeg
+        eeg_noisy = np.array(self.add_noise_to_eeg(eeg_clean, 40))           
        
-        return eeg_clean
+        return eeg_noisy
 
     def project_sources(self, sources):
         ''' Project sources through the leadfield to obtain the EEG data.
@@ -236,11 +236,20 @@ class Simulation:
 
         return result
 
-    def add_noise_to_eeg(eeg):
+    def add_noise_to_eeg(self,eeg, snr_db):
         ''' This function adds noise to the eeg signal
         '''
+        print('Add AWGN with snr {} dB'.format(snr_db))
 
-        print('Add noise to EEG ...')
+        mean_power = np.mean(eeg ** 2)
+        mean_power_db = 10*np.log10(mean_power)
+        noise_db = mean_power_db - snr_db
+        noise_watts = 10 ** (noise_db/10)
+
+        # Generate noise with calculated power
+        awgn = np.random.normal(0, np.sqrt(noise_watts), size=eeg.shape)
+
+        return eeg + awgn
 
     def check_settings(self):
         ''' Check if settings are complete and insert missing 

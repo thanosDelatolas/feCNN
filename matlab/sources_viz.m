@@ -3,12 +3,12 @@ clear; close all; clc;
 
 load('../duneuropy/Data/dipoles_downsampled_5k.mat')
 
-sources = readNPY('/media/thanos/Elements/thanos/sim_data/sim_type_1/downsampled_dipoles-5k/1e-1/sources_20TeD.npy');
+sources = readNPY('/media/thanos/Elements/thanos/sim_data/sim_type_1/downsampled_dipoles-5k/1e-5/sources_20TeD.npy');
 predicted_sources = readNPY('../../../Downloads/pred_sources.npy');
 
-load('/media/thanos/Elements/thanos/sim_data/sim_type_1/downsampled_dipoles-5k/1e-1/stand/eeg_20TeD_topos.mat')
-load('/media/thanos/Elements/thanos/sim_data/sim_type_1/downsampled_dipoles-5k/1e-1/stand/eeg_20TeD_topos_xi.mat')
-load('/media/thanos/Elements/thanos/sim_data/sim_type_1/downsampled_dipoles-5k/1e-1/stand/eeg_20TeD_topos_yi.mat')
+load('/media/thanos/Elements/thanos/sim_data/sim_type_1/downsampled_dipoles-5k/1e-5/stand/eeg_20TeD_topos.mat')
+load('/media/thanos/Elements/thanos/sim_data/sim_type_1/downsampled_dipoles-5k/1e-5/stand/eeg_20TeD_topos_xi.mat')
+load('/media/thanos/Elements/thanos/sim_data/sim_type_1/downsampled_dipoles-5k/1e-5/stand/eeg_20TeD_topos_yi.mat')
 
 
 %% visualize
@@ -38,6 +38,7 @@ subplot(1,3,2)
 scatter3(loc(:,1),loc(:,2),loc(:,3),100,source,'.')
 title('Simulated source');
 view([121.7 21.2]);
+
 
 subplot(1,3,3)
 scatter3(loc(:,1),loc(:,2),loc(:,3),100,pred,'.')

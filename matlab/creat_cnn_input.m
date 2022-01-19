@@ -6,7 +6,7 @@ import_fieldtrip();
 sensor_labels = split(sensor_labels{4});
 sensor_labels = sensor_labels(1:end-1);
 
-eeg = double(readNPY('/media/thanos/Elements/thanos/sim_data/sim_type_1/downsampled_dipoles-5k/1e-1/eeg_20TeD.npy'));
+eeg = double(readNPY('/media/thanos/Elements/thanos/sim_data/sim_type_1/downsampled_dipoles-5k/1e-15/eeg_20TeD.npy'));
 
 %sources = double(readNPY('../../../Downloads/sources.npy'));
 
@@ -50,9 +50,9 @@ end
 toc;
 
 close(w_bar);
-save('/media/thanos/Elements/thanos/sim_data/sim_type_1/downsampled_dipoles-5k/1e-1/stand/eeg_20TeD_topos.mat', 'eeg_topos', '-v7.3')
-save('/media/thanos/Elements/thanos/sim_data/sim_type_1/downsampled_dipoles-5k/1e-1/stand/eeg_20TeD_topos_xi.mat', 'eeg_Xi', '-v7.3')
-save('/media/thanos/Elements/thanos/sim_data/sim_type_1/downsampled_dipoles-5k/1e-1/stand/eeg_20TeD_topos_yi.mat', 'eeg_Yi', '-v7.3')
+save('/media/thanos/Elements/thanos/sim_data/sim_type_1/downsampled_dipoles-5k/1e-15/eeg_20TeD_topos.mat', 'eeg_topos', '-v7.3')
+save('/media/thanos/Elements/thanos/sim_data/sim_type_1/downsampled_dipoles-5k/1e-15/eeg_20TeD_topos_xi.mat', 'eeg_Xi', '-v7.3')
+save('/media/thanos/Elements/thanos/sim_data/sim_type_1/downsampled_dipoles-5k/1e-15/eeg_20TeD_topos_yi.mat', 'eeg_Yi', '-v7.3')
 
 
 %% visualize
