@@ -23,7 +23,7 @@ electrode_filename = os.path.join(folder_input, 'electrodes.elc')
 tensor_filename = os.path.join(folder_input, 'wm_tensors.mat')
 
 
-def solve_forward(downsampled_dipoles=True):
+def solve_forward(downsampled_dipoles=True, num_dipoles='5k'):
     ''' Compute EEG leadfield using the standard (CG-) FEM approach,
     in a realistic volumetric hexahedron 6 compartment head model
     with the Venant source model using the transfer matrix approach
@@ -31,8 +31,8 @@ def solve_forward(downsampled_dipoles=True):
     Approximate execution time: 53 minutes.
     '''
     if downsampled_dipoles:
-        lf_filename = os.path.join(folder_output, 'leadfield_downsampled_5k.npy')
-        dipoles_filename = os.path.join(folder_input, 'dipoles_downsampled_5k.mat')
+        lf_filename = os.path.join(folder_output, 'leadfield_downsampled_{}.npy'.format(num_dipoles))
+        dipoles_filename = os.path.join(folder_input, 'dipoles_downsampled_{}.mat'.format(num_dipoles))
     else :
         lf_filename = os.path.join(folder_output, 'leadfield.npy')
         dipoles_filename = os.path.join(folder_input, 'dipoles.mat')
