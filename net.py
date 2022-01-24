@@ -314,8 +314,10 @@ class EEG_CNN(NN):
             self.model.add(Dropout(0.25))
             self.model.add(Dense(1024, activation='relu'))
             self.model.add(BatchNormalization())
+            self.model.add(Dropout(0.25))
             self.model.add(Dense(1024, activation='relu'))
             self.model.add(BatchNormalization())
+            self.model.add(Dropout(0.25))
             # Add output layer
             self.model.add(Dense(self.n_dipoles, activation='relu', name='OutputLayer'))
 

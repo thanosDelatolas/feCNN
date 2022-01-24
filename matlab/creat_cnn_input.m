@@ -25,8 +25,8 @@ w_bar = waitbar(0, 'Creating CNN input...');
 
 tic;
 for ii=1:n_samples
-    eeg_s = (eeg(:,ii) - mean(eeg(:,ii)))/std(eeg(:,ii));
-
+    %eeg_s = (eeg(:,ii) - mean(eeg(:,ii)))/std(eeg(:,ii));
+    eeg_s = eeg(:,ii);
     idx = ismember(sensor_labels, lay.label)';
 
     tlabels=lay.label(idx)';

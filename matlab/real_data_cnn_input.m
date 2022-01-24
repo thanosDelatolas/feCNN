@@ -6,7 +6,8 @@ layout = '/home/thanos/fieldtrip/template/layout/EEG1010.lay';
 
 % 0.025
 
-eeg_s = (EEG_avg.avg(:,151) - mean(EEG_avg.avg(:,151)))/std(EEG_avg.avg(:,151));
+%eeg_s = (EEG_avg.avg(:,151) - mean(EEG_avg.avg(:,151)))/std(EEG_avg.avg(:,151));
+eeg_s = EEG_avg.avg(:,151);
 [Zi, Yi, Xi ] = ft_plot_topo(sensors_1010(:,1),sensors_1010(:,2),eeg_s,'mask',lay.mask,'outline',lay.outline);
 Zi = -replace_nan(Zi);
 
@@ -20,6 +21,7 @@ save('../real_data/eeg_topo_xi_real.mat', 'Yi');
 
 %% 
 
+clear; close all; clc;
 load('../real_data/eeg_topo_real.mat');
 load('../real_data/eeg_topo_yi_real.mat');
 load('../real_data/eeg_topo_xi_real.mat');
