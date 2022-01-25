@@ -1,8 +1,8 @@
 clear; close all; clc;
 
 load('../duneuropy/Data/dipoles.mat');
-dipoles_downsampled = downsample(cd_matrix,5);
+dipoles_downsampled = downsample(cd_matrix,2);
 
 cd_matrix = dipoles_downsampled;
 
-save('../duneuropy/Data/dipoles_downsampled_10k.mat', 'cd_matrix');
+save('../duneuropy/Data/dipoles_downsampled_25k.mat', 'cd_matrix');

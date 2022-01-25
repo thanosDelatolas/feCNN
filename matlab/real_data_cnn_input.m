@@ -24,16 +24,16 @@ save('../real_data/eeg_topo_real_yi_25_8ms.mat', 'Yi');
 
 %% 
 
-ms='25';
+ms='25_8';
 
 load(sprintf('../real_data/%sms/eeg_topo_real_%sms.mat',ms,ms));
 load(sprintf('../real_data/%sms/eeg_topo_real_xi_%sms.mat',ms,ms));
 load(sprintf('../real_data/%sms/eeg_topo_real_yi_%sms.mat',ms,ms));
 
 
-load('../duneuropy/Data/dipoles_downsampled_5k.mat')
+load('../duneuropy/Data/dipoles_downsampled_10k.mat')
 
-pred = readNPY('../../../Downloads/pred_sources_real.npy');
+pred = readNPY('../real_data/25_8ms/pred_sources_25_8.npy');
 
 
 
