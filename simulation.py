@@ -204,9 +204,9 @@ class Simulation:
         eeg_clean = np.array(self.project_sources(sources))
 
         # add noise to eeg
-        eeg_noisy = np.array(self.add_noise_to_eeg(eeg_clean, 40))           
+        # eeg_noisy = np.array(self.add_noise_to_eeg(eeg_clean, 40))           
        
-        return eeg_noisy
+        return eeg_clean
 
     def project_sources(self, sources):
         ''' Project sources through the leadfield to obtain the EEG data.
