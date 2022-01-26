@@ -33,7 +33,8 @@ load(sprintf('../real_data/%sms/eeg_topo_real_yi_%sms.mat',ms,ms));
 
 load('../duneuropy/Data/dipoles_downsampled_10k.mat')
 
-pred = readNPY('../real_data/25_8ms/pred_sources_25_8.npy');
+%pred = readNPY('../real_data/25_8ms/pred_sources_25_8.npy');
+pred = readNPY('../../../Downloads/pred_sources_real.npy');
 
 
 
