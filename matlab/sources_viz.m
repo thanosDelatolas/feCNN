@@ -1,14 +1,14 @@
 %% Load data
 clear; close all; clc;
 
-load('../duneuropy/Data/dipoles_downsampled_5k.mat')
+load('../duneuropy/Data/dipoles_downsampled_10k.mat')
 
-sources = readNPY('/media/thanos/Elements/thanos/sim_data/sim_type_1/downsampled_dipoles-5k/1e-5/sources_20TeD.npy');
+sources = readNPY('../../downsampled_dipoles-10k/1e-15/sources_10TeD.npy');
 predicted_sources = readNPY('../../../Downloads/pred_sources.npy');
 
-load('/media/thanos/Elements/thanos/sim_data/sim_type_1/downsampled_dipoles-5k/1e-5/stand/eeg_20TeD_topos.mat')
-load('/media/thanos/Elements/thanos/sim_data/sim_type_1/downsampled_dipoles-5k/1e-5/stand/eeg_20TeD_topos_xi.mat')
-load('/media/thanos/Elements/thanos/sim_data/sim_type_1/downsampled_dipoles-5k/1e-5/stand/eeg_20TeD_topos_yi.mat')
+load('../../downsampled_dipoles-10k/1e-15/eeg_10TeD_topos.mat')
+load('../../downsampled_dipoles-10k/1e-15/eeg_10TeD_topos_yi.mat')
+load('../../downsampled_dipoles-10k/1e-15/eeg_10TeD_topos_xi.mat')
 
 
 %% visualize

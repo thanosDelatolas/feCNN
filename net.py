@@ -203,7 +203,7 @@ class EEGMLP(NN):
             if self.verbose:
                 img = './assets/MLP.png'
                 img_keras = './assets/MLP-visual-keras.png'
-                tf.keras.utils.plot_model(self.model, to_file=img, show_shapes=True)
+                tf.keras.utils.plot_model(self.model, to_file=img, show_shapes=True, show_layer_names=False)
                 visualkeras.layered_view(self.model, legend=True,  to_file=img_keras)  
 
     def fit(self, learning_rate=0.001, 
@@ -326,7 +326,7 @@ class EEG_CNN(NN):
             if self.verbose:
                 img = './assets/CNN.png'
                 img_keras = './assets/CNN-visual-keras.png'
-                tf.keras.utils.plot_model(self.model, to_file=img, show_shapes=True)
+                tf.keras.utils.plot_model(self.model, to_file=img, show_shapes=True, show_layer_names=False)
                 visualkeras.layered_view(self.model, legend=True,  to_file=img_keras)  
     
     def fit(self, learning_rate=0.001, 

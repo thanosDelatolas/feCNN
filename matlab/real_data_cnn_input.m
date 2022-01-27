@@ -24,7 +24,7 @@ save('../real_data/eeg_topo_real_yi_25_8ms.mat', 'Yi');
 
 %% 
 
-ms='25_8';
+ms='25';
 
 load(sprintf('../real_data/%sms/eeg_topo_real_%sms.mat',ms,ms));
 load(sprintf('../real_data/%sms/eeg_topo_real_xi_%sms.mat',ms,ms));
@@ -52,7 +52,7 @@ scatter3(loc(:,1),loc(:,2),loc(:,3),100,pred,'.')
 title('Predicted source');
 view([121.7 21.2]);
 
-suptitle(strrep(sprintf('Read Data Prediction %sms',ms),'_','.'));
+%suptitle(strrep(sprintf('Read Data Prediction %sms',ms),'_','.'));
 set(gcf,'Position',[60 180 1600 500])
 
 
