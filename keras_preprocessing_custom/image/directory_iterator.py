@@ -60,7 +60,7 @@ class DirectoryIterator(BatchFromFilesMixin, Iterator):
             with target aspect ratio before resizing.
         dtype: Dtype to use for generated arrays.
     """
-    allowed_class_modes = {'categorical', 'binary', 'sparse', 'input', None}
+    allowed_class_modes = {'categorical', 'binary', 'sparse', 'input', 'eeg' ,None}
 
     def __new__(cls, *args, **kwargs):
         try:
@@ -72,16 +72,17 @@ class DirectoryIterator(BatchFromFilesMixin, Iterator):
         return super(DirectoryIterator, cls).__new__(cls)
 
     def __init__(self,
-                 directory,
-                 
+                 directory_x,
+                 directory_y,
                  classes=None,
-                 class_mode='categorical',
+                 class_mode='eeg',
                  batch_size=32,
                  shuffle=True,
                  seed=None,
                  
                  follow_links=False,
                  dtype='float32'):
+        self.target_size = (50460,)
         # super(DirectoryIterator, self).set_processing_attrs(image_data_generator,
         #                                                     target_size,
         #                                                     color_mode,
@@ -92,7 +93,8 @@ class DirectoryIterator(BatchFromFilesMixin, Iterator):
         #                                                     subset,
         #                                                     interpolation,
         #                                                     keep_aspect_ratio)
-        self.directory = directory
+        self.directory_x = directory_x
+        self.directory_y = directory_y
         self.classes = classes
         if class_mode not in self.allowed_class_modes:
             raise ValueError('Invalid class_mode: {}; expected one of: {}'
@@ -104,8 +106,8 @@ class DirectoryIterator(BatchFromFilesMixin, Iterator):
 
         if not classes:
             classes = []
-            for subdir in sorted(os.listdir(directory)):
-                if os.path.isdir(os.path.join(directory, subdir)):
+            for subdir in sorted(os.listdir(directory_y)):
+                if os.path.isdir(os.path.join(directory_y, subdir)):
                     classes.append(subdir)
         self.num_classes = len(classes)
         self.class_indices = dict(zip(classes, range(len(classes))))
@@ -114,20 +116,36 @@ class DirectoryIterator(BatchFromFilesMixin, Iterator):
 
         # Second, build an index of the images
         # in the different class subfolders.
-        results = []
-        self.filenames = []
+        results_y = []
+        self.filenames_y = []
         i = 0
-        for dirpath in (os.path.join(directory, subdir) for subdir in classes):
-            results.append(
+
+        # loader for y
+        for dirpath in (os.path.join(directory_y, subdir) for subdir in classes):
+            results_y.append(
                 pool.apply_async(_list_valid_filenames_in_directory,
                                  (dirpath, self.white_list_formats, None,
                                   self.class_indices, follow_links)))
+        
+        # loader for x
+        results_x = []
+        self.filenames_x = []
+        for dirpath in (os.path.join(directory_y, subdir) for subdir in classes):
+            results_x.append(
+                pool.apply_async(_list_valid_filenames_in_directory,
+                                    (dirpath, self.white_list_formats, None,
+                                    self.class_indices, follow_links)))
         classes_list = []
-        for res in results:
+        for res in results_y:
             classes, filenames = res.get()
             classes_list.append(classes)
-            self.filenames += filenames
-        self.samples = len(self.filenames)
+            self.filenames_y += filenames
+
+        for res in results_x:
+            _, filenames = res.get()
+            self.filenames_x += filenames
+
+        self.samples = len(self.filenames_y)
         self.classes = np.zeros((self.samples,), dtype='int32')
         for classes in classes_list:
             self.classes[i:i + len(classes)] = classes
@@ -137,9 +155,7 @@ class DirectoryIterator(BatchFromFilesMixin, Iterator):
               (self.samples, self.num_classes))
         pool.close()
         pool.join()
-        self._filepaths = [
-            os.path.join(self.directory, fname) for fname in self.filenames
-        ]
+        
         super(DirectoryIterator, self).__init__(self.samples,
                                                 batch_size,
                                                 shuffle,

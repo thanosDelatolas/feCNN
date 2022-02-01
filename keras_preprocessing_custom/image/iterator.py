@@ -28,7 +28,7 @@ class Iterator(IteratorType):
         seed: Random seeding for data shuffling.
     """
     # npy added!
-    white_list_formats = ('png', 'jpg', 'jpeg', 'bmp', 'ppm', 'tif', 'tiff','npy')
+    white_list_formats = ('png', 'jpg', 'jpeg', 'bmp', 'ppm', 'tif', 'tiff','npy', 'mat')
 
     def __init__(self, n, batch_size, shuffle, seed):
         self.n = n
@@ -218,10 +218,10 @@ class BatchFromFilesMixin():
         # Returns
             A batch of transformed samples.
         """
-        batch_x = np.zeros((len(index_array),) + self.image_shape, dtype=self.dtype)
+        batch_y = np.zeros((len(index_array),) + self.target_size, dtype=self.dtype)
         # build batch of image data
         # self.filepaths is dynamic, is better to call it once outside the loop
-        filepaths = self.filepaths
+       
         for i, j in enumerate(index_array):
             # img = load_img(filepaths[j],
             #                color_mode=self.color_mode,
@@ -235,8 +235,8 @@ class BatchFromFilesMixin():
             #     img.close()
             
             # iterator for npy files.
-            fname = self.filenames[j]
-            x = np.load(os.path.join(self.directory, fname))
+            fname = self.filenames_y[j]
+            y = np.load(os.path.join(self.directory_y, fname))
             #
 
             # if self.image_data_generator:
@@ -244,39 +244,27 @@ class BatchFromFilesMixin():
             #     x = self.image_data_generator.apply_transform(x, params)
             #     x = self.image_data_generator.standardize(x)
 
-            batch_x[i] = x
+            batch_y[i] = y
         # optionally save augmented images to disk for debugging purposes
-        if self.save_to_dir:
-            for i, j in enumerate(index_array):
-                img = array_to_img(batch_x[i], self.data_format, scale=True)
-                fname = '{prefix}_{index}_{hash}.{format}'.format(
-                    prefix=self.save_prefix,
-                    index=j,
-                    hash=np.random.randint(1e7),
-                    format=self.save_format)
-                img.save(os.path.join(self.save_to_dir, fname))
+        # if self.save_to_dir:
+        #     for i, j in enumerate(index_array):
+        #         img = array_to_img(batch_x[i], self.data_format, scale=True)
+        #         fname = '{prefix}_{index}_{hash}.{format}'.format(
+        #             prefix=self.save_prefix,
+        #             index=j,
+        #             hash=np.random.randint(1e7),
+        #             format=self.save_format)
+        #         img.save(os.path.join(self.save_to_dir, fname))
         # build batch of labels
-        if self.class_mode == 'input':
-            batch_y = batch_x.copy()
-        elif self.class_mode in {'binary', 'sparse'}:
-            batch_y = np.empty(len(batch_x), dtype=self.dtype)
-            for i, n_observation in enumerate(index_array):
-                batch_y[i] = self.classes[n_observation]
-        elif self.class_mode == 'categorical':
-            batch_y = np.zeros((len(batch_x), len(self.class_indices)),
-                               dtype=self.dtype)
-            for i, n_observation in enumerate(index_array):
-                batch_y[i, self.classes[n_observation]] = 1.
-        elif self.class_mode == 'multi_output':
-            batch_y = [output[index_array] for output in self.labels]
-        elif self.class_mode == 'raw':
-            batch_y = self.labels[index_array]
-        else:
-            return batch_x
-        if self.sample_weight is None:
-            return batch_x, batch_y
-        else:
-            return batch_x, batch_y, self.sample_weight[index_array]
+
+        batch_x = np.zeros((len(index_array),67,67))
+        if self.class_mode == 'eeg':
+            for ii in index_array:
+                fname = self.filenames_x[ii]
+                x = np.load(os.path.join(self.directory_x, fname))
+                batch_x[ii] = x
+
+        return batch_x, batch_y
 
     @property
     def filepaths(self):
