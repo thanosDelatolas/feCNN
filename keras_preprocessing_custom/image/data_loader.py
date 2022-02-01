@@ -30,9 +30,8 @@ class DataLoader(object):
 
        
     def flow_from_directory(self,
-                            directory_y,
                             directory_x,
-                            classes=None,
+                            directory_y,
                             class_mode='eeg',
                             batch_size=32,
                             shuffle=True,
@@ -71,9 +70,8 @@ class DataLoader(object):
                 and `y` is a NumPy array of corresponding labels.
         """
         return DirectoryIterator(
-            directory_y,
             directory_x,
-            classes=classes,
+            directory_y,
             class_mode=class_mode,
             batch_size=batch_size,
             shuffle=shuffle,

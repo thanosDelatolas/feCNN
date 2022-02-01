@@ -218,51 +218,25 @@ class BatchFromFilesMixin():
         # Returns
             A batch of transformed samples.
         """
-        batch_y = np.zeros((len(index_array),) + self.target_size, dtype=self.dtype)
+        batch_y = np.zeros((len(index_array),) + self.target_size_y, dtype=self.dtype)
         # build batch of image data
         # self.filepaths is dynamic, is better to call it once outside the loop
        
         for i, j in enumerate(index_array):
-            # img = load_img(filepaths[j],
-            #                color_mode=self.color_mode,
-            #                target_size=self.target_size,
-            #                interpolation=self.interpolation,
-            #                keep_aspect_ratio=self.keep_aspect_ratio)
-            # x = img_to_array(img, data_format=self.data_format)
-            # # Pillow images should be closed after `load_img`,
-            # # but not PIL images.
-            # if hasattr(img, 'close'):
-            #     img.close()
-            
+                     
             # iterator for npy files.
             fname = self.filenames_y[j]
             y = np.load(os.path.join(self.directory_y, fname))
-            #
-
-            # if self.image_data_generator:
-            #     params = self.image_data_generator.get_random_transform(x.shape)
-            #     x = self.image_data_generator.apply_transform(x, params)
-            #     x = self.image_data_generator.standardize(x)
 
             batch_y[i] = y
-        # optionally save augmented images to disk for debugging purposes
-        # if self.save_to_dir:
-        #     for i, j in enumerate(index_array):
-        #         img = array_to_img(batch_x[i], self.data_format, scale=True)
-        #         fname = '{prefix}_{index}_{hash}.{format}'.format(
-        #             prefix=self.save_prefix,
-        #             index=j,
-        #             hash=np.random.randint(1e7),
-        #             format=self.save_format)
-        #         img.save(os.path.join(self.save_to_dir, fname))
-        # build batch of labels
+       
 
         batch_x = np.zeros((len(index_array),67,67))
         if self.class_mode == 'eeg':
-            for ii in index_array:
-                fname = self.filenames_x[ii]
+            for i, j in enumerate(index_array):
+                fname = self.filenames_x[j]
                 x = np.load(os.path.join(self.directory_x, fname))
-                batch_x[ii] = x
+                batch_x[i] = x
 
         return batch_x, batch_y
 

@@ -1,5 +1,6 @@
 """Utilities for real-time data augmentation on image data.
 """
+from ast import Raise
 import multiprocessing.pool
 import os
 
@@ -74,7 +75,6 @@ class DirectoryIterator(BatchFromFilesMixin, Iterator):
     def __init__(self,
                  directory_x,
                  directory_y,
-                 classes=None,
                  class_mode='eeg',
                  batch_size=32,
                  shuffle=True,
@@ -82,20 +82,12 @@ class DirectoryIterator(BatchFromFilesMixin, Iterator):
                  
                  follow_links=False,
                  dtype='float32'):
-        self.target_size = (50460,)
-        # super(DirectoryIterator, self).set_processing_attrs(image_data_generator,
-        #                                                     target_size,
-        #                                                     color_mode,
-        #                                                     data_format,
-        #                                                     save_to_dir,
-        #                                                     save_prefix,
-        #                                                     save_format,
-        #                                                     subset,
-        #                                                     interpolation,
-        #                                                     keep_aspect_ratio)
+        self.target_size_y = (50460,)
+        self.target_size_x = (67,67)
+       
         self.directory_x = directory_x
         self.directory_y = directory_y
-        self.classes = classes
+       
         if class_mode not in self.allowed_class_modes:
             raise ValueError('Invalid class_mode: {}; expected one of: {}'
                              .format(class_mode, self.allowed_class_modes))
@@ -104,13 +96,22 @@ class DirectoryIterator(BatchFromFilesMixin, Iterator):
         # First, count the number of samples and classes.
         self.samples = 0
 
-        if not classes:
-            classes = []
-            for subdir in sorted(os.listdir(directory_y)):
-                if os.path.isdir(os.path.join(directory_y, subdir)):
-                    classes.append(subdir)
-        self.num_classes = len(classes)
-        self.class_indices = dict(zip(classes, range(len(classes))))
+        
+        classes_y = []
+        for subdir in sorted(os.listdir(directory_y)):
+            if os.path.isdir(os.path.join(directory_y, subdir)):
+                classes_y.append(subdir)
+
+        self.num_classes_y = len(classes_y)
+        self.class_indices_y = dict(zip(classes_y, range(len(classes_y))))
+
+        classes_x = []
+        for subdir in sorted(os.listdir(directory_x)):
+            if os.path.isdir(os.path.join(directory_x, subdir)):
+                classes_x.append(subdir)
+        
+        self.num_classes_x = len(classes_x)
+        self.class_indices_x = dict(zip(classes_x, range(len(classes_x))))
 
         pool = multiprocessing.pool.ThreadPool()
 
@@ -121,20 +122,21 @@ class DirectoryIterator(BatchFromFilesMixin, Iterator):
         i = 0
 
         # loader for y
-        for dirpath in (os.path.join(directory_y, subdir) for subdir in classes):
+        for dirpath in (os.path.join(directory_y, subdir) for subdir in classes_y):
             results_y.append(
                 pool.apply_async(_list_valid_filenames_in_directory,
                                  (dirpath, self.white_list_formats, None,
-                                  self.class_indices, follow_links)))
+                                  self.class_indices_y, follow_links)))
         
+
         # loader for x
         results_x = []
         self.filenames_x = []
-        for dirpath in (os.path.join(directory_y, subdir) for subdir in classes):
+        for dirpath in (os.path.join(directory_x, subdir) for subdir in classes_x):
             results_x.append(
                 pool.apply_async(_list_valid_filenames_in_directory,
                                     (dirpath, self.white_list_formats, None,
-                                    self.class_indices, follow_links)))
+                                    self.class_indices_x, follow_links)))
         classes_list = []
         for res in results_y:
             classes, filenames = res.get()
@@ -142,7 +144,7 @@ class DirectoryIterator(BatchFromFilesMixin, Iterator):
             self.filenames_y += filenames
 
         for res in results_x:
-            _, filenames = res.get()
+            classes, filenames = res.get()
             self.filenames_x += filenames
 
         self.samples = len(self.filenames_y)
@@ -151,8 +153,12 @@ class DirectoryIterator(BatchFromFilesMixin, Iterator):
             self.classes[i:i + len(classes)] = classes
             i += len(classes)
 
+
+        if self.num_classes_y != self.num_classes_x:
+            raise AttributeError('The classes of x and y must have the same len in regression.')
+            
         print('Found %d images belonging to %d classes.' %
-              (self.samples, self.num_classes))
+              (self.samples, self.num_classes_y))
         pool.close()
         pool.join()
         
