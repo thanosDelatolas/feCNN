@@ -1,3 +1,4 @@
+from tabnanny import verbose
 from joblib import Parallel, delayed
 from tqdm.autonotebook import tqdm
 import numpy as np
@@ -41,13 +42,13 @@ class Simulation:
     
     
     def create_dipoles_dataset(self, times_each_dipole):
-        ''' This method creates the trainning dataset which has 50460 * times_each_dipole  source spaces. 
+        ''' This method creates a trainning dataset which has n_dipoles * times_each_dipole  source spaces. 
             Each dipole is selected times_each_dipole as a seed location while the electrical current of the dipole 
             and the extent of the activation are selected randomly.
 
-            The shape of the simulated sources will be times_each_dipole * 50460, 50460.
+            The shape of the simulated sources will be times_each_dipole * n_dipoles, n_dipoles.
 
-            Hence, times_each_dipole * 50460 different source spaces will be created.
+            Hence, times_each_dipole * n_dipoles different source spaces will be created.
         '''
         if self.simulated:
             print('The data are already simulated.')
@@ -64,6 +65,7 @@ class Simulation:
         
         self.simulated = True
     
+
     def create_region_dataset(self,first_dipole, last_dipole, n_samples=100000):
         ''' This method creates a simulation for a spesific region. 
         '''
@@ -81,7 +83,40 @@ class Simulation:
         self.eeg_data = self.simulate_eeg()
         
         self.simulated = True
+
+
+    def create_large_dataset(self, times_each_dipole,directory_x,directory_y):
+        ''' This method creates a trainning dataset which has n_dipoles * times_each_dipole  source spaces. 
+            Each dipole is selected times_each_dipole as a seed location while the electrical current of the dipole 
+            and the extent of the activation are selected randomly.
+
+            The shape of the simulated sources will be times_each_dipole * n_dipoles, n_dipoles.
+
+            Hence, times_each_dipole * n_dipoles different source spaces will be created.
+
+            it stores each simulated source and eeg to a folder in order to user keras_preprocessing_custom for the
+            trainning.
+        '''
+        n_dipoles = self.fwd.leadfield.shape[1]
+        n_samples = int(times_each_dipole * n_dipoles)
         
+        eeg = np.zeros((73,n_samples))
+
+        print('Creating dataset with samles: {} .'.format(n_samples))
+
+        for sample in tqdm(range(n_samples)):
+            dipole = sample % n_dipoles
+
+            # simulate source
+            source = self.simulate_source(src_center=dipole % n_dipoles)
+            # calculate eeg 
+            eeg[:,sample] = np.array(self.project_sources(source, verbose=False))
+
+            np.save(directory_y+'source_{}.npy'.format(sample+1), source)
+        
+        np.save(directory_x+'eeg.npy',eeg)
+
+
     def simulate(self, n_samples=10000):
         ''' Simulate sources and EEG data'''
         if self.simulated :
@@ -208,7 +243,7 @@ class Simulation:
        
         return eeg_clean
 
-    def project_sources(self, sources):
+    def project_sources(self, sources, verbose=True):
         ''' Project sources through the leadfield to obtain the EEG data.
         Parameters
         ----------
@@ -218,7 +253,8 @@ class Simulation:
         Return the eeg signlas
         ------
         '''
-        print('Project sources to EEG.')
+        if verbose:
+            print('Project sources to EEG.')
         leadfield = self.fwd.leadfield
 
         if leadfield.shape[1] != sources.shape[0] :
