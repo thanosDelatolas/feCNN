@@ -156,7 +156,6 @@ class DirectoryIterator(BatchFromFilesMixin, Iterator):
 
         if self.num_classes_y != self.num_classes_x:
             raise AttributeError('The classes of x and y must have the same len in regression.')
-            
         print('Found %d images belonging to %d classes.' %
               (self.samples, self.num_classes_y))
         pool.close()
