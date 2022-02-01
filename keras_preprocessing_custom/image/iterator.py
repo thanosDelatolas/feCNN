@@ -27,6 +27,7 @@ class Iterator(IteratorType):
         shuffle: Boolean, whether to shuffle the data between epochs.
         seed: Random seeding for data shuffling.
     """
+    # npy added!
     white_list_formats = ('png', 'jpg', 'jpeg', 'bmp', 'ppm', 'tif', 'tiff','npy')
 
     def __init__(self, n, batch_size, shuffle, seed):
