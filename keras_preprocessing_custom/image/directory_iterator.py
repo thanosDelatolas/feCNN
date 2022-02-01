@@ -73,33 +73,25 @@ class DirectoryIterator(BatchFromFilesMixin, Iterator):
 
     def __init__(self,
                  directory,
-                 image_data_generator,
-                 target_size=(256, 256),
-                 color_mode='rgb',
+                 
                  classes=None,
                  class_mode='categorical',
                  batch_size=32,
                  shuffle=True,
                  seed=None,
-                 data_format='channels_last',
-                 save_to_dir=None,
-                 save_prefix='',
-                 save_format='png',
+                 
                  follow_links=False,
-                 subset=None,
-                 interpolation='nearest',
-                 keep_aspect_ratio=False,
                  dtype='float32'):
-        super(DirectoryIterator, self).set_processing_attrs(image_data_generator,
-                                                            target_size,
-                                                            color_mode,
-                                                            data_format,
-                                                            save_to_dir,
-                                                            save_prefix,
-                                                            save_format,
-                                                            subset,
-                                                            interpolation,
-                                                            keep_aspect_ratio)
+        # super(DirectoryIterator, self).set_processing_attrs(image_data_generator,
+        #                                                     target_size,
+        #                                                     color_mode,
+        #                                                     data_format,
+        #                                                     save_to_dir,
+        #                                                     save_prefix,
+        #                                                     save_format,
+        #                                                     subset,
+        #                                                     interpolation,
+        #                                                     keep_aspect_ratio)
         self.directory = directory
         self.classes = classes
         if class_mode not in self.allowed_class_modes:
@@ -128,7 +120,7 @@ class DirectoryIterator(BatchFromFilesMixin, Iterator):
         for dirpath in (os.path.join(directory, subdir) for subdir in classes):
             results.append(
                 pool.apply_async(_list_valid_filenames_in_directory,
-                                 (dirpath, self.white_list_formats, self.split,
+                                 (dirpath, self.white_list_formats, None,
                                   self.class_indices, follow_links)))
         classes_list = []
         for res in results:
