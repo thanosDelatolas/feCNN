@@ -116,6 +116,36 @@ class Simulation:
         
         np.save(directory_x+'eeg.npy',eeg)
 
+    
+    def create_large_evaluate_dataset(self, n_samples,directory_x,directory_y):
+        ''' This method creates a dataset for evaluation dataset.
+
+            The source center is selected randomly.
+            
+            The shape of the simulated sources will be  n_samples, n_dipoles.
+
+            Hence, times_each_dipole * n_dipoles different source spaces will be created.
+
+            it stores each simulated source and eeg to a folder in order to user keras_preprocessing_custom for the
+            trainning.
+        '''
+        n_dipoles = self.fwd.leadfield.shape[1]
+            
+        eeg = np.zeros((73,n_samples))
+
+        print('Creating dataset with {} samles'.format(n_samples))
+
+        for sample in tqdm(range(n_samples)):
+
+            # simulate source
+            source = self.simulate_source()
+            # calculate eeg 
+            eeg[:,sample] = np.array(self.project_sources(source, verbose=False))
+
+            np.save(directory_y+'source_{}.npy'.format(sample+1), source)
+        
+        np.save(directory_x+'eeg.npy',eeg)
+
 
     def simulate(self, n_samples=10000):
         ''' Simulate sources and EEG data'''
