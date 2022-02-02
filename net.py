@@ -14,6 +14,7 @@ import numpy as np
 
 import losses
 import util
+import keras_preprocessing_custom.image
 
 time_str = datetime.datetime.now().strftime('%d_%m_%Y__%H:%M:%S')
 
@@ -60,7 +61,7 @@ class NN:
     @abstractmethod
     def fit(self, learning_rate=0.001, 
         validation_split=0.2, epochs=500,
-        false_positive_penalty=2, delta=1., batch_size=64, 
+        false_positive_penalty=10, delta=1., batch_size=64, 
         loss=None, patience=250
     ):
         ''' Train the neural network using training data (eeg) and labels (sources).
@@ -128,7 +129,7 @@ class NN:
         pass
 
 
-
+    
     def save_nn(self, model_filename, save_sim=False, sim_filename='sim.pkl'):
         if self.trained:
             self.model.save(model_filename)
@@ -208,7 +209,7 @@ class EEGMLP(NN):
 
     def fit(self, learning_rate=0.001, 
         validation_split=0.2, epochs=500,
-        false_positive_penalty=2, delta=1., batch_size=32, 
+        false_positive_penalty=10, delta=1., batch_size=32, 
         loss=None, patience=250
     ):
 
@@ -408,4 +409,131 @@ class EEGLargeCnn():
     ''' This CNN it is used only for the full source space (50460 dipoles) and it is trained using a  keras.utils.Sequence
     from the package  keras_preprocessing_custom. It can be used a very large dataset because the data are loaded in batches
     from the directories y and x . 
+
+        Arguments
+        ---------
+            directory_y : directory with the sources dataset.
+            directory_x : directory with the topos dataset.
     '''
+
+    def __init__(self,directory_y,directory_x,directory_y_eval=None,directory_x_eval=None,
+        verbose=False,dipoles=50460
+        ):
+
+        self.directory_y = directory_y
+        self.directory_x = directory_x
+        self.directory_y_eval = directory_y_eval
+        self.directory_x_eval = directory_x_eval
+
+        self.n_dipoles = dipoles
+        self.verbose = verbose
+
+        self.default_loss = losses.weighted_huber_loss
+
+    def build_model(self):
+        ''' Build the neural network architecture using the 
+        tensorflow.keras.Sequential() API. 
+
+        The architecture is a CNN with three hidden layers.
+       
+        '''
+      
+        # Build the artificial neural network model using Dense layers.
+        self.model = keras.Sequential()
+
+        # add input layer
+        self.model.add(keras.Input(shape=(67,67,1), name='Input'))
+        self.model.add(Conv2D(8, kernel_size=(3, 3), activation='relu'))
+        #self.model.add(BatchNormalization())
+        self.model.add(Flatten())            
+        self.model.add(Dense(1024, activation='relu'))
+        self.model.add(BatchNormalization())
+        self.model.add(Dropout(0.25))
+        self.model.add(Dense(1024, activation='relu'))
+        self.model.add(BatchNormalization())
+        self.model.add(Dropout(0.25))
+        self.model.add(Dense(1024, activation='relu'))
+        self.model.add(BatchNormalization())
+        self.model.add(Dropout(0.25))
+        # Add output layer
+        self.model.add(Dense(self.n_dipoles, activation='relu', name='OutputLayer'))
+
+        self.model.summary()
+        
+        if self.verbose:
+            img = './assets/CNN.png'
+            img_keras = './assets/CNN-visual-keras.png'
+            tf.keras.utils.plot_model(self.model, to_file=img, show_shapes=True, show_layer_names=False)
+            visualkeras.layered_view(self.model, legend=True,  to_file=img_keras)  
+    
+    def fit(self, learning_rate=0.001, epochs=500,
+        batch_size=32,loss=None, patience=250,false_positive_penalty=10, delta=1.
+        ):
+               
+        loader = keras_preprocessing_custom.image.DataLoader()
+
+        train_loader = loader.flow_from_directory(
+            directory_y=self.directory_y,
+            directory_x=self.directory_x,
+            batch_size=batch_size,
+        )        
+
+        if loss == None:
+            loss = 'mse'
+
+        #lr_callback = keras.callbacks.LearningRateScheduler(NN.lr_schedule)
+        optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
+
+        self.model.compile(optimizer, loss, metrics=None)      
+
+        
+        if self.directory_x_eval != None and self.directory_y_eval != None:
+            eval_loader = loader.flow_from_directory(
+                directory_y=self.directory_y,
+                directory_x=self.directory_x,
+                batch_size=batch_size,
+            )
+
+            # early stoping
+            es = tf.keras.callbacks.EarlyStopping(monitor='val_loss', \
+                mode='min', patience=patience, restore_best_weights=True,verbose=1)
+
+            history = self.model.fit(train_loader, 
+                    epochs=epochs, batch_size=batch_size, shuffle=False, 
+                    validation_data=eval_loader, #steps_per_epoch= train_loader.n / batch_size,
+                    callbacks=[es]
+                )
+        else :
+            es = tf.keras.callbacks.EarlyStopping(monitor='loss', \
+                mode='min', patience=patience, restore_best_weights=True,verbose=1)
+
+            history = self.model.fit(train_loader, 
+                    epochs=epochs, batch_size=batch_size, shuffle=False, 
+                    #steps_per_epoch= train_loader.n / batch_size,
+                    callbacks=[es]
+                )
+
+        self.trained = True
+        
+        return history
+
+    
+    def save_nn(self, model_filename):
+        if self.trained:
+            self.model.save(model_filename)
+        else:
+            print('The model must be trained first.')
+    
+    def load_nn(self, model_filename, trained_model=True):
+        ''' This function loads the neural network.
+
+            !Important!
+            -----------
+            The simulation object must be the same with the one that it was used during trainning. 
+        '''
+        self.model = load_model(model_filename,  compile=False)
+        self.trained = trained_model
+        print('Loaded model in', self.__class__.__name__,':')
+        self.model.summary()
+        
+        

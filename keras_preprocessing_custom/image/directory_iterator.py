@@ -94,7 +94,7 @@ class DirectoryIterator(BatchFromFilesMixin, Iterator):
         self.class_mode = class_mode
         self.dtype = dtype
         # First, count the number of samples and classes.
-        self.samples = 0
+        self.samples_y = 0
 
         
         classes_y = []
@@ -147,8 +147,13 @@ class DirectoryIterator(BatchFromFilesMixin, Iterator):
             classes, filenames = res.get()
             self.filenames_x += filenames
 
-        self.samples = len(self.filenames_y)
-        self.classes = np.zeros((self.samples,), dtype='int32')
+        self.samples_x = len(self.filenames_x)
+        self.samples_y = len(self.filenames_y)
+
+        if self.samples_x != self.samples_y:
+            raise AttributeError('X and Y must have the same amount of samples.')
+
+        self.classes = np.zeros((self.samples_y,), dtype='int32')
         for classes in classes_list:
             self.classes[i:i + len(classes)] = classes
             i += len(classes)
@@ -157,11 +162,11 @@ class DirectoryIterator(BatchFromFilesMixin, Iterator):
         if self.num_classes_y != self.num_classes_x:
             raise AttributeError('The classes of x and y must have the same len in regression.')
         print('Found %d images belonging to %d classes.' %
-              (self.samples, self.num_classes_y))
+              (self.samples_x, self.num_classes_y))
         pool.close()
         pool.join()
         
-        super(DirectoryIterator, self).__init__(self.samples,
+        super(DirectoryIterator, self).__init__(self.samples_x,
                                                 batch_size,
                                                 shuffle,
                                                 seed)
