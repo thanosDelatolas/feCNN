@@ -23,7 +23,7 @@ eeg_Yi = zeros(67,67, n_samples);
 
 w_bar = waitbar(0, 'Creating CNN input...');
 
-path_to_save ='../../../Downloads/inputs/zi_%d.npy';
+path_to_save ='../../../Downloads/topos/zi_%d.npy';
 
 tic;
 for ii=1:n_samples
@@ -47,10 +47,11 @@ end
 toc;
 
 close(w_bar);
-% save('/media/thanos/Elements/thanos/sim_data/sim_type_1/downsampled_dipoles-25k/1e-15/eeg_4TeD_topos.mat', 'eeg_topos', '-v7.3')
-% save('/media/thanos/Elements/thanos/sim_data/sim_type_1/downsampled_dipoles-25k/1e-15/eeg_4TeD_topos_xi.mat', 'eeg_Xi', '-v7.3')
-% save('/media/thanos/Elements/thanos/sim_data/sim_type_1/downsampled_dipoles-25k/1e-15/eeg_4TeD_topos_yi.mat', 'eeg_Yi', '-v7.3')
-% 
+
+%save('../../../Downloads/eeg_5TeD_topos.mat', 'eeg_topos', '-v7.3')
+save('../../../Downloads/eeg_5TeD_topos_xi.mat', 'eeg_Xi', '-v7.3')
+save('../../../Downloads/eeg_5TeD_topos_yi.mat', 'eeg_Yi', '-v7.3')
+
 
 %% visualize
 

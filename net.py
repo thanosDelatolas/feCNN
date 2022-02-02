@@ -402,3 +402,10 @@ class EEG_CNN(NN):
             return mean_squared_errors
         else :
             print('The model must be trained first.')
+
+
+class EEGLargeCnn():
+    ''' This CNN it is used only for the full source space (50460 dipoles) and it is trained using a  keras.utils.Sequence
+    from the package  keras_preprocessing_custom. It can be used a very large dataset because the data are loaded in batches
+    from the directories y and x . 
+    '''
