@@ -102,7 +102,7 @@ class Simulation:
         
         eeg = np.zeros((73,n_samples))
 
-        print('Creating dataset with samles: {} .'.format(n_samples))
+        print('Creating dataset with {} samles'.format(n_samples))
 
         for sample in tqdm(range(n_samples)):
             dipole = sample % n_dipoles
