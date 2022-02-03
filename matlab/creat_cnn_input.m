@@ -6,7 +6,7 @@ import_fieldtrip();
 sensor_labels = split(sensor_labels{4});
 sensor_labels = sensor_labels(1:end-1);
 
-eeg = double(readNPY('../../../Downloads/eeg.npy'));
+eeg = double(readNPY('../../../Downloads/eeg_train.npy'));
 
 %sources = double(readNPY('../../../Downloads/sources.npy'));
 
@@ -23,7 +23,7 @@ eeg_Yi = zeros(67,67, n_samples);
 
 w_bar = waitbar(0, 'Creating CNN input...');
 
-path_to_save ='../../../Downloads/topos_eval/zi_%d.npy';
+path_to_save ='../../../Downloads/topos/zi_%d.npy';
 
 tic;
 for ii=1:n_samples

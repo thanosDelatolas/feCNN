@@ -114,6 +114,7 @@ class Simulation:
 
             np.save(directory_y+'source_{}.npy'.format(sample+1), source)
         
+        self.eeg_data = eeg
         np.save(directory_x+'eeg.npy',eeg)
 
     
