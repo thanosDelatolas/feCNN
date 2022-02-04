@@ -73,8 +73,8 @@ class DirectoryIterator(BatchFromFilesMixin, Iterator):
         return super(DirectoryIterator, cls).__new__(cls)
 
     def __init__(self,
-                 directory_x,
-                 directory_y,
+                 dir_x,
+                 dir_y,
                  class_mode='eeg',
                  batch_size=32,
                  shuffle=True,
@@ -85,8 +85,8 @@ class DirectoryIterator(BatchFromFilesMixin, Iterator):
         self.target_size_y = (50460,)
         self.target_size_x = (67,67)
        
-        self.directory_x = directory_x
-        self.directory_y = directory_y
+        self.dir_x = dir_x
+        self.dir_y = dir_y
        
         if class_mode not in self.allowed_class_modes:
             raise ValueError('Invalid class_mode: {}; expected one of: {}'
@@ -98,16 +98,16 @@ class DirectoryIterator(BatchFromFilesMixin, Iterator):
 
         
         classes_y = []
-        for subdir in sorted(os.listdir(directory_y)):
-            if os.path.isdir(os.path.join(directory_y, subdir)):
+        for subdir in sorted(os.listdir(dir_y)):
+            if os.path.isdir(os.path.join(dir_y, subdir)):
                 classes_y.append(subdir)
 
         self.num_classes_y = len(classes_y)
         self.class_indices_y = dict(zip(classes_y, range(len(classes_y))))
 
         classes_x = []
-        for subdir in sorted(os.listdir(directory_x)):
-            if os.path.isdir(os.path.join(directory_x, subdir)):
+        for subdir in sorted(os.listdir(dir_x)):
+            if os.path.isdir(os.path.join(dir_x, subdir)):
                 classes_x.append(subdir)
         
         self.num_classes_x = len(classes_x)
@@ -122,7 +122,7 @@ class DirectoryIterator(BatchFromFilesMixin, Iterator):
         i = 0
 
         # loader for y
-        for dirpath in (os.path.join(directory_y, subdir) for subdir in classes_y):
+        for dirpath in (os.path.join(dir_y, subdir) for subdir in classes_y):
             results_y.append(
                 pool.apply_async(_list_valid_filenames_in_directory,
                                  (dirpath, self.white_list_formats, None,
@@ -132,7 +132,7 @@ class DirectoryIterator(BatchFromFilesMixin, Iterator):
         # loader for x
         results_x = []
         self.filenames_x = []
-        for dirpath in (os.path.join(directory_x, subdir) for subdir in classes_x):
+        for dirpath in (os.path.join(dir_x, subdir) for subdir in classes_x):
             print(dirpath)
             results_x.append(
                 pool.apply_async(_list_valid_filenames_in_directory,

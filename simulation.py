@@ -85,7 +85,7 @@ class Simulation:
         self.simulated = True
 
 
-    def create_large_dataset(self, times_each_dipole,directory_x,directory_y):
+    def create_large_dataset(self, times_each_dipole,dir_x,dir_y):
         ''' This method creates a trainning dataset which has n_dipoles * times_each_dipole  source spaces. 
             Each dipole is selected times_each_dipole as a seed location while the electrical current of the dipole 
             and the extent of the activation are selected randomly.
@@ -112,13 +112,13 @@ class Simulation:
             # calculate eeg 
             eeg[:,sample] = np.array(self.project_sources(source, verbose=False))
 
-            np.save(directory_y+'source_{}.npy'.format(sample+1), source)
+            np.save(dir_y+'source_{}.npy'.format(sample+1), source * (1e14))
         
         self.eeg_data = eeg
-        np.save(directory_x+'eeg.npy',eeg)
+        np.save(dir_x+'eeg.npy',eeg)
 
     
-    def create_large_evaluate_dataset(self, n_samples,directory_x,directory_y):
+    def create_large_evaluate_dataset(self, n_samples,dir_x,dir_y):
         ''' This method creates a dataset for evaluation dataset.
 
             The source center is selected randomly.
@@ -143,9 +143,9 @@ class Simulation:
             # calculate eeg 
             eeg[:,sample] = np.array(self.project_sources(source, verbose=False))
 
-            np.save(directory_y+'source_{}.npy'.format(sample+1), source)
+            np.save(dir_y+'source_{}.npy'.format(sample+1), source)
         
-        np.save(directory_x+'eeg.npy',eeg)
+        np.save(dir_x+'eeg.npy',eeg)
 
 
     def simulate(self, n_samples=10000):

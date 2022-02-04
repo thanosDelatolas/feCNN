@@ -30,8 +30,8 @@ class DataLoader(object):
 
        
     def flow_from_directory(self,
-                            directory_x,
-                            directory_y,
+                            dir_x,
+                            dir_y,
                             class_mode='eeg',
                             batch_size=32,
                             shuffle=True,
@@ -41,11 +41,11 @@ class DataLoader(object):
         """Takes the path to a directory & generates batches of augmented data.
 
         # Arguments
-            directory_y: string, path to the target directory for the y data (output of the neural net)
+            dir_y: string, path to the target directory for the y data (output of the neural net)
                 It should contain one subdirectory per class.
                 Any PNG, JPG, BMP, PPM, npy, mat 
             
-            directory_x: string, path to the target directory for the x data (input of the neural net)
+            dir_x: string, path to the target directory for the x data (input of the neural net)
                 It should contain one subdirectory per class.
                 Any PNG, JPG, BMP, PPM, npy, mat 
                 
@@ -70,8 +70,8 @@ class DataLoader(object):
                 and `y` is a NumPy array of corresponding labels.
         """
         return DirectoryIterator(
-            directory_x,
-            directory_y,
+            dir_x,
+            dir_y,
             class_mode=class_mode,
             batch_size=batch_size,
             shuffle=shuffle,
