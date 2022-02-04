@@ -226,7 +226,7 @@ class BatchFromFilesMixin():
                      
             # iterator for npy files.
             fname = self.filenames_y[j]
-            y = np.load(os.path.join(self.directory_y, fname))
+            y = np.load(os.path.join(self.directory_y, fname)) * (1e14)
 
             batch_y[i] = y
        
