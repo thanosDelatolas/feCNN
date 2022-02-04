@@ -133,6 +133,7 @@ class DirectoryIterator(BatchFromFilesMixin, Iterator):
         results_x = []
         self.filenames_x = []
         for dirpath in (os.path.join(directory_x, subdir) for subdir in classes_x):
+            print(dirpath)
             results_x.append(
                 pool.apply_async(_list_valid_filenames_in_directory,
                                     (dirpath, self.white_list_formats, None,
@@ -150,6 +151,9 @@ class DirectoryIterator(BatchFromFilesMixin, Iterator):
         self.samples_x = len(self.filenames_x)
         self.samples_y = len(self.filenames_y)
 
+        print('Y samples:',self.samples_y)
+        print('X samples:',self.samples_x)
+        
         if self.samples_x != self.samples_y:
             raise AttributeError('X and Y must have the same amount of samples.')
 

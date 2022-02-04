@@ -489,8 +489,8 @@ class EEGLargeCnn():
         
         if self.directory_x_eval != None and self.directory_y_eval != None:
             eval_loader = loader.flow_from_directory(
-                directory_y=self.directory_y,
-                directory_x=self.directory_x,
+                directory_y=self.directory_y_eval,
+                directory_x=self.directory_x_eval,
                 batch_size=batch_size,
             )
 
