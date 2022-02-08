@@ -412,18 +412,18 @@ class EEGLargeCnn():
 
         Arguments
         ---------
-            directory_y : directory with the sources dataset.
-            directory_x : directory with the topos dataset.
+            dir_y : directory with the sources dataset.
+            dir_x : directory with the topos dataset.
     '''
 
-    def __init__(self,directory_y,directory_x,directory_y_eval=None,directory_x_eval=None,
+    def __init__(self,dir_y,dir_x,dir_y_eval=None,dir_x_eval=None,
         verbose=False,dipoles=50460
         ):
 
-        self.directory_y = directory_y
-        self.directory_x = directory_x
-        self.directory_y_eval = directory_y_eval
-        self.directory_x_eval = directory_x_eval
+        self.dir_y = dir_y
+        self.dir_x = dir_x
+        self.dir_y_eval = dir_y_eval
+        self.dir_x_eval = dir_x_eval
 
         self.n_dipoles = dipoles
         self.verbose = verbose
@@ -473,8 +473,8 @@ class EEGLargeCnn():
         loader = keras_preprocessing_custom.image.DataLoader()
 
         train_loader = loader.flow_from_directory(
-            directory_y=self.directory_y,
-            directory_x=self.directory_x,
+            dir_y=self.dir_y,
+            dir_x=self.dir_x,
             batch_size=batch_size,
         )        
 
@@ -487,10 +487,10 @@ class EEGLargeCnn():
         self.model.compile(optimizer, loss, metrics=None)      
 
         
-        if self.directory_x_eval != None and self.directory_y_eval != None:
+        if self.dir_x_eval != None and self.dir_y_eval != None:
             eval_loader = loader.flow_from_directory(
-                directory_y=self.directory_y_eval,
-                directory_x=self.directory_x_eval,
+                dir_y=self.dir_y_eval,
+                dir_x=self.dir_x_eval,
                 batch_size=batch_size,
             )
 
