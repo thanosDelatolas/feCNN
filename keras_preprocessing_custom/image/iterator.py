@@ -31,6 +31,7 @@ class Iterator(IteratorType):
     white_list_formats = ('png', 'jpg', 'jpeg', 'bmp', 'ppm', 'tif', 'tiff','npy', 'mat')
 
     def __init__(self, n, batch_size, shuffle, seed):
+
         self.n = n
         self.batch_size = batch_size
         self.seed = seed
@@ -225,19 +226,26 @@ class BatchFromFilesMixin():
         for i, j in enumerate(index_array):
                      
             # iterator for npy files.
-            fname = self.filenames_y[j]
-            y = np.load(os.path.join(self.directory_y, fname))
+            if self.load_file_names:
+                fname = self.filenames_y[j]
+            else:
+                fname = self.classes_y[0]+'/source_{}.npy'.format(i+1)
 
+            y = np.load(os.path.join(self.dir_y, fname))
             batch_y[i] = y
        
 
         batch_x = np.zeros((len(index_array),67,67))
         if self.class_mode == 'eeg':
             for i, j in enumerate(index_array):
-                fname = self.filenames_x[j]
-                x = np.load(os.path.join(self.directory_x, fname))
+                if self.load_file_names:
+                    fname = self.filenames_x[j]
+                else :
+                    fname = self.classes_x[0]+'/zi_{}.npy'.format(i+1)
+                
+                x = np.load(os.path.join(self.dir_x, fname))
                 batch_x[i] = x
-
+        
         return batch_x, batch_y
 
     @property

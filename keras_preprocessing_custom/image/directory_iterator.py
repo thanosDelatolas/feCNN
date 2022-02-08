@@ -79,11 +79,16 @@ class DirectoryIterator(BatchFromFilesMixin, Iterator):
                  batch_size=32,
                  shuffle=True,
                  seed=None,
-                 
+                 load_file_names=False,
+                 n=252300,
                  follow_links=False,
                  dtype='float32'):
         self.target_size_y = (50460,)
         self.target_size_x = (67,67)
+        self.load_file_names = load_file_names
+
+        if not self.load_file_names:
+            shuffle = False
        
         self.dir_x = dir_x
         self.dir_y = dir_y
@@ -93,82 +98,88 @@ class DirectoryIterator(BatchFromFilesMixin, Iterator):
                              .format(class_mode, self.allowed_class_modes))
         self.class_mode = class_mode
         self.dtype = dtype
+
+       
         # First, count the number of samples and classes.
         self.samples_y = 0
 
         
-        classes_y = []
+        self.classes_y = []
         for subdir in sorted(os.listdir(dir_y)):
             if os.path.isdir(os.path.join(dir_y, subdir)):
-                classes_y.append(subdir)
+                self.classes_y.append(subdir)
 
-        self.num_classes_y = len(classes_y)
-        self.class_indices_y = dict(zip(classes_y, range(len(classes_y))))
+        self.num_classes_y = len(self.classes_y)
+        self.class_indices_y = dict(zip(self.classes_y, range(len(self.classes_y))))
 
-        classes_x = []
+        self.classes_x = []
         for subdir in sorted(os.listdir(dir_x)):
             if os.path.isdir(os.path.join(dir_x, subdir)):
-                classes_x.append(subdir)
+                self.classes_x.append(subdir)
         
-        self.num_classes_x = len(classes_x)
-        self.class_indices_x = dict(zip(classes_x, range(len(classes_x))))
+        self.num_classes_x = len(self.classes_x)
+        self.class_indices_x = dict(zip(self.classes_x, range(len(self.classes_x))))
 
-        pool = multiprocessing.pool.ThreadPool()
+        if self.load_file_names:
 
-        # Second, build an index of the images
-        # in the different class subfolders.
-        results_y = []
-        self.filenames_y = []
-        i = 0
+            pool = multiprocessing.pool.ThreadPool()
 
-        # loader for y
-        for dirpath in (os.path.join(dir_y, subdir) for subdir in classes_y):
-            results_y.append(
-                pool.apply_async(_list_valid_filenames_in_directory,
-                                 (dirpath, self.white_list_formats, None,
-                                  self.class_indices_y, follow_links)))
-        
+            # Second, build an index of the images
+            # in the different class subfolders.
+            results_y = []
+            self.filenames_y = []
+            i = 0
 
-        # loader for x
-        results_x = []
-        self.filenames_x = []
-        for dirpath in (os.path.join(dir_x, subdir) for subdir in classes_x):
-            print(dirpath)
-            results_x.append(
-                pool.apply_async(_list_valid_filenames_in_directory,
+            # loader for y
+            for dirpath in (os.path.join(dir_y, subdir) for subdir in self.classes_y):
+                results_y.append(
+                    pool.apply_async(_list_valid_filenames_in_directory,
                                     (dirpath, self.white_list_formats, None,
-                                    self.class_indices_x, follow_links)))
-        classes_list = []
-        for res in results_y:
-            classes, filenames = res.get()
-            classes_list.append(classes)
-            self.filenames_y += filenames
+                                    self.class_indices_y, follow_links)))
+            
 
-        for res in results_x:
-            classes, filenames = res.get()
-            self.filenames_x += filenames
+            # loader for x
+            results_x = []
+            self.filenames_x = []
+            for dirpath in (os.path.join(dir_x, subdir) for subdir in self.classes_x):
+                results_x.append(
+                    pool.apply_async(_list_valid_filenames_in_directory,
+                                        (dirpath, self.white_list_formats, None,
+                                        self.class_indices_x, follow_links)))
+            classes_list = []
+            for res in results_y:
+                classes, filenames = res.get()
+                classes_list.append(classes)
+                self.filenames_y += filenames
 
-        self.samples_x = len(self.filenames_x)
-        self.samples_y = len(self.filenames_y)
+            for res in results_x:
+                classes, filenames = res.get()
+                self.filenames_x += filenames
 
-        print('Y samples:',self.samples_y)
-        print('X samples:',self.samples_x)
-        
-        if self.samples_x != self.samples_y:
-            raise AttributeError('X and Y must have the same amount of samples.')
+            self.samples_x = len(self.filenames_x)
+            self.samples_y = len(self.filenames_y)
 
-        self.classes = np.zeros((self.samples_y,), dtype='int32')
-        for classes in classes_list:
-            self.classes[i:i + len(classes)] = classes
-            i += len(classes)
+            print('Y samples:',self.samples_y)
+            print('X samples:',self.samples_x)
+            
+            if self.samples_x != self.samples_y:
+                raise AttributeError('X and Y must have the same amount of samples.')
+
+            self.classes = np.zeros((self.samples_y,), dtype='int32')
+            for classes in classes_list:
+                self.classes[i:i + len(classes)] = classes
+                i += len(classes)
 
 
-        if self.num_classes_y != self.num_classes_x:
-            raise AttributeError('The classes of x and y must have the same len in regression.')
-        print('Found %d images belonging to %d classes.' %
-              (self.samples_x, self.num_classes_y))
-        pool.close()
-        pool.join()
+            if self.num_classes_y != self.num_classes_x:
+                raise AttributeError('The classes of x and y must have the same len in regression.')
+            print('Found %d images belonging to %d classes.' %
+                (self.samples_x, self.num_classes_y))
+            pool.close()
+            pool.join()
+        else:
+            self.samples_x = n
+            self.samples_y = n
         
         super(DirectoryIterator, self).__init__(self.samples_x,
                                                 batch_size,
