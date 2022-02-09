@@ -37,7 +37,7 @@ class DataLoader(object):
                             shuffle=True,
                             seed=None,
                             follow_links=False,
-                            load_file_names=False,
+                            load_file_names=True,
                             n=252300
                         ):
         """Takes the path to a directory & generates batches of augmented data.
