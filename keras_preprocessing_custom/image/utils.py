@@ -2,6 +2,7 @@
 """
 import io
 import os
+import re
 import warnings
 from pathlib import Path
 
@@ -207,7 +208,7 @@ def _iter_valid_files(directory, white_list_formats, follow_links):
                       key=lambda x: x[0])
 
     for root, _, files in _recursive_list(directory):
-        for fname in sorted(files):
+        for fname in sorted(files, key=natural_keys):
             if fname.lower().endswith('.tiff'):
                 warnings.warn('Using ".tiff" files with multiple bands '
                               'will cause distortion. Please verify your output.')
@@ -351,3 +352,15 @@ def img_to_array(img, data_format='channels_last', dtype='float32'):
     else:
         raise ValueError('Unsupported image shape: %s' % (x.shape,))
     return x
+
+
+def atoi(text):
+    return int(text) if text.isdigit() else text
+
+def natural_keys(text):
+    '''
+    alist.sort(key=natural_keys) sorts in human order
+    http://nedbatchelder.com/blog/200712/human_sorting.html
+    (See Toothy's implementation in the comments)
+    '''
+    return [ atoi(c) for c in re.split(r'(\d+)', text) ]
