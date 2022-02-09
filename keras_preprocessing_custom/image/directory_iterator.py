@@ -81,7 +81,7 @@ class DirectoryIterator(BatchFromFilesMixin, Iterator):
                  seed=None,
                  load_file_names=False,
                  n=252300,
-                 follow_links=False,
+                 follow_links=True,
                  dtype='float32'):
         self.target_size_y = (50460,)
         self.target_size_x = (67,67)
