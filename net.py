@@ -517,6 +517,11 @@ class EEGLargeCnn():
         
         return history
 
+    def predict(self, eeg_topos):
+        ''' Predict the sources from the eeg_topos.
+        '''
+        predicted_sources = self.model.predict(eeg_topos)
+        return predicted_sources
     
     def save_nn(self, model_filename):
         if self.trained:

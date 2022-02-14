@@ -6,7 +6,7 @@ import_fieldtrip();
 sensor_labels = split(sensor_labels{4});
 sensor_labels = sensor_labels(1:end-1);
 
-eeg = double(readNPY('../../../Downloads/sim/eeg.npy'));
+eeg = double(readNPY('../../../Downloads/sim_data/eeg.npy'));
 
 layout = '/home/thanos/fieldtrip/template/layout/EEG1010.lay';
 
@@ -21,7 +21,7 @@ eeg_Yi = zeros(67,67, n_samples);
 
 w_bar = waitbar(0, 'Creating CNN input...');
 
-path_to_save ='../../../Downloads/sim/topos_data/topos/zi_%d.npy';
+%path_to_save ='../../../Downloads/sim/topos_data/topos/zi_%d.npy';
 
 tic;
 for ii=1:n_samples
@@ -32,7 +32,7 @@ for ii=1:n_samples
 
     Zi = -replace_nan(Zi);
     
-    writeNPY(Zi, sprintf(path_to_save,ii))
+    %writeNPY(Zi, sprintf(path_to_save,ii))
     
     eeg_topos(:,:,ii) = Zi;
     eeg_Xi(:,:,ii) = Xi;
@@ -46,9 +46,9 @@ toc;
 
 close(w_bar);
 
-%save('../../../Downloads/eeg_5TeD_topos.mat', 'eeg_topos', '-v7.3')
-% save('../../../Downloads/eeg_5TeD_topos_xi.mat', 'eeg_Xi', '-v7.3')
-% save('../../../Downloads/eeg_5TeD_topos_yi.mat', 'eeg_Yi', '-v7.3')
+save('../../../Downloads/sim_data/eeg_topos.mat', 'eeg_topos', '-v7.3')
+save('../../../Downloads/sim_data/topos_xi.mat', 'eeg_Xi', '-v7.3')
+save('../../../Downloads/sim_data/topos_yi.mat', 'eeg_Yi', '-v7.3')
 
 
 %% visualize
