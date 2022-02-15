@@ -4,10 +4,11 @@ clear; close all; clc;
 % (sLORETA,eLORETA,MNE)
 
 % load leadfield
-Le = double(readNPY('../duneuropy/DataOut/leadfield.npy'))';
+Le = double(readNPY('../duneuropy/DataOut/leadfield_downsampled_10k.npy'))';
 
 % load source space
 load('../duneuropy/Data/dipoles.mat')
+load('../duneuropy/Data/dipoles_downsampled_10k.mat')
 
 % load the real data
 load('../real_data/EEG_avg.mat')
@@ -37,7 +38,7 @@ head = ft_prepare_headmodel(cfg,EEG_avg.elec);
 
 cfg                    = [];
 cfg.method             = 'eloreta';                        %specify minimum norm estimate as method
-cfg.latency            = 0.025;%toi;            %latency of interest
+cfg.latency            = toi;            %latency of interest
 cfg.grid.pos           = lead.pos;
 cfg.grid.inside        = lead.inside;
 cfg.grid.unit          = 'mm';
