@@ -4,11 +4,11 @@ clear; close all; clc;
 % (sLORETA,eLORETA,MNE)
 
 % load leadfield
-Le = double(readNPY('../duneuropy/DataOut/leadfield_downsampled_10k.npy'))';
-
+%Le = double(readNPY('../duneuropy/DataOut/leadfield_downsampled_10k.npy'))';
+Le = double(readNPY('../duneuropy/DataOut/leadfield.npy'))';
 % load source space
 load('../duneuropy/Data/dipoles.mat')
-load('../duneuropy/Data/dipoles_downsampled_10k.mat')
+%load('../duneuropy/Data/dipoles_downsampled_10k.mat')
 
 % load the real data
 load('../real_data/EEG_avg.mat')
@@ -36,6 +36,7 @@ cfg=[];
 cfg.method='singlesphere';
 head = ft_prepare_headmodel(cfg,EEG_avg.elec);
 
+toi = 0.025;
 cfg                    = [];
 cfg.method             = 'eloreta';                        %specify minimum norm estimate as method
 cfg.latency            = toi;            %latency of interest
@@ -49,15 +50,33 @@ cfg.eloreta.lambda     = 25;                        %regularization parameter
 cfg.eloreta.scalesourcecov  = 'yes';                    %scaling the source covariance matrix
 source_ft         = ft_sourceanalysis(cfg,tmp_data);
 
-tmp = (source_ft.avg.pow);
-para = []; para.title = ['Source localization ']; para.tt=eye(3);
+scale = 1;
+source = source_ft.avg.pow;
+max_val = max(source);
+
+clipped_source = zeros(size(source));
+% cliping
+for ii=1:length(source)
+    if source(ii) >= scale * max_val
+        clipped_source(ii) = source(ii);
+    end
+end
+
+figure;
+loc = source_ft.pos;
+scatter3(loc(:,1),loc(:,2),loc(:,3),100,clipped_source,'.')
+colorbar; 
+view([121.7 21.2]);
+
+%tmp = (source_ft.avg.pow);
+%para = []; para.title = ['Source localization ']; para.tt=eye(3);
 
 %plot_inv_on_surf(model,para,tmp,0.8,source_grid,mri_t1,1,0,0);%tmp(:,61)
 
-mri_t1        = ft_read_mri(T1_name);
-
-mri_data_scale     = 60;
-mri_data_clipping  = .8;
-
-source_activation_mri(mri_t1,mri_data_scale,tmp,source_grid,...
-    mri_data_clipping,EEG_avg.time(inv_ind),'EEG Source Localization with eLORETA');
+% mri_t1        = ft_read_mri(T1_name);
+% 
+% mri_data_scale     = 60;
+% mri_data_clipping  = .8;
+% 
+% source_activation_mri(mri_t1,mri_data_scale,tmp,source_grid,...
+%     mri_data_clipping,EEG_avg.time(inv_ind),'EEG Source Localization with eLORETA');
