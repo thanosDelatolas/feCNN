@@ -79,3 +79,25 @@ mri_data_clipping  = .8;
 source_activation_mri(mri_t1,mri_data_scale,source_ft.avg.pow,source_grid,...
     mri_data_clipping,EEG_avg.time(151),'EEG Source Localization with eLORETA');
 
+
+%% dipole fit
+cfg = [];
+cfg.numdipoles    =  1;
+%cfg.grid          = source_grid;
+cfg.headmodel     = fake_head;
+cfg.grid        = Le;
+cfg.elec          = EEG_avg.elec;
+cfg.latency       = 0.025;
+cfg.nonlinear       = 'no';
+
+dipfit_fem        = ft_dipolefitting(cfg,EEG_avg);
+
+loc = source_grid;
+figure;
+scatter3(loc(:,1),loc(:,2),loc(:,3),100,'.')
+hold on
+act_loc = dipfit_fem.dip.pos(1,:) .* 10^-1;
+
+ft_plot_dipole(act_loc, mean(dipfit_fem.dip.mom(1:3,:),2), 'color', 'b','unit','mm')
+colorbar; 
+
