@@ -1,17 +1,13 @@
 clear; close all; clc;
 
-% this script solves the inverse problem using classic methods
-% (sLORETA,eLORETA,MNE)
 
-% load leadfield
-%Le = double(readNPY('../duneuropy/DataOut/leadfield_downsampled_10k.npy'))';
 Le = double(readNPY('../duneuropy/DataOut/leadfield.npy'))';
-% load source space
 load('../duneuropy/Data/dipoles.mat')
-%load('../duneuropy/Data/dipoles_downsampled_10k.mat')
+
 
 % load the real data
 load('../real_data/EEG_avg.mat')
+
 
 import_fieldtrip();
 
@@ -29,54 +25,57 @@ end
 
 lead.label=EEG_avg.label;
 
-tmp_data = EEG_avg;
+elec_mm = ft_convert_units(EEG_avg.elec,'mm');
 
 %create a fake head model
 cfg=[];
 cfg.method='singlesphere';
-head = ft_prepare_headmodel(cfg,EEG_avg.elec);
+fake_head = ft_prepare_headmodel(cfg,elec_mm);
 
-toi = 0.025;
+%% Minimum norm estimate
+cfg         = [];
+cfg.method  = 'mne';
+cfg.latency = 0.025;%[0.024 0.026];
+cfg.grid    = Le;
+cfg.headmodel    = fake_head;
+cfg.mne.prewhiten = 'yes';
+cfg.mne.lambda    = 3;
+cfg.mne.scalesourcecov = 'yes';
+minimum_norm  = ft_sourceanalysis(cfg,EEG_avg);
+
+T1_name = '../../../Downloads/T1w_1mm_anon.nii';
+mri_t1        = ft_read_mri(T1_name);
+
+
+cfg            = [];
+cfg.parameter  = 'avg.pow';
+interpolate  = ft_sourceinterpolate(cfg, minimum_norm , mri_t1);
+
+cfg = [];
+cfg.funparameter = 'pow';
+cfg.method        = 'ortho';
+ft_sourceplot(cfg,interpolate);
+
+
+%% eLORETA
+
 cfg                    = [];
-cfg.method             = 'eloreta';                        %specify minimum norm estimate as method
-cfg.latency            = toi;            %latency of interest
+cfg.method             = 'eloreta';                       
+cfg.latency            = [0.024 0.026];            %latency of interest
 cfg.grid.pos           = lead.pos;
 cfg.grid.inside        = lead.inside;
 cfg.grid.unit          = 'mm';
 cfg.grid.leadfield     = lead.leadfield;
-cfg.headmodel          = head;
+cfg.headmodel          = fake_head;
 cfg.eloreta.prewhiten  = 'yes';                    %prewhiten data
-cfg.eloreta.lambda     = 25;                        %regularization parameter
+cfg.eloreta.lambda     = 3;                        %regularization parameter
 cfg.eloreta.scalesourcecov  = 'yes';                    %scaling the source covariance matrix
-source_ft         = ft_sourceanalysis(cfg,tmp_data);
+source_ft         = ft_sourceanalysis(cfg, EEG_avg);
 
-scale = 1;
-source = source_ft.avg.pow;
-max_val = max(source);
 
-clipped_source = zeros(size(source));
-% cliping
-for ii=1:length(source)
-    if source(ii) >= scale * max_val
-        clipped_source(ii) = source(ii);
-    end
-end
+mri_data_scale     = 60;
+mri_data_clipping  = .8;
 
-figure;
-loc = source_ft.pos;
-scatter3(loc(:,1),loc(:,2),loc(:,3),100,clipped_source,'.')
-colorbar; 
-view([121.7 21.2]);
+source_activation_mri(mri_t1,mri_data_scale,source_ft.avg.pow,source_grid,...
+    mri_data_clipping,EEG_avg.time(151),'EEG Source Localization with eLORETA');
 
-%tmp = (source_ft.avg.pow);
-%para = []; para.title = ['Source localization ']; para.tt=eye(3);
-
-%plot_inv_on_surf(model,para,tmp,0.8,source_grid,mri_t1,1,0,0);%tmp(:,61)
-
-% mri_t1        = ft_read_mri(T1_name);
-% 
-% mri_data_scale     = 60;
-% mri_data_clipping  = .8;
-% 
-% source_activation_mri(mri_t1,mri_data_scale,tmp,source_grid,...
-%     mri_data_clipping,EEG_avg.time(inv_ind),'EEG Source Localization with eLORETA');

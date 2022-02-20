@@ -4,7 +4,7 @@ clc;
 
 import_fieldtrip();
 
-data_name              = '/media/thanos/Elements/thanos/sep_sef/sep_sef.ds';      
+data_name              = '/home/thanos/Documents/sep_sef/sep_sef.ds';      
 
 % Read events
 cfg                    = [];
@@ -19,9 +19,12 @@ cfg                    = [];
 cfg.dataset            = data_name;
 cfg.channel            = 'EEG1010';             % define channel type
 data_eeg               = ft_preprocessing(cfg); % read raw data
-data_eeg               = ft_redefinetrial(cfg_tr_def, data_eeg);
+data_eeg               = ft_redefinetrial(cfg_tr_def, data_eeg); % 72 channles
 
-
+[sensors,sensor_labels] = read_elc('./../duneuropy/Data/electrodes.elc');
+sensor_labels = split(sensor_labels{4});
+sensor_labels = sensor_labels(1:end-1);
+data_eeg.label = sensor_labels;
 
 cfg                = [];
 cfg.hpfilter       = 'yes';        % enable high-pass filtering

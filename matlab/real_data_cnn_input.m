@@ -8,9 +8,17 @@ layout = '/home/thanos/fieldtrip/template/layout/EEG1010.lay';
 % 25ms ,151
 % 24.2 ms 150
 % 25.8 ms 152
-% 24 ms 145
 
-eeg_s = (EEG_avg.avg(:,152) - mean(EEG_avg.avg(:,152)))/std(EEG_avg.avg(:,152));
+ms = '25_8';
+if strcmp(ms,'25')
+    idx = 151;
+elseif strcmp(ms,'24_2')
+        idx = 150;
+elseif  strcmp(ms,'25_8')
+    idx = 152;
+end
+
+eeg_s = (EEG_avg.avg(:,idx) - mean(EEG_avg.avg(:,idx)))/std(EEG_avg.avg(:,idx));
 [Zi, Yi, Xi ] = ft_plot_topo(sensors_1010(:,1),sensors_1010(:,2),eeg_s,'mask',lay.mask,'outline',lay.outline);
 Zi = -replace_nan(Zi);
 
@@ -18,9 +26,9 @@ figure;
 contourf(Xi,Yi,Zi)
 title('EEG topography.');
 
-save('../real_data/eeg_topo_real_25_8ms.mat', 'Zi');
-save('../real_data/eeg_topo_real_xi_25_8ms.mat', 'Xi');
-save('../real_data/eeg_topo_real_yi_25_8ms.mat', 'Yi');
+save(sprintf('../real_data/%sms/eeg_topo_real_%sms.mat',ms,ms), 'Zi');
+save(sprintf('../real_data/%sms/eeg_topo_real_xi_%sms.mat',ms,ms), 'Xi');
+save(sprintf('../real_data/%sms/eeg_topo_real_yi_%sms.mat',ms,ms), 'Yi');
 
 %% 
 
