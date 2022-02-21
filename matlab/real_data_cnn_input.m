@@ -5,15 +5,18 @@ load('../real_data/EEG_avg.mat')
 layout = '/home/thanos/fieldtrip/template/layout/EEG1010.lay';
 [sensors_1010, lay] = compatible_elec(EEG_avg.label, layout);
 
-% 25ms ,151
+% 20 ms 145 (deep source_
 % 24.2 ms 150
+% 25ms ,151
 % 25.8 ms 152
 
-ms = '25_8';
-if strcmp(ms,'25')
-    idx = 151;
+ms = '20';
+if strcmp(ms,'20')
+        idx = 145;
 elseif strcmp(ms,'24_2')
         idx = 150;
+elseif strcmp(ms,'25')
+    idx = 151;
 elseif  strcmp(ms,'25_8')
     idx = 152;
 end
@@ -62,4 +65,11 @@ view([121.7 21.2]);
 %suptitle(strrep(sprintf('Read Data Prediction %sms',ms),'_','.'));
 set(gcf,'Position',[60 180 1600 500])
 
+figure;
+scatter3(loc(:,1),loc(:,2),loc(:,3),100,pred,'.')
+view([291.3 9.2]);
+
+[val,idx] = max(pred);
+
+location = cd_matrix(idx,:)
 
