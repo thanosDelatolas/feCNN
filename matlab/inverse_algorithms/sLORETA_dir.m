@@ -1,5 +1,8 @@
 function [u_sLORETA,s] = sLORETA_dir(b,L,alpha)
-
+%sLORETA function
+%L: leadfield
+%b: data
+%alpha: regularization parameter (usual value 25)
 [m,n] = size(L);
 n_loc = n/3;
 

@@ -44,5 +44,9 @@ set(gcf,'Position',[60 180 1600 500])
 
 %% sLORETA
 
+b = eeg_s;
+alpha = 25;
+[u_sLORETA,s] = sLORETA_dir(b,Le,alpha);
+
 
 
