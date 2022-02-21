@@ -106,12 +106,25 @@ set(gcf, 'Position',[1 1 1200 800])
 
 
 cfg            = [];
-%cfg.zlim       = 'maxmin';
-% cfg.comment    = 'xlim';
-% cfg.commentpos = 'title';
-cfg.xlim       = [0.0245 0.0455];%[EEG_toi_mean_trial EEG_toi_mean_trial+0.01*EEG_toi_mean_trial];
+cfg.zlim       = 'maxmin';
+cfg.comment    = 'xlim';
+%cfg.commentpos = 'title';
+cfg.xlim       = [0.0248 0.0255];%[0.0245 0.0455];%[EEG_toi_mean_trial EEG_toi_mean_trial+0.01*EEG_toi_mean_trial];
 cfg.layout     = 'EEG1010.lay';
-%cfg.fontsize   = 14;
+cfg.fontsize   = 14;
+
+figure;
+ft_topoplotER(cfg, EEG_avg);
+set(gcf, 'Position',[1 1 1200 800])
+
+
+cfg            = [];
+cfg.zlim       = 'maxmin';
+cfg.comment    = 'xlim';
+%cfg.commentpos = 'title';
+cfg.xlim       = [0.019 0.021];%[0.0245 0.0455];%[EEG_toi_mean_trial EEG_toi_mean_trial+0.01*EEG_toi_mean_trial];
+cfg.layout     = 'EEG1010.lay';
+cfg.fontsize   = 14;
 
 figure;
 ft_topoplotER(cfg, EEG_avg);

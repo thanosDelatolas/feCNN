@@ -35,7 +35,7 @@ save(sprintf('../real_data/%sms/eeg_topo_real_yi_%sms.mat',ms,ms), 'Yi');
 
 %% 
 
-ms='25';
+ms='20';
 
 load(sprintf('../real_data/%sms/eeg_topo_real_%sms.mat',ms,ms));
 load(sprintf('../real_data/%sms/eeg_topo_real_xi_%sms.mat',ms,ms));
@@ -45,8 +45,8 @@ load(sprintf('../real_data/%sms/eeg_topo_real_yi_%sms.mat',ms,ms));
 load('../duneuropy/Data/dipoles_downsampled_10k.mat')
 
 pred = readNPY(sprintf('../real_data/%sms/pred_sources_%s.npy',ms,ms));
-
-
+[~,idx] = max(pred);
+location = cd_matrix(idx,:);
 
 loc = cd_matrix(:,1:3);
 
@@ -65,11 +65,5 @@ view([121.7 21.2]);
 %suptitle(strrep(sprintf('Read Data Prediction %sms',ms),'_','.'));
 set(gcf,'Position',[60 180 1600 500])
 
-figure;
-scatter3(loc(:,1),loc(:,2),loc(:,3),100,pred,'.')
-view([291.3 9.2]);
 
-[val,idx] = max(pred);
-
-location = cd_matrix(idx,:)
 
