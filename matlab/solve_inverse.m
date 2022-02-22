@@ -30,27 +30,25 @@ eeg_s = (EEG_avg.avg(:,idx) - mean(EEG_avg.avg(:,idx)))/std(EEG_avg.avg(:,idx)) 
 [Zi, Yi, Xi ] = ft_plot_topo(sensors_1010(:,1),sensors_1010(:,2),eeg_s,'mask',lay.mask,'outline',lay.outline);
 Zi = -replace_nan(Zi);
 
+figure;
+contourf(Xi,Yi,Zi)
+title('EEG topography.');
+
 import_directory('./inverse_algorithms/')
 %% Single Dipole Fit
 
 [dip,best_loc] = SingleDipoleFit(Le, eeg_s);
 [~,idx_max] = max(dip);
 
-figure;
-subplot(1,2,1)
-contourf(Xi,Yi,Zi)
-title('EEG topography.');
 
-subplot(1,2,2)
+figure;
 scatter3(loc(:,1),loc(:,2),loc(:,3),100,dip,'.')
 hold on
 scatter3(loc(idx_max,1),loc(idx_max,2),loc(idx_max,3),1,dip(idx_max),'y', 'linewidth',10)
 title('Dipole fitting localization');
 view([291.3 9.2]);
-colorbar;
-set(gcf,'Position',[60 180 1600 500])
 
-location_dipole_fit = cd_matrix(idx_max,:);
+location_dipole_fit = cd_matrix(idx_max,1:3);
 
 %% sLORETA
 
@@ -60,15 +58,33 @@ alpha = 25;
 [~,idx_max] = max(u_sLORETA);
 
 figure;
-subplot(1,2,1)
-contourf(Xi,Yi,Zi)
-title('EEG topography.');
-
-subplot(1,2,2)
 scatter3(loc(:,1),loc(:,2),loc(:,3),100,u_sLORETA,'.')
 title('sLORETA localization');
 view([291.3 9.2]);
-colorbar;
-set(gcf,'Position',[60 180 1600 500])
 
-location_sloreta = cd_matrix(idx_max,:);
+location_sloreta = cd_matrix(idx_max,1:3);
+
+%% Comparison
+
+% read neural net's prediction
+neural_net_pred = readNPY(sprintf('../real_data/%sms/pred_sources_%s.npy',ms,ms));
+
+
+figure;
+scatter3(loc(:,1),loc(:,2),loc(:,3),100,neural_net_pred,'.')
+title('Neural Net prediciton');
+view([291.3 9.2]);
+
+[~,idx_max] = max(neural_net_pred);
+location_nn= cd_matrix(idx_max,1:3);
+
+fn_nn_sloreta = norm(location_nn-location_sloreta,'fro');
+fn_nn_dipole_fit =  norm(location_nn-location_dipole_fit,'fro');
+fn_sloreta_dipole_fit = norm(location_sloreta-location_dipole_fit,'fro');
+
+
+methods = ["Neural Net vs sLORETA";"Neural Net vs Dipole Fit";"sLORETA vs Dipole Fit"];
+frobenius_norm = [fn_nn_sloreta;fn_nn_dipole_fit;fn_sloreta_dipole_fit];
+
+res_table = table(methods,frobenius_norm);
+disp(res_table)
