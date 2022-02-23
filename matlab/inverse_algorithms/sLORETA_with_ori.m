@@ -1,4 +1,4 @@
-function s = My_sLORETA(b,L,alpha)
+function s = sLORETA_with_ori(b,L,alpha)
 
 % Dmne is the dipole that compute for MNE
 % invS is inverse of standarized matrix S
@@ -34,7 +34,7 @@ for i=1:n_loc
     
     %     R = L(:,ind)'  *  E(:,ind);
     %     s(i) = u_mns(ind)'*(R \ u_mns(ind)); % standardized current density power
-    %%     s(i) = sqrt(s(i));                   % standardized current density amplitude
+    %     s(i) = sqrt(s(i));                   % standardized current density amplitude
     %
     
     invS = inv( L(:,ind)' * E(:,ind) );
