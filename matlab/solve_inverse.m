@@ -16,7 +16,7 @@ layout = '/home/thanos/fieldtrip/template/layout/EEG1010.lay';
 [sensors_1010, lay] = compatible_elec(EEG_avg.label, layout);
 
 
-ms = '20';
+ms = '25';
 if strcmp(ms,'20')
         eeg_idx = 145;
 elseif strcmp(ms,'24_2')
@@ -54,10 +54,10 @@ location_dipole_fit = cd_matrix(idx_max,1:3);
 
 b = eeg_s;
 alpha = 25;
-sLoreta_out = sLORETA_with_ori(b,Le,alpha);
+s_loreta_out = sLORETA_with_ori(b,Le,alpha);
 
 % find the average 3d-coordinates of the 100 dipoles with max amplityde
-[max_100_values, max_100_indexes] = maxk(sLoreta_out,100);
+[max_100_values, max_100_indexes] = maxk(s_loreta_out,100);
 
 coordinates = cd_matrix(max_100_indexes,1:3);
 average_coordinate = mean(coordinates,1);
@@ -68,7 +68,7 @@ dip_sloreta = mean(max_100_values);
 %[~,idx_max] = max(sLoreta_out);
 
 figure;
-scatter3(loc(:,1),loc(:,2),loc(:,3),100,zeros(size(sLoreta_out)),'.')
+scatter3(loc(:,1),loc(:,2),loc(:,3),100,zeros(size(s_loreta_out)),'.')
 hold on
 scatter3(location_sloreta(1),location_sloreta(2),location_sloreta(3),1,dip_sloreta,'y','linewidth',14)
 title('sLORETA localization');
@@ -77,7 +77,7 @@ view([291.3 9.2]);
 %% Load the neural net's predction
 
 % read neural net's prediction
-neural_net_pred = readNPY(sprintf('../real_data/%sms/pred_sources_%s.npy',ms,ms));
+neural_net_pred = double(readNPY(sprintf('../real_data/%sms/pred_sources_%s.npy',ms,ms)));
 
 
 figure;
@@ -114,15 +114,15 @@ source_grid = downsample(cd_matrix(:,1:3),3);
 
 % project to MRI the neural net's prediction
 source_activation_mri(mri_t1,mri_data_scale,neural_net_pred,source_grid,...
-    mri_data_clipping,EEG_avg.time(eeg_idx),'Source Localization with Neural Net');
+    mri_data_clipping,EEG_avg.time(eeg_idx),'Localization with Neural Net');
 
 % project to MRI the sLORETA solution
-source_activation_mri(mri_t1,mri_data_scale,sLoreta_out,cd_matrix(:,1:3),...
-    mri_data_clipping,EEG_avg.time(eeg_idx),'Source Localization with sLORETA');
+source_activation_mri(mri_t1,mri_data_scale,s_loreta_out,source_grid,...
+    mri_data_clipping,EEG_avg.time(eeg_idx),'Localization with sLORETA');
 
 
 % project to MRI the dipole fit solution
-source_activation_mri(mri_t1,mri_data_scale,dipole_fit_out,cd_matrix(:,1:3),...
-    mri_data_clipping,EEG_avg.time(eeg_idx),'EEG Source Localization with Dipole Fit');
+source_activation_mri(mri_t1,mri_data_scale/100,dipole_fit_out,source_grid,...
+    mri_data_clipping,EEG_avg.time(eeg_idx),'Localization with Dipole Fit');
 
 
