@@ -35,6 +35,7 @@ contourf(Xi,Yi,Zi)
 title('EEG topography.');
 
 import_directory('./inverse_algorithms/')
+
 %% Single Dipole Fit
 
 [dipole_fit_out,best_loc] = SingleDipoleFit(Le, eeg_s);
@@ -44,6 +45,9 @@ import_directory('./inverse_algorithms/')
 
 figure;
 scatter3(loc(:,1),loc(:,2),loc(:,3),100,dipole_fit_out,'.')
+
+hold on
+scatter3(location_dipole_fit(1),location_dipole_fit(2),location_dipole_fit(3),1,max(dipole_fit_out),'y','linewidth',9);
 % title('Dipole fitting localization');
 % view([291.3 9.2]);
 view([-251.1 7.6]);
@@ -60,6 +64,8 @@ s_loreta_out = sLORETA_with_ori(b,Le,alpha);
 
 figure;
 scatter3(loc(:,1),loc(:,2),loc(:,3),100,s_loreta_out,'.')
+hold on
+scatter3(location_sloreta(1),location_sloreta(2),location_sloreta(3),1,max(s_loreta_out),'y','linewidth',9);
 %title('sLORETA localization');
 %view([291.3 9.2]);
 view([-251.1 7.6]);
@@ -75,7 +81,7 @@ neural_net_pred = double(readNPY(sprintf('../real_data/%sms/pred_sources_%s.npy'
 
 figure;
 scatter3(loc(:,1),loc(:,2),loc(:,3),100,neural_net_pred,'.')
-title('Neural Net prediciton');
+%title('Neural Net prediciton');
 %view([291.3 9.2]);
 view([-251.1 7.6]);
 
@@ -104,6 +110,7 @@ mri_data_clipping  = .8;
 % create the source grid
 source_grid = downsample(cd_matrix(:,1:3),3);
 
+
 % project to MRI the neural net's prediction
 source_activation_mri(mri_t1,mri_data_scale,neural_net_pred,source_grid,...
     mri_data_clipping,EEG_avg.time(eeg_idx),'Localization with Neural Net');
@@ -118,3 +125,7 @@ source_activation_mri(mri_t1,mri_data_scale,dipole_fit_out,source_grid,...
     mri_data_clipping,EEG_avg.time(eeg_idx),'Localization with Dipole Fit');
 
 
+%% Save files
+
+path_to_save = '../../GitHub/presentations/4. Results/res/';
+%saver(path_to_save,1, 7, 0);
