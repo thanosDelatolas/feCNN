@@ -16,7 +16,7 @@ layout = '/home/thanos/fieldtrip/template/layout/EEG1010.lay';
 [sensors_1010, lay] = compatible_elec(EEG_avg.label, layout);
 
 
-ms = '25';
+ms = '20';
 if strcmp(ms,'20')
         eeg_idx = 145;
 elseif strcmp(ms,'24_2')
@@ -38,19 +38,16 @@ import_directory('./inverse_algorithms/')
 %% Single Dipole Fit
 
 [dipole_fit_out,best_loc] = SingleDipoleFit(Le, eeg_s);
-[~,idx_max] = max(dipole_fit_out);
 
-dipole_fit_out = normalize_vec(dipole_fit_out);
+[dipole_fit_out,location_dipole_fit] = create_source_activation_vector(...
+    dipole_fit_out,'dipole_fit',cd_matrix);
 
 figure;
 scatter3(loc(:,1),loc(:,2),loc(:,3),100,dipole_fit_out,'.')
-hold on
-scatter3(loc(idx_max,1),loc(idx_max,2),loc(idx_max,3),1,dipole_fit_out(idx_max),'y', 'linewidth',10)
 % title('Dipole fitting localization');
 % view([291.3 9.2]);
 view([-251.1 7.6]);
 
-location_dipole_fit = cd_matrix(idx_max,1:3);
 
 %% sLORETA
 
@@ -58,35 +55,23 @@ b = eeg_s;
 alpha = 25;
 s_loreta_out = sLORETA_with_ori(b,Le,alpha);
 
-% find the average 3d-coordinates of the 100 dipoles with max amplityde
-[max_100_values, max_100_indexes] = maxk(s_loreta_out,100);
-
-s_loreta_out = normalize_vec(s_loreta_out);
-
-coordinates = cd_matrix(max_100_indexes,1:3);
-average_coordinate = mean(coordinates,1);
-location_sloreta = average_coordinate;
-dip_sloreta = mean(max_100_values);
-
-%[u_sLORETA,s] = sLORETA_dir(b,Le,alpha);
-%[~,idx_max] = max(sLoreta_out);
+[s_loreta_out,location_sloreta] = create_source_activation_vector(...
+    s_loreta_out,'sLORETA',cd_matrix);
 
 figure;
-scatter3(loc(:,1),loc(:,2),loc(:,3),100,zeros(size(s_loreta_out)),'.')
-hold on
-scatter3(location_sloreta(1),location_sloreta(2),location_sloreta(3),1,dip_sloreta,'y','linewidth',10)
+scatter3(loc(:,1),loc(:,2),loc(:,3),100,s_loreta_out,'.')
 %title('sLORETA localization');
 %view([291.3 9.2]);
 view([-251.1 7.6]);
+
 
 %% Load the neural net's predction
 
 % read neural net's prediction
 neural_net_pred = double(readNPY(sprintf('../real_data/%sms/pred_sources_%s.npy',ms,ms)));
-[~,idx_max] = max(neural_net_pred);
-location_nn= cd_matrix(idx_max,1:3);
 
-neural_net_pred = normalize_vec(neural_net_pred);
+[neural_net_pred,location_nn] = create_source_activation_vector(...
+    neural_net_pred,'nn',cd_matrix);
 
 figure;
 scatter3(loc(:,1),loc(:,2),loc(:,3),100,neural_net_pred,'.')
