@@ -43,7 +43,7 @@ axial_pos    = [.1 .05 .4 .4];
 
 count = pos(idm,:);
 
-dat = (dat - min(dat)) / ( max(dat) - min(dat));
+%dat = (dat - min(dat)) / ( max(dat) - min(dat));
 
 img = nan*ones(length(xx),length(yy),length(zz));
 z1 = unique(pos(:,3));
