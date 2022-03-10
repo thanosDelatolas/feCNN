@@ -28,8 +28,8 @@ cnn_dist_db = [];
 s_loreta_dist_db = [];
 dipole_scan_dist_db = [];
 
-for ii=1:1%length(snr_db)
-    snr = int2str(snr_db(ii+2));
+for ii=1:length(snr_db)
+    snr = int2str(snr_db(ii));
     fprintf('Load data for evaluation ...\n');
     % read the eeg data
     eeg_signals = double(readNPY(sprintf('./../eval_sim_data/%sdb/eeg_noisy.npy',snr)));
