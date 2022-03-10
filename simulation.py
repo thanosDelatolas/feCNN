@@ -118,34 +118,30 @@ class Simulation:
         np.save(dir_x+'eeg.npy',eeg)
 
     
-    def create_large_evaluate_dataset(self, n_samples,dir_x,dir_y):
-        ''' This method creates a dataset for evaluation dataset.
+    def create_evaluate_dataset(self, n_samples, snr=5):
+        ''' This method creates a dataset for evaluation.
 
-            The source center is selected randomly.
-            
-            The shape of the simulated sources will be  n_samples, n_dipoles.
+            Each source center is selected randomly.
 
-            Hence, times_each_dipole * n_dipoles different source spaces will be created.
-
-            it stores each simulated source and eeg to a folder in order to user keras_preprocessing_custom for the
-            trainning.
+            At the final eeg signal gaussian white noise is added with the 
+            given snr (in dB).
         '''
         n_dipoles = self.fwd.leadfield.shape[1]
             
         eeg = np.zeros((73,n_samples))
-
-        print('Creating dataset with {} samles'.format(n_samples))
+        sources = np.zeros((n_dipoles,n_samples))
+        print('Creating evalation dataset with {} samles and with snr {} dB'.format(n_samples,snr))
 
         for sample in tqdm(range(n_samples)):
 
             # simulate source
             source = self.simulate_source()
+            sources[:, sample] = source
             # calculate eeg 
-            eeg[:,sample] = np.array(self.project_sources(source, verbose=False))
+            eeg_clean = np.array(self.project_sources(source, verbose=False))
+            eeg[:,sample] = eeg_clean + self.add_noise_to_eeg(eeg_clean, snr)
 
-            np.save(dir_y+'source_{}.npy'.format(sample+1), source)
-        
-        np.save(dir_x+'eeg.npy',eeg)
+        return eeg, sources
 
 
     def simulate(self, n_samples=10000):
@@ -306,7 +302,7 @@ class Simulation:
     def add_noise_to_eeg(self,eeg, snr_db):
         ''' This function adds noise to the eeg signal
         '''
-        print('Add AWGN with snr {} dB'.format(snr_db))
+        #print('Add AWGN with snr {} dB'.format(snr_db))
 
         mean_power = np.mean(eeg ** 2)
         mean_power_db = 10*np.log10(mean_power)

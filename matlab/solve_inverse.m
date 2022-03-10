@@ -16,7 +16,7 @@ layout = '/home/thanos/fieldtrip/template/layout/EEG1010.lay';
 [sensors_1010, lay] = compatible_elec(EEG_avg.label, layout);
 
 
-ms = '20';
+ms = '25';
 if strcmp(ms,'20')
         eeg_idx = 145;
 elseif strcmp(ms,'24_2')
@@ -32,25 +32,29 @@ Zi = -replace_nan(Zi);
 
 figure;
 contourf(Xi,Yi,Zi)
-title('EEG topography.');
+title(sprintf('EEG topography at %s ms',ms));
 
 import_directory('./inverse_algorithms/')
 
-%% Single Dipole Fit
+%% Single Dipole Scanning
 
-[dipole_fit_out,best_loc] = SingleDipoleFit(Le, eeg_s);
+[dipole_scan_out,best_loc] = SingleDipoleFit(Le, eeg_s);
 
-[dipole_fit_out,location_dipole_fit] = create_source_activation_vector(...
-    dipole_fit_out,'dipole_fit',cd_matrix);
+[dipole_scan_out,location_dipole_scan] = create_source_activation_vector(...
+    dipole_scan_out,'dipole_fit',cd_matrix);
 
 figure;
-scatter3(loc(:,1),loc(:,2),loc(:,3),100,dipole_fit_out,'.')
+scatter3(loc(:,1),loc(:,2),loc(:,3),100,dipole_scan_out,'.')
 
 hold on
-scatter3(location_dipole_fit(1),location_dipole_fit(2),location_dipole_fit(3),1,max(dipole_fit_out),'y','linewidth',9);
-% title('Dipole fitting localization');
-% view([291.3 9.2]);
-view([-251.1 7.6]);
+scatter3(location_dipole_scan(1),location_dipole_scan(2),location_dipole_scan(3),1,max(dipole_scan_out),'y','linewidth',9);
+title('Dipole scanning localization');
+
+if strcmp(ms,'25')
+    view([291.3 9.2]);
+else
+    view([-251.1 7.6]);
+end
 
 
 %% sLORETA
@@ -66,9 +70,13 @@ figure;
 scatter3(loc(:,1),loc(:,2),loc(:,3),100,s_loreta_out,'.')
 hold on
 scatter3(location_sloreta(1),location_sloreta(2),location_sloreta(3),1,max(s_loreta_out),'y','linewidth',9);
-%title('sLORETA localization');
-%view([291.3 9.2]);
-view([-251.1 7.6]);
+title('sLORETA localization');
+
+if strcmp(ms,'25')
+    view([291.3 9.2]);
+else
+    view([-251.1 7.6]);
+end
 
 
 %% Load the neural net's predction
@@ -81,22 +89,29 @@ neural_net_pred = double(readNPY(sprintf('../real_data/%sms/pred_sources_%s.npy'
 
 figure;
 scatter3(loc(:,1),loc(:,2),loc(:,3),100,neural_net_pred,'.')
-%title('Neural Net prediciton');
-%view([291.3 9.2]);
-view([-251.1 7.6]);
+title('Neural Net prediciton');
+if strcmp(ms,'25')
+    view([291.3 9.2]);
+else
+    view([-251.1 7.6]);
+end
 
-%% Comparison
+%% Frobenius norm table
 
 fn_nn_sloreta = norm(location_nn-location_sloreta,'fro');
-fn_nn_dipole_fit =  norm(location_nn-location_dipole_fit,'fro');
-fn_sloreta_dipole_fit = norm(location_sloreta-location_dipole_fit,'fro');
+fn_nn_dipole_fit =  norm(location_nn-location_dipole_scan,'fro');
+fn_sloreta_dipole_scan = norm(location_sloreta-location_dipole_scan,'fro');
 
 
-methods = ["Neural Net vs sLORETA";"Neural Net vs Dipole Fit";"sLORETA vs Dipole Fit"];
-frobenius_norm = [fn_nn_sloreta;fn_nn_dipole_fit;fn_sloreta_dipole_fit];
+methods = ["Neural Net vs sLORETA";"Neural Net vs Dipole Scanning";"sLORETA vs Dipole Scanning"];
+frobenius_norm = [fn_nn_sloreta;fn_nn_dipole_fit;fn_sloreta_dipole_scan];
 
 res_table = table(methods,frobenius_norm);
 disp(res_table)
+
+%% Spatial Dispersion (SD)
+
+
 
 %% show results on the MRI
 
@@ -121,11 +136,11 @@ source_activation_mri(mri_t1,mri_data_scale,s_loreta_out,source_grid,...
 
 
 % project to MRI the dipole fit solution
-source_activation_mri(mri_t1,mri_data_scale,dipole_fit_out,source_grid,...
-    mri_data_clipping,EEG_avg.time(eeg_idx),'Localization with Dipole Fit');
+source_activation_mri(mri_t1,mri_data_scale,dipole_scan_out,source_grid,...
+    mri_data_clipping,EEG_avg.time(eeg_idx),'Localization with Dipole Scan');
 
 
 %% Save files
 
-path_to_save = '../../GitHub/presentations/4. Results/res/';
-%saver(path_to_save,1, 7, 0);
+path_to_save = '../../GitHub/thesis_summary/pics/';
+%saver(path_to_save,2, 3, 0);

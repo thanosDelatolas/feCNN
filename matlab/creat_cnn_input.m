@@ -6,7 +6,8 @@ import_fieldtrip();
 sensor_labels = split(sensor_labels{4});
 sensor_labels = sensor_labels(1:end-1);
 
-eeg = double(readNPY('../../../Downloads/sim_data/eeg.npy'));
+snr='50';
+eeg = double(readNPY(sprintf('./../eval_sim_data/%sdb/eeg_noisy.npy',snr)));
 
 layout = '/home/thanos/fieldtrip/template/layout/EEG1010.lay';
 
@@ -46,9 +47,9 @@ toc;
 
 close(w_bar);
 
-save('../../../Downloads/sim_data/eeg_topos.mat', 'eeg_topos', '-v7.3')
-save('../../../Downloads/sim_data/topos_xi.mat', 'eeg_Xi', '-v7.3')
-save('../../../Downloads/sim_data/topos_yi.mat', 'eeg_Yi', '-v7.3')
+save(sprintf('./../eval_sim_data/%sdb/eeg_topos_noisy.mat',snr), 'eeg_topos', '-v7.3')
+save(sprintf('./../eval_sim_data/%sdb/eeg_topos_xi.mat',snr), 'eeg_Xi', '-v7.3')
+save(sprintf('./../eval_sim_data/%sdb/eeg_topos_yi.mat',snr), 'eeg_Yi', '-v7.3')
 
 
 %% visualize
