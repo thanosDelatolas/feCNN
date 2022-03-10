@@ -11,9 +11,7 @@ eeg = double(readNPY('../../../Downloads/eeg.npy'));
 
 sources = double(readNPY('../../../Downloads/sources.npy'));
 
-load('../duneuropy/Data/dipoles_downsampled_5k.mat')
-
-
+load('../duneuropy/Data/dipoles_downsampled_10k.mat')
 
 layout = '/home/thanos/fieldtrip/template/layout/EEG1010.lay';
 

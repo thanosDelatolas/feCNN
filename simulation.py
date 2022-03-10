@@ -118,7 +118,7 @@ class Simulation:
         np.save(dir_x+'eeg.npy',eeg)
 
     
-    def create_evaluate_dataset(self, n_samples, snr=5):
+    def create_evaluate_dataset(self, n_samples=100, snr=5):
         ''' This method creates a dataset for evaluation.
 
             Each source center is selected randomly.
