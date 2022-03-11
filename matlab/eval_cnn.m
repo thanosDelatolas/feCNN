@@ -24,9 +24,9 @@ distances_cnn = [];
 distances_s_loreta = [];
 distances_dipole_scan = [];
 
-cnn_dist_db = [];
-s_loreta_dist_db = [];
-dipole_scan_dist_db = [];
+cnn_dist_db = zeros(size(snr_db));
+s_loreta_dist_db = zeros(size(snr_db));
+dipole_scan_dist_db = zeros(size(snr_db));
 
 for ii=1:length(snr_db)
     snr = int2str(snr_db(ii));
@@ -78,9 +78,32 @@ for ii=1:length(snr_db)
        
         waitbar(jj/n_samples, w_bar, sprintf('Evaluate cnn for snr %s dB: %d %%',snr,floor(jj/n_samples*100)));
     end
-    cnn_dist_db = mean(distances_cnn);
-    s_loreta_dist_db = mean(distances_s_loreta);
-    dipole_scan_dist_db = mean(distances_dipole_scan);
+    cnn_dist_db(ii) = mean(distances_cnn);
+    s_loreta_dist_db(ii) = mean(distances_s_loreta);
+    dipole_scan_dist_db(ii) = mean(distances_dipole_scan);
     close(w_bar);
 end
+ save('./eval_results/cnn_dist_db.mat','cnn_dist_db')
+ save('./eval_results/s_loreta_dist_db.mat','s_loreta_dist_db')
+ save('./eval_results/dipole_scan_dist_db.mat','dipole_scan_dist_db')
+ 
+%% Plot the results
 
+load('./eval_results/s_loreta_dist_db.mat')
+load('./eval_results/dipole_scan_dist_db.mat')
+load('./eval_results/cnn_dist_db.mat')
+
+snr = -10:5:20;
+
+figure;
+plot(snr,cnn_dist_db,'linewidth',4);
+hold on;
+plot(snr,dipole_scan_dist_db,'linewidth',4);
+hold on;
+plot(snr,s_loreta_dist_db,'linewidth',4);
+hold off;
+grid on;
+legend('CNN','Dipole Scan', 'sLORETA');
+set(gcf,'Position',[220 300 1200 500]);
+xlabel('SNR [db]');
+ylabel('Localization Error [mm]');
