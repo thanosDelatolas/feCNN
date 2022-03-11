@@ -20,7 +20,10 @@ class Simulation:
     ''' Simulate EEG and sources data.
     '''
 
-    def __init__(self, fwd, settings=DEFAULT_SETTINGS, source_data=None, eeg_data=None,parallel=False, n_jobs=-1):
+    def __init__(self, fwd, settings=DEFAULT_SETTINGS, source_data=None, eeg_data=None,
+        snr_levels=np.arange(-10, 25, 5, dtype=int),
+        noisy_eeg=False,parallel=False, n_jobs=-1
+        ):
         self.settings = settings
         self.check_settings()
 
@@ -31,6 +34,9 @@ class Simulation:
         # if source_data and eeg_data are already known from previous simulations
         self.source_data = source_data
         self.eeg_data = eeg_data
+
+        self.noisy_eeg=noisy_eeg
+        self.snr_levels =  snr_levels
 
         if self.source_data is not None and self.eeg_data is not None and \
             self.source_data.shape[1] == self.eeg_data.shape[1]:
@@ -61,7 +67,7 @@ class Simulation:
             for dipole in tqdm(range(n_samples))], axis=0)
         
         self.source_data = sources.T      
-        self.eeg_data = self.simulate_eeg()
+        self.eeg_data = self.simulate_eeg(self.noisy_eeg)
         
         self.simulated = True
     
@@ -151,7 +157,7 @@ class Simulation:
             return
 
         self.source_data = self.simulate_sources(n_samples)
-        self.eeg_data = self.simulate_eeg()        
+        self.eeg_data = self.simulate_eeg(self.noisy_eeg)        
         self.simulated = True
 
 
@@ -239,12 +245,19 @@ class Simulation:
 
         return np.squeeze(source)
 
-    def simulate_eeg(self):
+    def simulate_eeg(self, noisy_eeg=False, target_snr=(False, 5)):
         ''' Create EEG of specified number of trials based on sources and some SNR.
         Parameters
         -----------
         fwd : Forward
             the Forward object located in forward.py
+
+        noisy_eeg: boolean
+            True if we want to preturb with AWGN the eeg data.
+        
+        target_snr: tuple(boolean, int)
+            if we want to have a traget snr instead of a random snr.
+
         n_jobs : int
                 Number of jobs to run in parallel. -1 will utilize all cores.
 
@@ -265,10 +278,25 @@ class Simulation:
         # calculate eeg 
         eeg_clean = np.array(self.project_sources(sources))
 
-        # add noise to eeg
-        # eeg_noisy = np.array(self.add_noise_to_eeg(eeg_clean, 40))           
-       
-        return eeg_clean
+        if noisy_eeg:
+            eeg_noisy = np.zeros(eeg_clean.shape)
+            print('Add noise to eeg')
+            for sample in tqdm(range(sources.shape[1])):
+                
+                if target_snr[0]:
+                    snr = target_snr[1]
+                else :
+                    # get random snr
+                    snr = np.random.choice(self.snr_levels)
+
+                # add noise to eeg
+                eeg_noisy[:,sample] = self.add_noise_to_eeg(eeg_clean[:,sample], snr)
+
+            return eeg_noisy
+        
+        else :
+            return eeg_clean
+
 
     def project_sources(self, sources, verbose=True):
         ''' Project sources through the leadfield to obtain the EEG data.

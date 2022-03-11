@@ -6,8 +6,8 @@ import_fieldtrip();
 sensor_labels = split(sensor_labels{4});
 sensor_labels = sensor_labels(1:end-1);
 
-snr='20';
-eeg = double(readNPY(sprintf('./../eval_sim_data/%sdb/eeg_noisy.npy',snr)));
+%snr='20'; sprintf('./../eval_sim_data/%sdb/eeg_noisy.npy',snr)
+eeg = double(readNPY('../../../Downloads/sim_data_noisy/eeg.npy'));
 
 layout = '/home/thanos/fieldtrip/template/layout/EEG1010.lay';
 
@@ -23,6 +23,14 @@ eeg_Yi = zeros(67,67, n_samples);
 w_bar = waitbar(0, 'Creating CNN input...');
 
 %path_to_save ='../../../Downloads/sim/topos_data/topos/zi_%d.npy';
+
+ii = 10093;
+eeg_s = (eeg(:,ii) - mean(eeg(:,ii)))/std(eeg(:,ii));
+
+[Zi, Yi, Xi ] = ft_plot_topo(sensors_1010(:,1),sensors_1010(:,2),eeg_s,'mask',lay.mask,'outline',lay.outline);
+
+Zi = -replace_nan(Zi);
+
 
 tic;
 for ii=1:n_samples
@@ -47,10 +55,14 @@ toc;
 
 close(w_bar);
 
-save(sprintf('./../eval_sim_data/%sdb/eeg_topos_noisy.mat',snr), 'eeg_topos', '-v7.3')
-save(sprintf('./../eval_sim_data/%sdb/eeg_topos_xi.mat',snr), 'eeg_Xi', '-v7.3')
-save(sprintf('./../eval_sim_data/%sdb/eeg_topos_yi.mat',snr), 'eeg_Yi', '-v7.3')
+% save(sprintf('./../eval_sim_data/%sdb/eeg_topos_noisy.mat',snr), 'eeg_topos', '-v7.3')
+% save(sprintf('./../eval_sim_data/%sdb/eeg_topos_xi.mat',snr), 'eeg_Xi', '-v7.3')
+% save(sprintf('./../eval_sim_data/%sdb/eeg_topos_yi.mat',snr), 'eeg_Yi', '-v7.3')
 
+
+save('../../../Downloads/sim_data_noisy/eeg_topos.mat', 'eeg_topos', '-v7.3');
+save('../../../Downloads/sim_data_noisy/eeg_topos_xi.mat', 'eeg_Xi', '-v7.3');
+save('../../../Downloads/sim_data_noisy/eeg_topos_yi.mat', 'eeg_Yi', '-v7.3');
 
 %% visualize
 
