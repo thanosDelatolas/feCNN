@@ -21,7 +21,7 @@ class Simulation:
     '''
 
     def __init__(self, fwd, settings=DEFAULT_SETTINGS, source_data=None, eeg_data=None,
-        snr_levels=np.arange(-10, 25, 5, dtype=int),
+        snr_levels=np.arange(-10, 25, 5, dtype=int), target_snr=(False, 10),
         noisy_eeg=False,parallel=False, n_jobs=-1
         ):
         self.settings = settings
@@ -35,8 +35,9 @@ class Simulation:
         self.source_data = source_data
         self.eeg_data = eeg_data
 
-        self.noisy_eeg=noisy_eeg
+        self.noisy_eeg = noisy_eeg
         self.snr_levels =  snr_levels
+        self.target_snr = target_snr
 
         if self.source_data is not None and self.eeg_data is not None and \
             self.source_data.shape[1] == self.eeg_data.shape[1]:
@@ -252,7 +253,7 @@ class Simulation:
         self.source_centers.append(src_centers)
         return np.squeeze(source)
 
-    def simulate_eeg(self, noisy_eeg=False, target_snr=(False, 5)):
+    def simulate_eeg(self, noisy_eeg=False):
         ''' Create EEG of specified number of trials based on sources and some SNR.
         Parameters
         -----------
@@ -290,8 +291,8 @@ class Simulation:
             print('Add noise to eeg')
             for sample in tqdm(range(sources.shape[1])):
                 
-                if target_snr[0]:
-                    snr = target_snr[1]
+                if self.target_snr[0]:
+                    snr = self.target_snr[1]
                 else :
                     # get random snr
                     snr = np.random.choice(self.snr_levels)
