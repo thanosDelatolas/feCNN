@@ -45,6 +45,9 @@ class Simulation:
             self.simulated = False
             self.source_data = None
             self.eeg_data = None
+        
+        # to keep track the centers of each simulation (for two sources simultaneously mostly)
+        self.source_centers = []
     
     
     def create_dipoles_dataset(self, times_each_dipole):
@@ -155,6 +158,8 @@ class Simulation:
         if self.simulated :
             print('The data are already simulated.')
             return
+        
+        self.source_centers.clear()
 
         self.source_data = self.simulate_sources(n_samples)
         self.eeg_data = self.simulate_eeg(self.noisy_eeg)        
@@ -242,7 +247,9 @@ class Simulation:
             else:
                 msg = BaseException("shape must be of type >string< and be >gaussian<")
                 raise(msg)
-
+                
+        # keep track the seed dipoles for each simulation
+        self.source_centers.append(src_centers)
         return np.squeeze(source)
 
     def simulate_eeg(self, noisy_eeg=False, target_snr=(False, 5)):
