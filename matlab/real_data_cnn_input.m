@@ -51,16 +51,21 @@ location = cd_matrix(idx,:);
 loc = cd_matrix(:,1:3);
 
 figure;
-subplot(1,2,1)
+subplot(1,3,1)
 contourf(Xi,Yi,Zi)
 title('EEG topography.');
 
 
-subplot(1,2,2)
+subplot(1,3,2)
 scatter3(loc(:,1),loc(:,2),loc(:,3),100,pred,'.')
-
 title('Predicted source');
 view([121.7 21.2]);
+
+subplot(1,3,3)
+pred_new = readNPY('../../../Downloads/pred_real.npy');
+scatter3(loc(:,1),loc(:,2),loc(:,3),100,pred,'.')
+view([121.7 21.2]);
+title('Pred with new cnn');
 
 %suptitle(strrep(sprintf('Read Data Prediction %sms',ms),'_','.'));
 set(gcf,'Position',[60 180 1600 500])

@@ -27,6 +27,12 @@ class Simulation:
         self.settings = settings
         self.check_settings()
 
+        # randrange does not include upper limit.
+        if isinstance(self.settings['number_of_sources'], (list, np.ndarray)):
+            self.settings['number_of_sources'][1] += 1
+        elif isinstance(self.settings['number_of_sources'], (tuple)):
+            self.settings['number_of_sources'] = (self.settings['number_of_sources'][0], self.settings['number_of_sources'][1]+1)
+
         self.fwd = fwd
         self.parallel = parallel
         self.n_jobs = n_jobs
@@ -388,7 +394,7 @@ class Simulation:
         else:
             msg = f'dtype must be int or float, got {type(dtype)} instead'
             raise AttributeError(msg)
-
+        
         if isinstance(val, (list, tuple, np.ndarray)):
             out = rng(*val)
         elif isinstance(val, (int, float)):
