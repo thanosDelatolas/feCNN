@@ -7,11 +7,11 @@ import_fieldtrip();
 sensor_labels = split(sensor_labels{4});
 sensor_labels = sensor_labels(1:end-1);
 
-eeg = double(readNPY('../../../Downloads/snr_5_15/sim_data_noisy/eeg.npy'));
+eeg = double(readNPY('../../../Downloads/two_sources/eeg.npy'));
 
-sources = double(readNPY('../../../Downloads/snr_5_15/sim_data_noisy/sources.npy'));
+sources = double(readNPY('../../../Downloads/two_sources/sources.npy'));
 
-predicted_sources = double(readNPY('../../../Downloads/snr_5_15/sim_data_noisy/predicted_sources.npy'));
+predicted_sources = double(readNPY('../../../Downloads/two_sources/predicted_sources.npy'));
 
 load('../duneuropy/Data/dipoles_downsampled_10k.mat')
 
@@ -61,6 +61,7 @@ figure;
 subplot(1,2,1)
 scatter3(loc(:,1),loc(:,2),loc(:,3),100,predicted_sources(:, sample),'.')
 view([-103.9 -6.8])
+title('Predicted');
 
 subplot(1,2,2);
 source = sources(:, sample);

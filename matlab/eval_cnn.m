@@ -32,11 +32,11 @@ for ii=1:length(snr_db)
     snr = int2str(snr_db(ii));
     fprintf('Load data for evaluation ...\n');
     % read the eeg data
-    eeg_signals = double(readNPY(sprintf('./../eval_sim_data/%sdb/eeg_noisy.npy',snr)));
+    eeg_signals = double(readNPY(sprintf('./../eval_sim_data/single_source/%sdb/eeg_noisy.npy',snr)));
     % prediction created with python and tensorflow
-    cnn_predictions = double(readNPY(sprintf('./../eval_sim_data/%sdb/predicted_sources.npy',snr)));
+    cnn_predictions = double(readNPY(sprintf('./../eval_sim_data/single_source/%sdb/predicted_sources.npy',snr)));
     % ground truth
-    sources_val = double(readNPY(sprintf('./../eval_sim_data/%sdb/sources.npy',snr)));
+    sources_val = double(readNPY(sprintf('./../eval_sim_data/single_source/%sdb/sources.npy',snr)));
     
     n_samples = size(cnn_predictions,2);
     
