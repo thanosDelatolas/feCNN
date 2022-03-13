@@ -1,7 +1,8 @@
 clear; close all; clc;
 
 
-% This file evaluates our cnn with the noisy simulated eeg data
+% This file evaluates our cnn with the noisy simulated eeg data (single
+% source)
 
 Le = double(readNPY('../duneuropy/DataOut/leadfield_downsampled_10k.npy'))';
 load('../duneuropy/Data/dipoles_downsampled_10k.mat')
