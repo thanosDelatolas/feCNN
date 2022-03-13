@@ -23,10 +23,15 @@ eeg_signals = double(readNPY(sprintf('./../eval_sim_data/two_sources/%sdb/eeg_no
 sources_val = double(readNPY(sprintf('./../eval_sim_data/two_sources/%sdb/sources.npy',snr)));
 source_centers = readNPY(sprintf('./../eval_sim_data/two_sources/%sdb/source_centers.npy',snr));
 
-sample = 10;
+
+n_samples = size(eeg_signals,2);
+sample = randi([1 n_samples],1,1);
 
 eeg = eeg_signals(:,sample);
 centers = source_centers(sample,:);
 source = sources_val(:,sample);
 
 locations = find_multiple_soucres(source,cd_matrix);
+
+
+
