@@ -7,11 +7,11 @@ import_fieldtrip();
 sensor_labels = split(sensor_labels{4});
 sensor_labels = sensor_labels(1:end-1);
 
-eeg = double(readNPY('../../../Downloads/two_sources/eeg.npy'));
+eeg = double(readNPY('../../../Downloads/one_two_sources/eeg.npy'));
 
-sources = double(readNPY('../../../Downloads/two_sources/sources.npy'));
+sources = double(readNPY('../../../Downloads/one_two_sources/sources.npy'));
 
-predicted_sources = double(readNPY('../../../Downloads/two_sources/predicted_sources.npy'));
+predicted_sources = double(readNPY('../../../Downloads/one_two_sources/predicted_sources.npy'));
 
 load('../duneuropy/Data/dipoles_downsampled_10k.mat')
 
