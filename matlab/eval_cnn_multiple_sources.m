@@ -27,11 +27,13 @@ load(sprintf('./../eval_sim_data/one_two_sources/%sdb/source_centers.mat',snr));
 n_samples = size(eeg_signals,2);
 sample = randi([1 n_samples],1,1);
 
+sample = 179;
+
 eeg = eeg_signals(:,sample);
-centers = source_centers{sample};
+centers = source_centers{sample}
 source = sources_val(:,sample);
 
-locations = find_multiple_soucres(source,cd_matrix);
+locations = find_multiple_soucres(source,cd_matrix)
 
 
-
+% check sample 179
