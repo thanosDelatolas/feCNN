@@ -73,7 +73,7 @@ for ii=1:length(snr_db)
         [s_loreta_out,location_sloreta] = create_source_activation_vector(...
             s_loreta_out,'sLORETA',cd_matrix);
         
-       distances_cnn(jj) = distance_3d_space(location, cnn_location);
+       distances_cnn(jj) = (location, cnn_location);
        distances_s_loreta(jj) = distance_3d_space(location, location_sloreta);
        distances_dipole_scan(jj) = distance_3d_space(location,location_dipole_scan);
        

@@ -7,7 +7,7 @@ function [locations] = find_multiple_soucres(source, cd_matrix)
     mean_source = mean(source);
     activations = 0;
     % distance from dipole in mm
-    activation_radius = 50;
+    activation_radius = 55;
     for ii=1:length(pks)
         % ignore dipoles with small amplitude
         if pks(ii) < mean_source
@@ -41,25 +41,15 @@ function [locations] = find_multiple_soucres(source, cd_matrix)
         [~,idx_max] = max(neighborhood_vals);
         seed_dipole = neighborhood_idxs(idx_max);
         
-        cont =0;
-        % ensure that the seed dipole is not in a neighborhood, already in
-        % the activations.
-        for kk=1:length(locations)
-            if distance_3d_space(cd_matrix(seed_dipole,1:3),cd_matrix(locations(kk),1:3)) <= activation_radius
-                cont=1;
-                break;
-             end
-        end
-        if cont == 1
-            continue
-        end
-        
         activations=activations+1;
         locations(activations) = seed_dipole;
     end
+     
     % get the two dipoles with the maximum amplitude
     if length(locations) > 2
-        
+        [~,idx_max] = maxk(source(locations),2);
+        locations = locations(idx_max);
     end
+    
 
 end
