@@ -10,3 +10,4 @@ pydotplus
 sklearn
 mat73
 visualkeras
+pandas

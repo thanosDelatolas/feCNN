@@ -18,21 +18,22 @@ layout = '/home/thanos/fieldtrip/template/layout/EEG1010.lay';
 snr = int2str(20);
 
 
-eeg_signals = double(readNPY(sprintf('./../eval_sim_data/one_two_sources/%sdb/eeg_noisy.npy',snr)));
+eeg_signals = double(readNPY(sprintf('./../eval_sim_data/two_sources/%sdb/eeg_noisy.npy',snr)));
+source_centers = double(readNPY(sprintf('./../eval_sim_data/two_sources/%sdb/source_centers.npy',snr)));
 % ground truth
-sources_val = double(readNPY(sprintf('./../eval_sim_data/one_two_sources/%sdb/sources.npy',snr)));
-load(sprintf('./../eval_sim_data/one_two_sources/%sdb/source_centers.mat',snr));
-
+sources_val = double(readNPY(sprintf('./../eval_sim_data/two_sources/%sdb/sources.npy',snr)));
+predicted_sources = double(readNPY(sprintf('./../eval_sim_data/two_sources/%sdb/predicted_sources.npy',snr)));
 %%
 n_samples = size(eeg_signals,2);
 sample = randi([1 n_samples],1,1);
 
 
 eeg = eeg_signals(:,sample);
-centers = source_centers{sample}
 source = sources_val(:,sample);
+pred_nn = predicted_sources(:,sample);
+center = source_centers(sample,:)
 
-locations = find_multiple_soucres(source,cd_matrix)
-
+sim_locations = find_multiple_soucres(source,cd_matrix)
+nn_locations = find_multiple_soucres(pred_nn,cd_matrix)
 
 % check sample 179

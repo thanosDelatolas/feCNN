@@ -1,9 +1,9 @@
-from tabnanny import verbose
+import os
 from joblib import Parallel, delayed
-from tqdm.autonotebook import tqdm
+from tqdm import tqdm
 import numpy as np
 import random
-import colorednoise as cn
+import pandas as pd
 
 import util
 
@@ -161,7 +161,9 @@ class Simulation:
 
 
     def simulate(self, n_samples=10000):
-        ''' Simulate sources and EEG data'''
+        ''' Simulate sources and EEG data
+            Simulate n_samples randomly.
+        '''
         if self.simulated :
             print('The data are already simulated.')
             return
@@ -174,7 +176,9 @@ class Simulation:
 
 
     def simulate_sources(self, n_samples):
-        
+        ''' Simulate n_samles sources randomly. 
+        Each source center is selected randomly.
+        '''
         if self.simulated :
             print('The data are already simulated.')
 
@@ -188,6 +192,44 @@ class Simulation:
 
         source_data = source_data.T
         return source_data
+
+
+    def create_depth_evaluate_dataset(self, path_to_save_dataset):
+        ''' Simulates randomly dipoles per each depth in the head
+        '''
+
+        if not os.path.isdir(path_to_save_dataset):
+            os.mkdir(path_to_save_dataset)
+            
+        source_space = self.fwd.dipoles[:,:3]
+
+        min_depth = np.min(source_space[:,-1])
+        # depth is in z column
+        df = pd.DataFrame(source_space, columns = ['x','y','z'])
+
+        
+        z_df = df.groupby(['z'])
+        for z_val, grouped_values in tqdm(z_df):
+            #dipoles = df.index[df['z'] == z_val].tolist()
+            grouped_values.reset_index()
+            source_data = []
+
+            for dipole, _ in grouped_values.iterrows():
+                source = self.simulate_source(src_center=dipole).reshape(self.fwd.dipoles.shape[0], 1)
+                if len(source_data) == 0:
+                    source_data = source
+                else :
+                    source_data = np.concatenate((source_data,source), axis=-1)
+            
+            eeg_data = self.simulate_eeg(sources=source_data, noisy_eeg=self.noisy_eeg, verbose=False)
+            path = os.path.join(path_to_save_dataset, str(z_val-min_depth))
+
+            if not os.path.isdir(path):
+                os.mkdir(path)
+
+            np.save(os.path.join(path,'eeg.npy'),eeg_data)
+            np.save(os.path.join(path,'sources.npy'),source_data)
+
 
     def simulate_source(self, src_center=-1):
         ''' Returns a vector containing the dipole currents. Requires only a 
@@ -259,12 +301,16 @@ class Simulation:
         self.source_centers.append(src_centers)
         return np.squeeze(source)
 
-    def simulate_eeg(self, noisy_eeg=False):
+
+    def simulate_eeg(self, sources=None,noisy_eeg=False,verbose=True):
         ''' Create EEG of specified number of trials based on sources and some SNR.
         Parameters
         -----------
         fwd : Forward
-            the Forward object located in forward.py
+            the Forward object located in forward.py (class object)
+        
+        sources : ndarray or None
+            The sources that will generate the eeg. If None, the self.source_data will be used.
 
         noisy_eeg: boolean
             True if we want to preturb with AWGN the eeg data.
@@ -284,18 +330,26 @@ class Simulation:
             print('The data are already simulated.')
             return
         
-        print('Simulate EEG.')
+        if verbose:
+            print('Simulate EEG.')
 
-        # Desired Dim of sources: (samples x dipoles x time points)
-        sources = self.source_data
+        if sources is None:
+            # Desired Dim of sources: (samples x dipoles x time points)
+            sources = self.source_data
 
         # calculate eeg 
-        eeg_clean = np.array(self.project_sources(sources))
+        eeg_clean = np.array(self.project_sources(sources, verbose))
 
         if noisy_eeg:
             eeg_noisy = np.zeros(eeg_clean.shape)
-            print('Add noise to eeg')
-            for sample in tqdm(range(sources.shape[1])):
+
+            if verbose:
+                print('Add noise to eeg')
+                rng = tqdm(range(sources.shape[1]))
+            else:
+                rng = range(sources.shape[1])
+
+            for sample in rng:
                 
                 if self.target_snr[0]:
                     snr = self.target_snr[1]
@@ -310,6 +364,7 @@ class Simulation:
         
         else :
             return eeg_clean
+
 
 
     def project_sources(self, sources, verbose=True):
@@ -341,6 +396,7 @@ class Simulation:
 
         return result
 
+
     def add_noise_to_eeg(self,eeg, snr_db):
         ''' This function adds noise to the eeg signal
         '''
@@ -355,6 +411,7 @@ class Simulation:
         awgn = np.random.normal(0, np.sqrt(noise_watts), size=eeg.shape)
 
         return eeg + awgn
+
 
     def check_settings(self):
         ''' Check if settings are complete and insert missing 
