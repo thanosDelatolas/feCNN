@@ -7,7 +7,7 @@ sensor_labels = split(sensor_labels{4});
 sensor_labels = sensor_labels(1:end-1);
 
 snr='-10'; %sprintf('./../eval_sim_data/two_sources/%sdb/eeg_noisy.npy',snr)
-eeg = double(readNPY(sprintf('./../eval_sim_data/one_two_sources/%sdb/eeg_noisy.npy',snr)));
+eeg = double(readNPY('./../../../Downloads/test/eeg.npy'));
 
 layout = '/home/thanos/fieldtrip/template/layout/EEG1010.lay';
 
@@ -48,14 +48,14 @@ toc;
 
 close(w_bar);
 
-save(sprintf('./../eval_sim_data/one_two_sources/%sdb/eeg_topos_noisy.mat',snr), 'eeg_topos', '-v7.3')
-save(sprintf('./../eval_sim_data/one_two_sources/%sdb/eeg_topos_xi.mat',snr), 'eeg_Xi', '-v7.3')
-save(sprintf('./../eval_sim_data/one_two_sources/%sdb/eeg_topos_yi.mat',snr), 'eeg_Yi', '-v7.3')
+% save(sprintf('./../eval_sim_data/one_two_sources/%sdb/eeg_topos_noisy.mat',snr), 'eeg_topos', '-v7.3')
+% save(sprintf('./../eval_sim_data/one_two_sources/%sdb/eeg_topos_xi.mat',snr), 'eeg_Xi', '-v7.3')
+% save(sprintf('./../eval_sim_data/one_two_sources/%sdb/eeg_topos_yi.mat',snr), 'eeg_Yi', '-v7.3')
 
 
-% save('../../../Downloads/one_two_sources/eeg_topos.mat', 'eeg_topos', '-v7.3');
-% save('../../../Downloads/one_two_sources/eeg_topos_xi.mat', 'eeg_Xi', '-v7.3');
-% save('../../../Downloads/one_two_sources/eeg_topos_yi.mat', 'eeg_Yi', '-v7.3');
+save('../../../Downloads/test/eeg_topos.mat', 'eeg_topos', '-v7.3');
+save('../../../Downloads/test/eeg_topos_xi.mat', 'eeg_Xi', '-v7.3');
+save('../../../Downloads/test/eeg_topos_yi.mat', 'eeg_Yi', '-v7.3');
 
 %% visualize
 

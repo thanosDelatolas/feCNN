@@ -41,7 +41,7 @@ class NN:
         self.sim = sim
 
         self.n_elec = self.sim.fwd.leadfield.shape[0]
-        self.n_dipoles = self.sim.source_data.shape[0]  # self.sim.fwd.leadfield.shape[1] (not for region dataset)
+        self.n_dipoles = self.sim.fwd.leadfield.shape[1]
 
         # simulation's samples
         self.n_samples = self.sim.eeg_data.shape[1]
@@ -207,6 +207,7 @@ class EEGMLP(NN):
                 tf.keras.utils.plot_model(self.model, to_file=img, show_shapes=True, show_layer_names=False)
                 visualkeras.layered_view(self.model, legend=True,  to_file=img_keras)  
 
+
     def fit(self, learning_rate=0.001, 
         validation_split=0.2, epochs=500,
         false_positive_penalty=10, delta=1., batch_size=32, 
@@ -277,7 +278,7 @@ class EEGMLP(NN):
 
 
 class EEG_CNN(NN):
-    ''' A CNN to solve the inverse problem.
+    ''' A CNN to solve the inverse problem. It predicts the electrical current of each dipole in the source space
 
         The additional eeg_topographies argument is a set of topographies for each eeg signal
         in simulations.
@@ -330,6 +331,7 @@ class EEG_CNN(NN):
                 tf.keras.utils.plot_model(self.model, to_file=img, show_shapes=True, show_layer_names=False)
                 visualkeras.layered_view(self.model, legend=True,  to_file=img_keras)  
     
+
     def fit(self, learning_rate=0.001, 
         validation_split=0.2, epochs=500,
         false_positive_penalty=10, delta=1., batch_size=64, 
@@ -403,6 +405,108 @@ class EEG_CNN(NN):
             return mean_squared_errors
         else :
             print('The model must be trained first.')
+
+
+class LocCNN(NN):
+    ''' A CNN that predicts the location of the activation in the source space.
+    It does not predict the the electrical current of each dipole.
+
+    The additional eeg_topographies argument is a set of topographies for each eeg signal
+    in simulations.
+    '''
+    def __init__(self, sim, eeg_topographies, num_of_simultaneously_dipoles=1,verbose=True):
+        super().__init__(sim, verbose)
+
+        if len(eeg_topographies.shape) != 3 :
+            raise AttributeError('The set of topographies must be a 3D-array. (n_samples x xpxiels x ypixels)')
+        elif eeg_topographies.shape[0] != self.n_samples :
+            raise AttributeError('Incompatible sim and topographies.')
+        
+        self.eeg_topographies = eeg_topographies
+        # number of dipoles that operate the same time.
+        self.num_of_simultaneously_dipoles = num_of_simultaneously_dipoles
+
+    def build_model(self):
+        ''' Build the neural network architecture using the 
+        tensorflow.keras.Sequential() API. 
+
+        The architecture is a CNN with three hidden layers.
+       
+        '''
+        if not self.compiled :
+            # Build the artificial neural network model using Dense layers.
+            self.model = keras.Sequential()
+
+            # add input layer
+            self.model.add(keras.Input(shape=(self.eeg_topographies.shape[1], self.eeg_topographies.shape[2],1), name='Input'))
+            self.model.add(Conv2D(8, kernel_size=(3, 3), activation='relu'))
+            #self.model.add(BatchNormalization())
+            self.model.add(Flatten())            
+            self.model.add(Dense(1024, activation='relu'))
+            self.model.add(BatchNormalization())
+            self.model.add(Dropout(0.25))
+            self.model.add(Dense(1024, activation='relu'))
+            self.model.add(BatchNormalization())
+            self.model.add(Dropout(0.25))
+            self.model.add(Dense(1024, activation='relu'))
+            self.model.add(BatchNormalization())
+            self.model.add(Dropout(0.25))
+            # Add output layer with only 3 output neurons, one for each coordinate in the 3D-space.
+            self.model.add(Dense(3*self.num_of_simultaneously_dipoles, activation='relu'))
+
+            self.model.summary()
+            
+            if self.verbose:
+                img = './assets/LocCNN.png'
+                img_keras = './assets/LocCNN-visual-keras.png'
+                tf.keras.utils.plot_model(self.model, to_file=img, show_shapes=True, show_layer_names=False)
+                visualkeras.layered_view(self.model, legend=True,  to_file=img_keras)  
+
+
+    def fit(self, learning_rate=0.001, 
+        validation_split=0.2, epochs=500, batch_size=32, 
+        loss=None, patience=250
+    ):
+
+        if len(self.sim.eeg_data.shape) != 2 :
+            raise AttributeError("EEG data must be 2D (n_elctrodes x n_samples")
+
+        # Input data
+        x = self.eeg_topographies       
+
+        # Target data (3D locations in the source space)
+        y = self.sim.locations        
+
+        # early stoping
+        es = tf.keras.callbacks.EarlyStopping(monitor='val_loss', \
+            mode='min', patience=patience, restore_best_weights=True,verbose=1)
+
+
+        if loss == None:
+            loss = 'mse'
+
+        metrics = [#tf.keras.metrics.MeanAbsolutePercentageError(name="MAPE"),
+            tf.keras.losses.MeanAbsoluteError(name='MAE')         
+        ]
+
+        #lr_callback = keras.callbacks.LearningRateScheduler(NN.lr_schedule)
+        optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
+
+        if not self.compiled:
+            self.model.compile(optimizer, loss, metrics=metrics)
+            self.compiled = True
+
+        
+        #x_scaled = util.standardize_dataset(x)
+        #y_scaled = util.normalize_array(y)
+
+        # scale topos and sources
+        history = self.model.fit(x, y, 
+                epochs=epochs, batch_size=batch_size, shuffle=True, 
+                validation_split=validation_split, callbacks=[es])
+        self.trained = True
+        
+        return history
 
 
 class EEGLargeCnn():

@@ -20,7 +20,7 @@ class Simulation:
     ''' Simulate EEG and sources data.
     '''
 
-    def __init__(self, fwd, settings=DEFAULT_SETTINGS, source_data=None, eeg_data=None,
+    def __init__(self, fwd, settings=DEFAULT_SETTINGS, source_data=None, eeg_data=None, locations=None,
         snr_levels=np.arange(-10, 25, 5, dtype=int), target_snr=(False, 10),
         noisy_eeg=False,parallel=False, n_jobs=-1
         ):
@@ -37,21 +37,17 @@ class Simulation:
         self.parallel = parallel
         self.n_jobs = n_jobs
 
-        # if source_data and eeg_data are already known from previous simulations
-        self.source_data = source_data
-        self.eeg_data = eeg_data
+        # if source_data, eeg_data and locations are already known from previous simulations
+        self.source_data = source_data 
+        self.eeg_data = eeg_data 
+        self.locations = locations
 
         self.noisy_eeg = noisy_eeg
         self.snr_levels =  snr_levels
         self.target_snr = target_snr
 
-        if self.source_data is not None and self.eeg_data is not None and \
-            self.source_data.shape[1] == self.eeg_data.shape[1]:
-                self.simulated = True
-        else :
-            self.simulated = False
-            self.source_data = None
-            self.eeg_data = None
+        if  self.target_snr[0] and  not self.noisy_eeg:
+            raise AttributeError('If target snr is true, then noisy_eeg must be true too.')
         
         # to keep track the centers of each simulation (for two sources simultaneously mostly)
         self.source_centers = []
@@ -229,6 +225,32 @@ class Simulation:
 
             np.save(os.path.join(path,'eeg.npy'),eeg_data)
             np.save(os.path.join(path,'sources.npy'),source_data)
+
+
+
+    def simulate_locations(self, n_samples):
+        ''' Simulate sources and EEG data. This function does not store the 
+        electrical current of the sources. It used to simulate data for the LocCNN (net.py).
+
+        The noise added in the eeg must be specified in the constructor of the simulation object.
+        '''
+        if self.simulated :
+            print('The data are already simulated.')
+            return
+        
+        self.source_centers.clear()
+        eeg = np.zeros((73,n_samples))
+        # source locations in the 3d space
+        locations = np.zeros((n_samples,3))
+        for ii in tqdm(range(n_samples)):
+            # appends source centers
+           
+            source = self.simulate_source().reshape(self.fwd.dipoles.shape[0], 1)
+            locations[ii,:] = self.fwd.dipoles[ii,:3]
+            eeg[:,ii] = np.squeeze(self.simulate_eeg(sources=source, noisy_eeg=self.noisy_eeg, verbose=False))
+
+        self.eeg_data = eeg
+        self.locations = locations
 
 
     def simulate_source(self, src_center=-1):
