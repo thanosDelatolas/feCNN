@@ -49,6 +49,7 @@ class Simulation:
         if  self.target_snr[0] and  not self.noisy_eeg:
             raise AttributeError('If target snr is true, then noisy_eeg must be true too.')
         
+        self.simulated = False
         # to keep track the centers of each simulation (for two sources simultaneously mostly)
         self.source_centers = []
     
