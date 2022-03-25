@@ -245,9 +245,8 @@ class Simulation:
         locations = np.zeros((n_samples,3))
         for ii in tqdm(range(n_samples)):
             # appends source centers
-           
             source = self.simulate_source().reshape(self.fwd.dipoles.shape[0], 1)
-            locations[ii,:] = self.fwd.dipoles[ii,:3]
+            locations[ii,:] = self.fwd.dipoles[self.source_centers[ii],:3]
             eeg[:,ii] = np.squeeze(self.simulate_eeg(sources=source, noisy_eeg=self.noisy_eeg, verbose=False))
 
         self.eeg_data = eeg
