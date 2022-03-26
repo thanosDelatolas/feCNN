@@ -234,19 +234,32 @@ class Simulation:
         electrical current of the sources. It used to simulate data for the LocCNN (net.py).
 
         The noise added in the eeg must be specified in the constructor of the simulation object.
+
+        This function does not work when settings['number_of_sources'] is a tuple or array.
+        It works when settings['number_of_sources'] == 1 or settings['number_of_sources'] == 2
         '''
         if self.simulated :
             print('The data are already simulated.')
             return
         
+        if self.settings['number_of_sources'] != 1 and self.settings['number_of_sources'] != 2 :
+            raise AttributeError('simulate_locations works only for settings[\'number_of_sources\'] == 1 or 2')
+
         self.source_centers.clear()
         eeg = np.zeros((73,n_samples))
         # source locations in the 3d space
-        locations = np.zeros((n_samples,3))
+        locations = np.zeros((n_samples,3 * self.settings['number_of_sources']))
         for ii in tqdm(range(n_samples)):
             # appends source centers
             source = self.simulate_source().reshape(self.fwd.dipoles.shape[0], 1)
-            locations[ii,:] = self.fwd.dipoles[self.source_centers[ii],:3]
+
+            if self.settings['number_of_sources'] == 1 :
+                locations[ii,:] = self.fwd.dipoles[self.source_centers[ii],:3]
+
+            else : # number_of_sources is two
+                locations[ii,:] = np.concatenate((self.fwd.dipoles[self.source_centers[ii][0],:3],
+                self.fwd.dipoles[self.source_centers[ii][1],:3]), axis=None)
+
             eeg[:,ii] = np.squeeze(self.simulate_eeg(sources=source, noisy_eeg=self.noisy_eeg, verbose=False))
 
         self.eeg_data = eeg
