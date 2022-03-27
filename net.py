@@ -47,8 +47,6 @@ class NN:
         self.n_samples = self.sim.eeg_data.shape[1]
         self.compiled = False
 
-        self.default_loss = losses.weighted_huber_loss
-
         self.verbose = verbose
         self.trained = False
 
@@ -60,8 +58,7 @@ class NN:
 
     @abstractmethod
     def fit(self, learning_rate=0.001, 
-        validation_split=0.2, epochs=500,
-        false_positive_penalty=10, delta=1., batch_size=64, 
+        validation_split=0.2, epochs=500, batch_size=64, 
         loss=None, patience=250
     ):
         ''' Train the neural network using training data (eeg) and labels (sources).
@@ -75,14 +72,9 @@ class NN:
                 The learning rate for training the neural network
             validation_split : float
                 Proportion of data to keep as validation set.
-            delta : int/float
-                The delta parameter of the huber loss function
             epochs : int
                 Number of epochs to train. In one epoch all training samples 
                 are used once for training.
-            false_positive_penalty : float
-                Defines weighting of false-positive predictions. Increase for conservative 
-                inverse solutions, decrease for liberal prediction.
             batch_size : int
                 The number of samples to simultaneously calculate the error 
                 during backpropagation.
@@ -169,9 +161,14 @@ class NN:
 
     
 class EEGMLP(NN):
-    '''  An MLP nueral network
+    '''  An MLP that predicts the location of the activation in the source space.
+    It does not predict the the electrical current of each dipole.
    
     '''
+    def __init__(self, sim, num_of_simultaneously_dipoles=1,verbose=True):
+        super().__init__(sim, verbose)
+        # number of dipoles that operate the same time.
+        self.num_of_simultaneously_dipoles = num_of_simultaneously_dipoles
     
     def build_model(self):
         ''' Build the neural network architecture using the 
@@ -185,20 +182,20 @@ class EEGMLP(NN):
             self.model = keras.Sequential()
 
             # add input layer
-            self.model.add(keras.Input(shape=(self.n_elec,), name='InputLayer'))
+            self.model.add(keras.Input(shape=(self.n_elec,)))
 
-            # first hidden layer with 256 neurons.
-            self.model.add(Dense(units=256, activation='relu', name='Hidden-1'))
-
+            self.model.add(Dense(1024, activation='relu'))
             self.model.add(BatchNormalization())
-            # second hidden layer with 512 neurons.
-            self.model.add(Dense(units=512, activation='relu', name='Hidden-2'))
+            self.model.add(Dropout(0.25))
+            self.model.add(Dense(1024, activation='relu'))
             self.model.add(BatchNormalization())
-            # third hidden layer with 1024 neurons.
-            self.model.add(Dense(units=1024, activation='relu', name='Hidden-3'))            
+            self.model.add(Dropout(0.25))
+            self.model.add(Dense(1024, activation='relu'))
             self.model.add(BatchNormalization())
+            self.model.add(Dropout(0.25))
+            
             # Add output layer
-            self.model.add(Dense(self.n_dipoles, activation='relu', name='OutputLayer'))
+            self.model.add(Dense(3*self.num_of_simultaneously_dipoles, activation='relu'))
 
             self.model.summary()
             if self.verbose:
@@ -209,15 +206,12 @@ class EEGMLP(NN):
 
 
     def fit(self, learning_rate=0.001, 
-        validation_split=0.2, epochs=500,
-        false_positive_penalty=10, delta=1., batch_size=32, 
+        validation_split=0.2, epochs=500, batch_size=32, 
         loss=None, patience=250
     ):
 
         if len(self.sim.eeg_data.shape) != 2 :
             raise AttributeError("EEG data must be 2D (n_elctrodes x n_samples")
-        elif len(self.sim.source_data.shape) != 2 :
-            raise AttributeError("Sources data must be 2D (n_dipoles x n_samples")
 
         tensorboard_dir = 'logs/MLP-Model-{}'.format(time_str)
         tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=tensorboard_dir)
@@ -225,8 +219,8 @@ class EEGMLP(NN):
         # Input data
         x = self.sim.eeg_data.T        
 
-        # Target data
-        y = self.sim.source_data.T        
+        # Target data (3D locations in the source space)
+        y = self.sim.locations        
 
         # early stoping
         es = tf.keras.callbacks.EarlyStopping(monitor='val_loss', \
@@ -236,24 +230,20 @@ class EEGMLP(NN):
 
 
         if loss == None:
-            loss = self.default_loss(weight=false_positive_penalty, delta=delta)
+            loss = 'mse'
         
-        metrics = [#tf.keras.metrics.MeanAbsoluteError(name="MAE"), 
-            self.default_loss(weight=false_positive_penalty, delta=delta)
+        metrics = [
+            tf.keras.metrics.MeanAbsoluteError(name="MAE")
             #tf.keras.metrics.MeanAbsolutePercentageError(name="MAPE")            
         ]
 
         if not self.compiled:
             self.model.compile(optimizer, loss, metrics=metrics)
             self.compiled = True
-        
-        data_train, data_val, labels_train, labels_val = train_test_split(x, y, test_size=validation_split, shuffle=True)
 
-        del x, y
-
-        history = self.model.fit(data_train, labels_train, 
-                epochs=epochs, batch_size=batch_size, shuffle=False, 
-                validation_data=(data_val, labels_val), callbacks=[es, tensorboard_callback])
+        history = self.model.fit(x, y, 
+                epochs=epochs, batch_size=batch_size, shuffle=True, 
+                validation_split=validation_split, callbacks=[es, tensorboard_callback])
         self.trained = True
         
         return history, tensorboard_dir
@@ -333,8 +323,7 @@ class EEG_CNN(NN):
     
 
     def fit(self, learning_rate=0.001, 
-        validation_split=0.2, epochs=500,
-        false_positive_penalty=10, delta=1., batch_size=64, 
+        validation_split=0.2, epochs=500, batch_size=64, 
         loss=None, patience=250
     ):
 
@@ -358,11 +347,10 @@ class EEG_CNN(NN):
 
 
         if loss == None:
-            #loss = self.default_loss(weight=false_positive_penalty, delta=delta)
             loss = 'mse'
 
-        metrics = [#tf.keras.metrics.MeanAbsolutePercentageError(name="MAPE"),
-            self.default_loss(weight=false_positive_penalty, delta=delta)           
+        metrics = [
+            tf.keras.metrics.MeanAbsoluteError(name='MAE')
         ]
 
         #lr_callback = keras.callbacks.LearningRateScheduler(NN.lr_schedule)
@@ -425,6 +413,7 @@ class LocCNN(NN):
         self.eeg_topographies = eeg_topographies
         # number of dipoles that operate the same time.
         self.num_of_simultaneously_dipoles = num_of_simultaneously_dipoles
+
 
     def build_model(self):
         ''' Build the neural network architecture using the 
@@ -532,7 +521,6 @@ class EEGLargeCnn():
         self.n_dipoles = dipoles
         self.verbose = verbose
 
-        self.default_loss = losses.weighted_huber_loss
 
     def build_model(self):
         ''' Build the neural network architecture using the 
@@ -571,7 +559,7 @@ class EEGLargeCnn():
             visualkeras.layered_view(self.model, legend=True,  to_file=img_keras)  
     
     def fit(self, learning_rate=0.001, epochs=500,
-        batch_size=32,loss=None, patience=250,false_positive_penalty=10, delta=1.
+        batch_size=32,loss=None, patience=250
         ):
                
         loader = keras_preprocessing_custom.image.DataLoader()
