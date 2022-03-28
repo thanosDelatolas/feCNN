@@ -35,6 +35,25 @@ def weighted_mse_loss(weight=1, min_val=1e-3, scale=True):
 
     return loss
 
+def huber_loss(y_true, y_pred, clip_delta=1.0):
+    '''
+    ' Huber loss.
+    ' https://en.wikipedia.org/wiki/Huber_loss
+    '''
+    error = y_true - y_pred
+    cond  = tf.keras.backend.abs(error) < clip_delta
+
+    squared_loss = 0.5 * tf.keras.backend.square(error)
+    linear_loss  = clip_delta * (tf.keras.backend.abs(error) - 0.5 * clip_delta)
+
+    return tf.where(cond, squared_loss, linear_loss)
+
+def huber_loss_mean(y_true, y_pred, clip_delta=1.0):
+    ''' Mean  Huber loss.
+    '''
+    return tf.keras.backend.mean(huber_loss(y_true, y_pred, clip_delta))
+
+
 def weighted_huber_loss(weight=1.0, delta=1.0, min_val=1e-3, scale=True):
     ''' Weighted Huber loss. A loss function that can be 
     used with tensorflow/keras which calculates the Huber loss with 
@@ -77,6 +96,7 @@ def weighted_huber_loss(weight=1.0, delta=1.0, min_val=1e-3, scale=True):
 
     return loss
 
+
 def weighted_mae_loss(w=1, min_val=1e-3, scale=True):
     ''' Weighted mean absolute error (MAE) loss. A loss function that can be 
     used with tensorflow/keras which calculates the MAE with a weighting of 
@@ -110,6 +130,7 @@ def weighted_mae_loss(w=1, min_val=1e-3, scale=True):
         return K.mean(error) 
 
     return loss
+
 
 def scale_mat(mat):
     ''' Scale matrix such that each row has max value of 1'''
