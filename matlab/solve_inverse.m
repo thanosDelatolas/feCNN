@@ -116,7 +116,7 @@ disp(res_table)
 %% show results on the MRI
 
 import_fieldtrip();
-T1_name = '../mri_data/T1w_1mm_anon.nii';
+T1_name = '/media/thanos/TD/A0206/o20170327_111915t1mpragesagiso1mmwselnfp2s003a1001.nii';%'../mri_data/T1w_1mm_anon.nii';
 mri_t1        = ft_read_mri(T1_name);
 
 mri_data_scale     = 60;
