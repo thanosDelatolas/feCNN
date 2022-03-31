@@ -7,7 +7,7 @@ import_fieldtrip();
 file_name.A0206 = '/home/thanos//Documents/TUC/Thesis/Real-Data/A0206/sep_sef/sep_sef.ds';
 file_name.A1974 = '/home/thanos/Documents/TUC/Thesis/Real-Data/A1974/A1974_comparisonSEF_20170329_02_singletrial.ds';
 file_name.A1999 = '/home/thanos/Documents/TUC/Thesis/Real-Data/A1999/A1999_comparisonSEF_20170510_03_singletrial.ds';
-data_name              = file_name.A1974;    
+data_name              = file_name.A1999;    
 
 % read electrodes
 if strcmp(data_name, file_name.A0206)
