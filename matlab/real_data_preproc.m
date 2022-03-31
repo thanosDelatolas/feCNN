@@ -4,7 +4,24 @@ clc;
 
 import_fieldtrip();
 
-data_name              = '/home/thanos/Documents/TUC/Thesis/Real Data/A1974/A1974_comparisonSEF_20170329_02_singletrial.ds';      
+file_name.A0206 = '/home/thanos//Documents/TUC/Thesis/Real-Data/A0206/sep_sef/sep_sef.ds';
+file_name.A1974 = '/home/thanos/Documents/TUC/Thesis/Real-Data/A1974/A1974_comparisonSEF_20170329_02_singletrial.ds';
+file_name.A1999 = '/home/thanos/Documents/TUC/Thesis/Real-Data/A1999/A1999_comparisonSEF_20170510_03_singletrial.ds';
+data_name              = file_name.A1974;    
+
+% read electrodes
+if strcmp(data_name, file_name.A0206)
+    [sensors,sensor_labels] = read_elc('./../duneuropy/Data/electrodes.elc');
+    sensor_labels = split(sensor_labels{4});
+    sensor_labels = sensor_labels(1:end-1);
+elseif strcmp(data_name, file_name.A1974)
+    T = readtable('/home/thanos/Documents/TUC/Thesis/Real-Data/A1974/elec.xlsx');
+    sensor_labels = T.elecs;
+elseif strcmp(data_name, file_name.A1999)
+    T = readtable('/home/thanos/Documents/TUC/Thesis/Real-Data/A1999/elec.xlsx');
+    sensor_labels = T.elecs;
+end
+
 
 % Read events
 cfg                    = [];
@@ -17,14 +34,12 @@ cfg_tr_def             = ft_definetrial(cfg);   % read the list of the specific 
 % segment data according to the trial definition
 cfg                    = [];
 cfg.dataset            = data_name;
-cfg.channel            = 'EEG1010';             % define channel type
+cfg.channel            = sensor_labels;             % define channel type
 data_eeg               = ft_preprocessing(cfg); % read raw data
-data_eeg               = ft_redefinetrial(cfg_tr_def, data_eeg); % 72 channles
+data_eeg               = ft_redefinetrial(cfg_tr_def, data_eeg);
 
-[sensors,sensor_labels] = read_elc('./../duneuropy/Data/electrodes.elc');
-sensor_labels = split(sensor_labels{4});
-sensor_labels = sensor_labels(1:end-1);
-data_eeg.label = sensor_labels;
+
+%data_eeg.label = sensor_labels;
 
 cfg                = [];
 cfg.hpfilter       = 'yes';        % enable high-pass filtering
