@@ -1,8 +1,14 @@
 clear; close all; clc;
 
 %A1999,A1974,A0206
-subject='A1999';
-ms='22_5';
+subject='A1974';
+ms_A1999={'17_5','21_7','22_5','23','20_8'}; 
+ms_A0206='25';
+ms_A1974={'22_5','23_3','24_2','25'}; 
+
+ms=ms_A1974{2};
+
+
 load(sprintf('../real_data/%s/EEG_avg.mat',subject));
 
 % plot EEG_avg
@@ -21,34 +27,30 @@ load(sprintf('../real_data/%s/%sms/eeg_topo_real_yi_%sms.mat',subject,ms,ms));
 
 % load source space and the fsl linear registration output.
 if strcmp(subject,'A1974')
-    load(sprintf('../real_data/%s/%s_source_space.mat',subject,subject));
-    cd_matrix = apply_lt_matrix(sprintf('../mri_data/%s/%s_regist.mat',subject,subject),cd_matrix(:,1:3));
-    % downsample the source_space
-    len = size(cd_matrix,1);
-    cd_matrix = resample(cd_matrix,10092,len);
+    load('../duneuropy/Data/dipoles_downsampled_10k.mat')
+%     load(sprintf('../real_data/%s/%s_source_space.mat',subject,subject));
+%     cd_matrix = apply_lt_matrix(sprintf('../mri_data/%s/%s_regist.mat',subject,subject),cd_matrix(:,1:3));
+%     % downsample the source_space
+%     len = size(cd_matrix,1);
+%     cd_matrix = resample(cd_matrix,10092,len);
     
-    eeg_idx = 149;
+    T1_name = sprintf('../mri_data/%s/%s_regist.nii',subject,subject);
 elseif strcmp(subject,'A1999')
-    load(sprintf('../real_data/%s/%s_source_space.mat',subject,subject));
-    cd_matrix = apply_lt_matrix(sprintf('../mri_data/%s/%s_regist.mat',subject,subject),cd_matrix(:,1:3));
-    % downsample the source_space
-    len = size(cd_matrix,1);
-    cd_matrix = resample(cd_matrix,10092,len);
-    
-     eeg_idx = 148;
+    load('../duneuropy/Data/dipoles_downsampled_10k.mat')
+%     load(sprintf('../real_data/%s/%s_source_space.mat',subject,subject));
+%     cd_matrix = apply_lt_matrix(sprintf('../mri_data/%s/%s_regist.mat',subject,subject),cd_matrix(:,1:3));
+%     % downsample the source_space
+%     len = size(cd_matrix,1);
+%     cd_matrix = resample(cd_matrix,10092,len)
+     
+     T1_name = sprintf('../mri_data/%s/%s_regist.nii',subject,subject);
 elseif strcmp(subject,'A0206')
     load('../duneuropy/Data/dipoles_downsampled_10k.mat')
     
-    if strcmp(ms,'20')
-            eeg_idx = 145;
-    elseif strcmp(ms,'24_2')
-            eeg_idx = 150;
-    elseif strcmp(ms,'25')
-        eeg_idx = 151;
-    elseif  strcmp(ms,'25_8')
-        eeg_idx = 152;
-    end
+    T1_name = sprintf('../mri_data/%s/%s_mri.nii',subject,subject);
 end
+
+eeg_idx = get_eeg_idx(subject,ms);
 
 % load the neural net's prediction
 
@@ -64,11 +66,11 @@ title('Neural Net prediciton');
 
 
 import_fieldtrip();
-T1_name = sprintf('../mri_data/%s/%s_regist.nii',subject,subject);
+
 mri_t1        = ft_read_mri(T1_name);
 
 mri_data_scale     = 60;
-mri_data_clipping  = .8;
+mri_data_clipping  = 1;
 
 % create the source grid
 source_grid = downsample(cd_matrix(:,1:3),3);

@@ -1,31 +1,56 @@
 clear; close all; clc;
 
+%A1999,A1974,A0206
+subject='A1974';
+ms = '23_3';
 
-%Le = double(readNPY('../duneuropy/DataOut/leadfield.npy'))';
-%load('../duneuropy/Data/dipoles.mat')
+%% Load data
+load(sprintf('../real_data/%s/EEG_avg.mat',subject));
 
-% load downsampled Leadfield and dipoles
-Le = double(readNPY('../duneuropy/DataOut/leadfield_downsampled_10k.npy'))';
-load('../duneuropy/Data/dipoles_downsampled_10k.mat')
+eeg_idx = get_eeg_idx(subject,ms);
+
+% load downsampled Leadfield
+if strcmp(subject,'A0206')
+    load('../duneuropy/Data/dipoles_downsampled_10k.mat')
+    % load leadfield (calculated by Duneuro)
+    Le = double(readNPY('../duneuropy/DataOut/leadfield_downsampled_10k.npy'))';
+    % MRI name
+    T1_name = sprintf('../mri_data/%s/%s_mri.nii',subject,subject);
+    
+elseif strcmp(subject,'A1974')
+    % load and resample leadfield
+    load(sprintf('../real_data/%s/%s_Le.mat',subject,subject));
+    Le = resample(Le',10092,size(Le,2))';
+    
+    load(sprintf('../real_data/%s/%s_source_space.mat',subject,subject));
+    cd_matrix = apply_lt_matrix(sprintf('../mri_data/%s/%s_regist.mat',subject,subject),cd_matrix(:,1:3));
+    % downsample the source_space
+    len = size(cd_matrix,1);
+    cd_matrix = resample(cd_matrix,10092,len);
+     
+    
+    % MRI name
+    T1_name = sprintf('../mri_data/%s/%s_regist.nii',subject,subject);
+    
+elseif strcmp(subject,'A1999')
+    % load and resample leadfield
+    load(sprintf('../real_data/%s/%s_Le.mat',subject,subject));
+    Le = resample(Le',10092,size(Le,2))';
+    
+    % MRI name
+    T1_name = sprintf('../mri_data/%s/%s_regist.nii',subject,subject);
+    
+    load('../duneuropy/Data/dipoles_downsampled_10k.mat')
+end
+
+
 loc = cd_matrix(:,1:3);
 
-% load the real data
-load('../real_data/EEG_avg.mat')
 
 layout = '/home/thanos/fieldtrip/template/layout/EEG1010.lay';
 [sensors_1010, lay] = compatible_elec(EEG_avg.label, layout);
 
 
-ms = '25';
-if strcmp(ms,'20')
-        eeg_idx = 145;
-elseif strcmp(ms,'24_2')
-        eeg_idx = 150;
-elseif strcmp(ms,'25')
-    eeg_idx = 151;
-elseif  strcmp(ms,'25_8')
-    eeg_idx = 152;
-end
 eeg_s = (EEG_avg.avg(:,eeg_idx) - mean(EEG_avg.avg(:,eeg_idx)))/std(EEG_avg.avg(:,eeg_idx)) ;
 [Zi, Yi, Xi ] = ft_plot_topo(sensors_1010(:,1),sensors_1010(:,2),eeg_s,'mask',lay.mask,'outline',lay.outline);
 Zi = -replace_nan(Zi);
@@ -45,10 +70,10 @@ import_directory('./inverse_algorithms/')
 
 figure;
 scatter3(loc(:,1),loc(:,2),loc(:,3),100,dipole_scan_out,'.')
-
 hold on
 scatter3(location_dipole_scan(1),location_dipole_scan(2),location_dipole_scan(3),1,max(dipole_scan_out),'y','linewidth',9);
 title('Dipole scanning localization');
+hold off;
 
 if strcmp(ms,'25')
     view([291.3 9.2]);
@@ -69,7 +94,7 @@ s_loreta_out = sLORETA_with_ori(b,Le,alpha);
 figure;
 scatter3(loc(:,1),loc(:,2),loc(:,3),100,s_loreta_out,'.')
 hold on
-scatter3(location_sloreta(1),location_sloreta(2),location_sloreta(3),1,max(s_loreta_out),'y','linewidth',9);
+scatter3(location_sloreta(1),location_sloreta(2),location_sloreta(3),1,max(s_loreta_out),'y','linewidth',20);
 title('sLORETA localization');
 
 if strcmp(ms,'25')
@@ -82,7 +107,7 @@ end
 %% Load the neural net's predction
 
 % read neural net's prediction
-neural_net_pred = double(readNPY(sprintf('../real_data/%sms/pred_sources_%s.npy',ms,ms)));
+neural_net_pred = double(readNPY(sprintf('../real_data/%s/%sms/pred_sources_%s.npy',subject,ms,ms)));
 
 [neural_net_pred,location_nn] = create_source_activation_vector(...
     neural_net_pred,'nn',cd_matrix);
@@ -109,18 +134,15 @@ frobenius_norm = [fn_nn_sloreta;fn_nn_dipole_fit;fn_sloreta_dipole_scan];
 res_table = table(methods,frobenius_norm);
 disp(res_table)
 
-%% Spatial Dispersion (SD)
-
 
 
 %% show results on the MRI
 
 import_fieldtrip();
-T1_name = '/media/thanos/TD/A0206/o20170327_111915t1mpragesagiso1mmwselnfp2s003a1001.nii';%'../mri_data/T1w_1mm_anon.nii';
 mri_t1        = ft_read_mri(T1_name);
 
 mri_data_scale     = 60;
-mri_data_clipping  = .8;
+mri_data_clipping  = 1;
 
 % create the source grid
 source_grid = downsample(cd_matrix(:,1:3),3);
@@ -142,5 +164,5 @@ source_activation_mri(mri_t1,mri_data_scale,dipole_scan_out,source_grid,...
 
 %% Save files
 
-path_to_save = '../../GitHub/thesis_summary/pics/';
+%path_to_save = '../../GitHub/thesis_summary/pics/';
 %saver(path_to_save,2, 3, 0);
