@@ -157,7 +157,7 @@ source_activation_mri(mri_t1,mri_data_scale,s_loreta_out,source_grid,...
     mri_data_clipping,EEG_avg.time(eeg_idx),'Localization with sLORETA');
 
 
-% project to MRI the dipole fit solution
+% project to MRI the dipole scan solution
 source_activation_mri(mri_t1,mri_data_scale,dipole_scan_out,source_grid,...
     mri_data_clipping,EEG_avg.time(eeg_idx),'Localization with Dipole Scan');
 
