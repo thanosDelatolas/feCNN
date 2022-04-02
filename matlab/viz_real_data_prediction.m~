@@ -34,12 +34,16 @@ if strcmp(subject,'A1974')
     T1_name = sprintf('../mri_data/%s/%s_regist.nii',subject,subject);
     
 elseif strcmp(subject,'A1999')
-    load(sprintf('../real_data/%s/%s_source_space.mat',subject,subject));
-    cd_matrix = apply_lt_matrix(sprintf('../mri_data/%s/%s_regist.mat',subject,subject),cd_matrix(:,1:3));
+
+%     load(sprintf('../real_data/%s/%s_source_space.mat',subject,subject));
+%     cd_matrix = apply_lt_matrix(sprintf('../mri_data/%s/%s_regist.mat',subject,subject),cd_matrix(:,1:3));
+%     % downsample the source_space
+%     len = size(cd_matrix,1);
+%     cd_matrix = resample(cd_matrix,10092,len)
      
      T1_name = sprintf('../mri_data/%s/%s_regist.nii',subject,subject);
 elseif strcmp(subject,'A0206')
-    load('../duneuropy/Data/dipoles.mat')
+    load('../duneuropy/Data/dipoles_downsampled_10k.mat')
     
     T1_name = sprintf('../mri_data/%s/%s_mri.nii',subject,subject);
 end
@@ -47,11 +51,12 @@ end
 eeg_idx = get_eeg_idx(subject,ms);
 
 % load the neural net's prediction
+
 neural_net_pred = double(readNPY(sprintf('../real_data/%s/%sms/pred_sources_%s.npy',subject,ms,ms)));
 
 
 [neural_net_pred,location_nn] = create_source_activation_vector(...
-    neural_net_pred,'loc_cnn',cd_matrix);
+    neural_net_pred,'nn',cd_matrix);
 
 figure;
 scatter3(cd_matrix(:,1),cd_matrix(:,2),cd_matrix(:,3),100,neural_net_pred,'.')
