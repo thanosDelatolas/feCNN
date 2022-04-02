@@ -1,12 +1,12 @@
 clear; close all; clc;
 
 %A1999,A1974,A0206
-subject='A1974';
+subject='A0206';
 ms_A1999={'17_5','21_7','22_5','23','20_8'}; 
 ms_A0206='25';
 ms_A1974={'22_5','23_3','24_2','25'}; 
 
-ms=ms_A1974{2};
+ms=ms_A0206;
 
 
 load(sprintf('../real_data/%s/EEG_avg.mat',subject));
@@ -56,7 +56,7 @@ neural_net_pred = double(readNPY(sprintf('../real_data/%s/%sms/pred_sources_%s.n
 figure;
 scatter3(cd_matrix(:,1),cd_matrix(:,2),cd_matrix(:,3),100,neural_net_pred,'.')
 title('Neural Net prediciton');
-
+colorbar;
 
 import_fieldtrip();
 
