@@ -429,15 +429,18 @@ class LocCNN(NN):
             # add input layer
             self.model.add(keras.Input(shape=(self.eeg_topographies.shape[1], self.eeg_topographies.shape[2],1), name='Input'))
             self.model.add(Conv2D(8, kernel_size=(3, 3), activation='relu'))
-            #self.model.add(BatchNormalization())
+            self.model.add(MaxPooling2D(pool_size=(2, 2)))
+            self.model.add(Conv2D(16, kernel_size=(3, 3), activation='relu'))
+
             self.model.add(Flatten())            
-            self.model.add(Dense(1024, activation='relu'))
-            self.model.add(BatchNormalization())
             self.model.add(Dropout(0.25))
             self.model.add(Dense(1024, activation='relu'))
             self.model.add(BatchNormalization())
             self.model.add(Dropout(0.25))
-            self.model.add(Dense(1024, activation='relu'))
+            self.model.add(Dense(2048, activation='relu'))
+            self.model.add(BatchNormalization())
+            self.model.add(Dropout(0.25))
+            self.model.add(Dense(5096, activation='relu'))
             self.model.add(BatchNormalization())
             self.model.add(Dropout(0.25))
             # Add output layer with only 3 output neurons, one for each coordinate in the 3D-space.
@@ -472,14 +475,14 @@ class LocCNN(NN):
 
 
         if loss == None:
-            loss = 'mse'
+            loss = tf.keras.losses.MeanAbsoluteError()
 
         metrics = [#tf.keras.metrics.MeanAbsolutePercentageError(name="MAPE"),
-            tf.keras.losses.MeanAbsoluteError(name='MAE')         
+            'mse'         
         ]
 
         #lr_callback = keras.callbacks.LearningRateScheduler(NN.lr_schedule)
-        optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
+        optimizer = tf.keras.optimizers.SGD(learning_rate=0.001)
 
         if not self.compiled:
             self.model.compile(optimizer, loss, metrics=metrics)

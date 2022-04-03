@@ -131,7 +131,7 @@ class Simulation:
         np.save(dir_x+'eeg.npy',eeg)
 
     
-    def create_evaluate_dataset(self, n_samples=100, snr=5):
+    def create_evaluate_dataset(self, n_samples=100, snr=5, save_sources=False):
         ''' This method creates a dataset for evaluation.
 
             Each source center is selected randomly.
@@ -142,19 +142,27 @@ class Simulation:
         n_dipoles = self.fwd.leadfield.shape[1]
             
         eeg = np.zeros((73,n_samples))
-        sources = np.zeros((n_dipoles,n_samples))
+        
+        if save_sources:
+            sources = np.zeros((n_dipoles,n_samples))
+
         print('Creating evalation dataset with {} samles and with snr {} dB'.format(n_samples,snr))
 
         for sample in tqdm(range(n_samples)):
 
             # simulate source
             source = self.simulate_source()
-            sources[:, sample] = source
+            
+            if save_sources:
+                sources[:, sample] = source
             # calculate eeg 
             eeg_clean = np.array(self.project_sources(source, verbose=False))
             eeg[:,sample] = eeg_clean + self.add_noise_to_eeg(eeg_clean, snr)
 
-        return eeg, sources
+        if save_sources:
+            return eeg, sources
+        else:
+            return eeg, self.source_centers
 
 
     def simulate(self, n_samples=10000):
