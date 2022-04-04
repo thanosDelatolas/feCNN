@@ -2,8 +2,8 @@ clear; close all; clc;
 % This file evaluates our cnn with the noisy simulated eeg data (single
 % source)
 
-Le = double(readNPY('../duneuropy/DataOut/leadfield_downsampled_10k.npy'))';
-load('../duneuropy/Data/dipoles_downsampled_10k.mat')
+Le = double(readNPY('../duneuropy/DataOut/leadfield.npy'))';
+load('../duneuropy/Data/dipoles.mat')
 loc = cd_matrix(:,1:3);
 
 [sensors,sensor_labels] = read_elc('./../duneuropy/Data/electrodes.elc');
@@ -17,7 +17,7 @@ layout = '/home/thanos/fieldtrip/template/layout/EEG1010.lay';
 
 import_directory('./inverse_algorithms/');
 
-snr_db = '20';
+snr_db = '-10';
 
 depth_dataset_path = sprintf('../eval_sim_data/depth/%sdb/',snr_db);
 depths_struct = dir(fullfile(depth_dataset_path,'*'));
@@ -46,6 +46,8 @@ for ii = 1:numel(depths_subdirs)
             simulated_sources = double(readNPY(fullfile(depth_dataset_path,depths_subdirs{ii},C{jj})));
         elseif strcmp(C{jj},'predicted_sources.npy')
             cnn_predictions = double(readNPY(fullfile(depth_dataset_path,depths_subdirs{ii},C{jj})));
+        elseif strcmp(C{jj},'source_centers.npy')
+            source_centers = double(readNPY(fullfile(depth_dataset_path,depths_subdirs{ii},C{jj})));
         end
     end
     
@@ -62,12 +64,11 @@ for ii = 1:numel(depths_subdirs)
         % noisy eeg signal for sample kk
         eeg_s = eeg_signals(:,kk);
         % ground truth for sample kk
-        source =  simulated_sources(:,kk);
-        [source,location] = create_source_activation_vector(source,'g_t',cd_matrix);
+        source =  source_centers(kk)+1;        
+        location = cd_matrix(source,1:3);
         
         % prediction of th cnn
-        cnn_pred = cnn_predictions(:,kk);        
-        [cnn_pred,cnn_location] = create_source_activation_vector(cnn_pred,'cnn',cd_matrix);
+        cnn_pred = cnn_predictions(kk);        
         
         % dipole scanning
         [dipole_scan_out,best_loc] = SingleDipoleFit(Le, eeg_s);        
@@ -79,7 +80,7 @@ for ii = 1:numel(depths_subdirs)
         [s_loreta_out,location_sloreta] = create_source_activation_vector(...
             s_loreta_out,'sLORETA',cd_matrix);
         
-        le_cnn(kk) = distance_3d_space(location, cnn_location);
+        le_cnn(kk) = distance_3d_space(location, cnn_pred);
         le_s_loreta(kk) = distance_3d_space(location, location_sloreta);
         le_dipole_scan(kk) = distance_3d_space(location,location_dipole_scan);
         
