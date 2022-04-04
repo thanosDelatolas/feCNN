@@ -1,0 +1,13 @@
+numpy
+scipy
+matplotlib
+tensorflow
+joblib
+tqdm
+colorednoise
+pydot
+pydotplus
+sklearn
+mat73
+visualkeras
+pandas
