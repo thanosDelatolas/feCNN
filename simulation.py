@@ -199,7 +199,7 @@ class Simulation:
         return source_data
 
 
-    def create_depth_evaluate_dataset(self, path_to_save_dataset):
+    def create_depth_evaluate_dataset(self, path_to_save_dataset, save_sources=False):
         ''' Simulates randomly dipoles per each depth in the head
         '''
 
@@ -217,6 +217,8 @@ class Simulation:
         for z_val, grouped_values in tqdm(z_df):
             #dipoles = df.index[df['z'] == z_val].tolist()
             grouped_values.reset_index()
+
+            self.source_centers.clear()
             source_data = []
 
             for dipole, _ in grouped_values.iterrows():
@@ -233,7 +235,11 @@ class Simulation:
                 os.mkdir(path)
 
             np.save(os.path.join(path,'eeg.npy'),eeg_data)
-            np.save(os.path.join(path,'sources.npy'),source_data)
+
+            if save_sources:
+                np.save(os.path.join(path,'sources.npy'),source_data)
+          
+            np.save(os.path.join(path,'source_centers.npy'),self.source_centers)
 
 
 

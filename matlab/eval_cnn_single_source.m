@@ -4,8 +4,8 @@ clear; close all; clc;
 % This file evaluates our cnn with the noisy simulated eeg data (single
 % source)
 
-Le = double(readNPY('../duneuropy/DataOut/leadfield_downsampled_10k.npy'))';
-load('../duneuropy/Data/dipoles_downsampled_10k.mat')
+Le = double(readNPY('../duneuropy/DataOut/leadfield.npy'))';
+load('../duneuropy/Data/dipoles.mat')
 loc = cd_matrix(:,1:3);
 
 [sensors,sensor_labels] = read_elc('./../duneuropy/Data/electrodes.elc');
@@ -33,11 +33,11 @@ for ii=1:length(snr_db)
     snr = int2str(snr_db(ii));
     fprintf('Load data for evaluation ...\n');
     % read the eeg data
-    eeg_signals = double(readNPY(sprintf('./../eval_sim_data/single_source/%sdb/eeg_noisy.npy',snr)));
+    eeg_signals = double(readNPY(sprintf('./../eval_sim_data/single_source/%sdb/eeg.npy',snr)));
     % prediction created with python and tensorflow
     cnn_predictions = double(readNPY(sprintf('./../eval_sim_data/single_source/%sdb/predicted_sources.npy',snr)));
     % ground truth
-    sources_val = double(readNPY(sprintf('./../eval_sim_data/single_source/%sdb/sources.npy',snr)));
+    source_centers = double(readNPY(sprintf('./../eval_sim_data/single_source/%sdb/source_centers.npy',snr)));
     
     n_samples = size(cnn_predictions,2);
     
@@ -54,12 +54,10 @@ for ii=1:length(snr_db)
         % noisy eeg signal for sample jj
         eeg_s = eeg_signals(:,jj);
         % ground truth for sample jj
-        source =  sources_val(:,jj);
-        [source,location] = create_source_activation_vector(source,'g_t',cd_matrix);
+        source =  source_centers(jj)+1;
+        
         % prediction of th cnn
         cnn_pred = cnn_predictions(:,jj);
-        
-        [cnn_pred,cnn_location] = create_source_activation_vector(cnn_pred,'cnn',cd_matrix);
         
         % dipole scanning
         [dipole_scan_out,best_loc] = SingleDipoleFit(Le, eeg_s);
@@ -73,9 +71,9 @@ for ii=1:length(snr_db)
         [s_loreta_out,location_sloreta] = create_source_activation_vector(...
             s_loreta_out,'sLORETA',cd_matrix);
         
-       distances_cnn(jj) = distance_3d_space(location, cnn_location);
-       distances_s_loreta(jj) = distance_3d_space(location, location_sloreta);
-       distances_dipole_scan(jj) = distance_3d_space(location,location_dipole_scan);
+       distances_cnn(jj) = distance_3d_space(loc(source,:), cnn_pred);
+       distances_s_loreta(jj) = distance_3d_space(loc(source,:), location_sloreta);
+       distances_dipole_scan(jj) = distance_3d_space(loc(source,:),location_dipole_scan);
        
         waitbar(jj/n_samples, w_bar, sprintf('Evaluate cnn for snr %s dB: %d %%',snr,floor(jj/n_samples*100)));
     end
