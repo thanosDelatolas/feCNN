@@ -1,8 +1,8 @@
 clear; close all; clc;
 
 %A1999,A1974,A0206
-subject='A0206';
-ms = '25';
+subject='A1999';
+ms = '22_5';
 
 %% Load data
 load(sprintf('../real_data/%s/EEG_avg.mat',subject));
@@ -59,7 +59,7 @@ toc;
 figure;
 scatter3(loc(:,1),loc(:,2),loc(:,3),100,dipole_scan_out,'.')
 hold on
-scatter3(location_dipole_scan(1),location_dipole_scan(2),location_dipole_scan(3),1,max(dipole_scan_out),'y','linewidth',9);
+scatter3(location_dipole_scan(1),location_dipole_scan(2),location_dipole_scan(3),1,max(dipole_scan_out),'y*','linewidth',14);
 title('Dipole scanning localization');
 hold off;
 
@@ -83,7 +83,7 @@ toc;
 figure;
 scatter3(loc(:,1),loc(:,2),loc(:,3),100,s_loreta_out,'.')
 hold on
-scatter3(location_sloreta(1),location_sloreta(2),location_sloreta(3),1,max(s_loreta_out),'y','linewidth',20);
+scatter3(location_sloreta(1),location_sloreta(2),location_sloreta(3),1,max(s_loreta_out),'y*','linewidth',14);
 title('sLORETA localization');
 
 if strcmp(ms,'25')
@@ -103,6 +103,8 @@ neural_net_pred = double(readNPY(sprintf('../real_data/%s/%sms/pred_sources_%s.n
 
 figure;
 scatter3(loc(:,1),loc(:,2),loc(:,3),100,neural_net_pred,'.')
+hold on;
+scatter3(location_nn(1),location_nn(2),location_nn(3),100,1,'y*','linewidth',14)
 title('Neural Net prediciton');
 if strcmp(ms,'25')
     view([291.3 9.2]);
