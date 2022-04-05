@@ -8,7 +8,7 @@ sensor_labels = sensor_labels(1:end-1);
 layout = '/home/thanos/fieldtrip/template/layout/EEG1010.lay';
 [sensors_1010, lay] = compatible_elec(sensor_labels, layout);
 
-snr='15';
+snr='-10';
 depth_dataset_path = sprintf('../eval_sim_data/depth/%sdb/',snr);
 depths_struct = dir(fullfile(depth_dataset_path,'*'));
 

@@ -17,7 +17,7 @@ layout = '/home/thanos/fieldtrip/template/layout/EEG1010.lay';
 
 import_directory('./inverse_algorithms/');
 
-snr_db = '-10';
+snr_db = '20';
 
 depth_dataset_path = sprintf('../eval_sim_data/depth/%sdb/',snr_db);
 depths_struct = dir(fullfile(depth_dataset_path,'*'));
@@ -68,7 +68,7 @@ for ii = 1:numel(depths_subdirs)
         location = cd_matrix(source,1:3);
         
         % prediction of th cnn
-        cnn_pred = cnn_predictions(kk);        
+        cnn_pred = cnn_predictions(:,kk);        
         
         % dipole scanning
         [dipole_scan_out,best_loc] = SingleDipoleFit(Le, eeg_s);        
@@ -103,7 +103,6 @@ close(w_bar);
 toc;
 
 %%
-snr_db='-5';
 
 load(sprintf('./eval_results/depth_eval/%sdb/mle_cnn.mat',snr_db));
 load(sprintf('./eval_results/depth_eval/%sdb/mle_s_loreta.mat',snr_db));
