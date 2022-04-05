@@ -43,6 +43,7 @@ if strcmp(method,'nn')
 elseif strcmp(method,'loc_cnn') % new cnn that predicts the x,y,z coordinates
     min_dist = inf;
     dipole = -1;
+    data=data';
     for ii=1:size(cd_matrix,1)
         if distance_3d_space(data,cd_matrix(ii,1:3)) < min_dist
             min_dist = distance_3d_space(data,cd_matrix(ii,1:3));
@@ -52,6 +53,7 @@ elseif strcmp(method,'loc_cnn') % new cnn that predicts the x,y,z coordinates
 
     source_activation = -1 * ones(size(cd_matrix,1),1);
     source_activation(dipole) = 1;
+    dipole_location = cd_matrix(dipole,1:3);
 else
     source_activation = (-1) * ones(size(data));
     source_activation(activation_idx) = dipole_value;

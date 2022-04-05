@@ -1,8 +1,8 @@
 clear; close all; clc;
 
 %A1999,A1974,A0206
-subject='A1974';
-ms = '23_3';
+subject='A0206';
+ms = '25';
 
 %% Load data
 load(sprintf('../real_data/%s/EEG_avg.mat',subject));
@@ -11,36 +11,24 @@ eeg_idx = get_eeg_idx(subject,ms);
 
 % load downsampled Leadfield
 if strcmp(subject,'A0206')
-    load('../duneuropy/Data/dipoles_downsampled_10k.mat')
+    load('../duneuropy/Data/dipoles.mat')
     % load leadfield (calculated by Duneuro)
-    Le = double(readNPY('../duneuropy/DataOut/leadfield_downsampled_10k.npy'))';
+    Le = double(readNPY('../duneuropy/DataOut/leadfield.npy'))';
     % MRI name
-    T1_name = sprintf('../mri_data/%s/%s_mri.nii',subject,subject);
+    T1_name = sprintf('../mri_data/%s/%s_regist_anon.nii',subject,subject);
     
-elseif strcmp(subject,'A1974')
+elseif strcmp(subject,'A1974') || strcmp(subject,'A1999')
     % load and resample leadfield
     load(sprintf('../real_data/%s/%s_Le.mat',subject,subject));
-    Le = resample(Le',10092,size(Le,2))';
+    
     
     load(sprintf('../real_data/%s/%s_source_space.mat',subject,subject));
+    
+    % apply the linear registration matrix to the cd_matrix
     cd_matrix = apply_lt_matrix(sprintf('../mri_data/%s/%s_regist.mat',subject,subject),cd_matrix(:,1:3));
-    % downsample the source_space
-    len = size(cd_matrix,1);
-    cd_matrix = resample(cd_matrix,10092,len);
-     
-    
+   
     % MRI name
-    T1_name = sprintf('../mri_data/%s/%s_regist.nii',subject,subject);
-    
-elseif strcmp(subject,'A1999')
-    % load and resample leadfield
-    load(sprintf('../real_data/%s/%s_Le.mat',subject,subject));
-    Le = resample(Le',10092,size(Le,2))';
-    
-    % MRI name
-    T1_name = sprintf('../mri_data/%s/%s_regist.nii',subject,subject);
-    
-    load('../duneuropy/Data/dipoles_downsampled_10k.mat')
+    T1_name = sprintf('../mri_data/%s/%s_regist_anon.nii',subject,subject);
 end
 
 
@@ -62,9 +50,9 @@ title(sprintf('EEG topography at %s ms',ms));
 import_directory('./inverse_algorithms/')
 
 %% Single Dipole Scanning
-
+tic;
 [dipole_scan_out,best_loc] = SingleDipoleFit(Le, eeg_s);
-
+toc;
 [dipole_scan_out,location_dipole_scan] = create_source_activation_vector(...
     dipole_scan_out,'dipole_fit',cd_matrix);
 
@@ -86,8 +74,9 @@ end
 
 b = eeg_s;
 alpha = 25;
+tic;
 s_loreta_out = sLORETA_with_ori(b,Le,alpha);
-
+toc;
 [s_loreta_out,location_sloreta] = create_source_activation_vector(...
     s_loreta_out,'sLORETA',cd_matrix);
 
@@ -110,7 +99,7 @@ end
 neural_net_pred = double(readNPY(sprintf('../real_data/%s/%sms/pred_sources_%s.npy',subject,ms,ms)));
 
 [neural_net_pred,location_nn] = create_source_activation_vector(...
-    neural_net_pred,'nn',cd_matrix);
+    neural_net_pred,'loc_cnn',cd_matrix);
 
 figure;
 scatter3(loc(:,1),loc(:,2),loc(:,3),100,neural_net_pred,'.')

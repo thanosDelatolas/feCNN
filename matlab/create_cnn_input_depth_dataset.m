@@ -8,7 +8,7 @@ sensor_labels = sensor_labels(1:end-1);
 layout = '/home/thanos/fieldtrip/template/layout/EEG1010.lay';
 [sensors_1010, lay] = compatible_elec(sensor_labels, layout);
 
-snr='-10';
+snr='15';
 depth_dataset_path = sprintf('../eval_sim_data/depth/%sdb/',snr);
 depths_struct = dir(fullfile(depth_dataset_path,'*'));
 
@@ -40,9 +40,9 @@ for ii = 1:numel(depths_subdirs)
 
         Zi = -replace_nan(Zi);
         
-        eeg_topos(:,:,ii) = Zi;
-        eeg_Xi(:,:,ii) = Xi;
-        eeg_Yi(:,:,ii) = Yi;
+        eeg_topos(:,:,kk) = Zi;
+        eeg_Xi(:,:,kk) = Xi;
+        eeg_Yi(:,:,kk) = Yi;
     
     end
     

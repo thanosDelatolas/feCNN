@@ -74,7 +74,7 @@ class Simulation:
             for dipole in tqdm(range(n_samples))], axis=0)
         
         self.source_data = sources.T      
-        self.eeg_data = self.simulate_eeg(self.noisy_eeg)
+        self.eeg_data = self.simulate_eeg(noisy_eeg=self.noisy_eeg)
         
         self.simulated = True
     
@@ -176,7 +176,7 @@ class Simulation:
         self.source_centers.clear()
 
         self.source_data = self.simulate_sources(n_samples)
-        self.eeg_data = self.simulate_eeg(self.noisy_eeg)        
+        self.eeg_data = self.simulate_eeg(noisy_eeg=self.noisy_eeg)        
         self.simulated = True
 
 
@@ -416,7 +416,7 @@ class Simulation:
 
 
 
-    def project_sources(self, sources, verbose=True):
+    def project_sources(self, sources=None, verbose=True):
         ''' Project sources through the leadfield to obtain the EEG data.
         Parameters
         ----------
@@ -428,6 +428,10 @@ class Simulation:
         '''
         if verbose:
             print('Project sources to EEG.')
+        
+        if sources is None:
+            sources = self.source_data
+
         leadfield = self.fwd.leadfield
 
         if leadfield.shape[1] != sources.shape[0] :

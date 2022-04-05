@@ -2,7 +2,7 @@ clear; close all; clc;
 
 %A1999,A1974,A0206
 subject='A1999';
-ms = '20_8';
+ms = '22_5';
 load(sprintf('../real_data/%s/EEG_avg.mat',subject));
 
 % plot EEG_avg
@@ -26,7 +26,7 @@ Zi = -replace_nan(Zi);
 figure;
 contourf(Xi,Yi,Zi)
 title('EEG topography.');
-
+c
 save(sprintf('../real_data/%s/%sms/eeg_topo_real_%sms.mat',subject,ms,ms), 'Zi');
 save(sprintf('../real_data/%s/%sms/eeg_topo_real_xi_%sms.mat',subject,ms,ms), 'Xi');
 save(sprintf('../real_data/%s/%sms/eeg_topo_real_yi_%sms.mat',subject,ms,ms), 'Yi');
