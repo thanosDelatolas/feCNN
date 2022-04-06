@@ -17,7 +17,7 @@ layout = '/home/thanos/fieldtrip/template/layout/EEG1010.lay';
 
 import_directory('./inverse_algorithms/');
 
-snr_db = '-10';
+snr_db = '5';
 
 depth_dataset_path = sprintf('../eval_sim_data/depth/%sdb/',snr_db);
 depths_struct = dir(fullfile(depth_dataset_path,'*'));
