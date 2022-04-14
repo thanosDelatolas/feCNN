@@ -12,7 +12,7 @@ function source_activation_mri(mri,scale,dat,pos,thresh,time,tit)
 % f = figure('WindowScrollWheelFcn',@figScroll,'KeyPressFcn',@figButton,...
 %     'WindowButtonUpFcn',@ImageClickUp,'Name','Scroll MRI');
 f = figure('WindowScrollWheelFcn',@figScroll,'WindowButtonUpFcn',@ImageClickUp,'Name','Source Activity on MRI',...
-    'pos',[100 100 900 700]);
+    'pos',[200 200 900 700]);
 %'pos',[100 100 450 400]
 
 % make source space positive
@@ -177,7 +177,7 @@ plot_data(mri,scale,dat,pos,count,time)
         text(20,mri.dim(2)-20,'P/I','color','w','fontweight','bold','fontsize',fss)
         text(mri.dim(2)-20,mri.dim(3)-20,'A','color','w','fontweight','bold','fontsize',fss)
         text(20,20,'S','color','w','fontweight','bold','fontsize',fss)
-        text(mri.dim(2)-50,20,[num2str(floor(1000*time)) ' ms'],'color','w','fontweight','bold','fontsize',fss)
+        %text(mri.dim(2)-50,20,[num2str(floor(1000*time)) ' ms'],'color','w','fontweight','bold','fontsize',fss)
         title(['Sagittal ' num2str(count(1)) '/' num2str(mri.dim(1))],'fontsize',fss)
         
         axis([1 mri.dim(2) 1 mri.dim(3)])
@@ -288,8 +288,8 @@ plot_data(mri,scale,dat,pos,count,time)
         colormap(ax1,'gray')
         colormap(ax2,'autumn')
         colormap(ax3,'autumn')
-        hcb=colorbar(ax3,'Position',[.52 .05 .05 .4]);
-        ylabel(hcb,tit,'fontsize',fss)
+        %hcb=colorbar(ax3,'Position',[.52 .05 .05 .4]);
+        %ylabel(hcb,tit,'fontsize',fss)
         
         %         ax1 = axes('Parent',f,'Units','normalized','Position',[.6 .1 .4 .4]);
         %         para = []; para.title = ['sLORETA']; para.tt=eye(3); para.axis_handle=ax1;
