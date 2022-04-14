@@ -12,7 +12,7 @@ function source_activation_mri(mri,scale,dat,pos,thresh,time,tit)
 % f = figure('WindowScrollWheelFcn',@figScroll,'KeyPressFcn',@figButton,...
 %     'WindowButtonUpFcn',@ImageClickUp,'Name','Scroll MRI');
 f = figure('WindowScrollWheelFcn',@figScroll,'WindowButtonUpFcn',@ImageClickUp,'Name','Source Activity on MRI',...
-    'pos',[200 200 900 700]);
+    'pos',[200 200 1200 700]);
 %'pos',[100 100 450 400]
 
 % make source space positive
@@ -37,9 +37,9 @@ xx = linspace(1,mri.dim(1),mri.dim(1));
 yy = linspace(1,mri.dim(2),mri.dim(2));
 zz = linspace(1,mri.dim(3),mri.dim(3));
 
-sagittal_pos = [.1 .55 .4 .4];
-coronal_pos  = [.55 .55 .4 .4];
-axial_pos    = [.1 .05 .4 .4];
+sagittal_pos = [.05 .55 .3 .3];
+coronal_pos  = [.36 .55 .3 .3];
+axial_pos    = [.67 .55 .3 .3];
 
 count = pos(idm,:);
 
