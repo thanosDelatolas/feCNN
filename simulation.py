@@ -392,6 +392,15 @@ class Simulation:
         if noisy_eeg:
             eeg_noisy = np.zeros(eeg_clean.shape)
 
+            if sources.ndim != 2:
+                sources = np.expand_dims(sources,axis=1)
+
+            if eeg_clean.ndim != 2:
+                eeg_clean = np.expand_dims(eeg_clean,axis=1)
+            
+            if eeg_noisy.ndim != 2:
+                eeg_noisy = np.expand_dims(eeg_noisy,axis=1)
+
             if verbose:
                 print('Add noise to eeg')
                 rng = tqdm(range(sources.shape[1]))

@@ -103,7 +103,8 @@ close(w_bar);
 toc;
 
 %%
-
+% clear; close all; clc;
+% snr_db = '-5';
 load(sprintf('./eval_results/depth_eval/%sdb/mle_cnn.mat',snr_db));
 load(sprintf('./eval_results/depth_eval/%sdb/mle_s_loreta.mat',snr_db));
 load(sprintf('./eval_results/depth_eval/%sdb/mle_dipole_scan.mat',snr_db));
@@ -117,7 +118,11 @@ hold on;
 plot(sort(depth),sort(mle_dipole_scan),'linewidth',4);
 hold off;
 grid on;
-legend('CNN','Dipole Scan', 'sLORETA');
+legend({'CNN','Dipole Scan', 'sLORETA'},'Location','northwest','FontSize',12,'fontweight','bold');
 set(gcf,'Position',[220 300 1200 500]);
-xlabel('Depth [mm]');
-ylabel('Localization Error [mm]');
+xlabel('Depth [mm]','fontsize',14,'fontweight','bold');
+ylabel('Localization Error [mm]','fontsize',14,'fontweight','bold');
+set(gca,'FontSize',18)
+
+saveas(gcf,sprintf('../../GitHub/thesisLatex/doc/Figures/chapter6/depth_snr_%s',snr_db),'epsc')
+saveas(gcf,sprintf('../../GitHub/thesis_summary/res/depth_snr_%s',snr_db),'epsc')
