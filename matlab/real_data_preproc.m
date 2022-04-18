@@ -7,7 +7,7 @@ import_fieldtrip();
 file_name.A0206 = '/home/thanos//Documents/TUC/Thesis/Real-Data/A0206/sep_sef/sep_sef.ds';
 file_name.A1974 = '/home/thanos/Documents/TUC/Thesis/Real-Data/A1974/A1974_comparisonSEF_20170329_02_singletrial.ds';
 file_name.A1999 = '/home/thanos/Documents/TUC/Thesis/Real-Data/A1999/A1999_comparisonSEF_20170510_03_singletrial.ds';
-data_name              = file_name.A1999;    
+data_name              = file_name.A0206;    
 
 % read electrodes
 if strcmp(data_name, file_name.A0206)
@@ -38,8 +38,6 @@ cfg.channel            = sensor_labels;             % define channel type
 data_eeg               = ft_preprocessing(cfg); % read raw data
 data_eeg               = ft_redefinetrial(cfg_tr_def, data_eeg);
 
-
-%data_eeg.label = sensor_labels;
 
 cfg                = [];
 cfg.hpfilter       = 'yes';        % enable high-pass filtering
@@ -82,7 +80,6 @@ cfg.method = 'amplitude';
 EEG_gmfp = ft_globalmeanfield(cfg, EEG_avg);
 
 figure;
-
 pol = -1;     % correct polarity
 scale = 10^6; % scale for eeg data micro volts
 
@@ -93,17 +90,11 @@ h1 = plot(EEG_avg.time,signal_EEG,'color',[0,0,0.5]);
 hold on;
 h2 = plot(EEG_avg.time,scale*EEG_gmfp.avg,'color',[1,0,0],'linewidth',1);
 
-
+idx = get_eeg_idx(subject);
+toi = EEG_avg.time(idx);
 % uncoment for visualize and MODIFY to visualize a topography
-% mx = max(max(signal_EEG));
-% mn = min(min(signal_EEG));
-% 
-% % select time of interest for the source reconstruction later on
-% idx = find(EEG_avg.time>0.024 & EEG_avg.time<=0.027);
-% toi = EEG_avg.time(idx);
-% 
-% [mxx,idxm] = max(max(abs(EEG_avg.avg(:,idx))));
-% EEG_toi_mean_trial = toi(idxm);
+[mxx,idxm] = max(max(abs(EEG_avg.avg(:,idx))));
+EEG_toi_mean_trial = toi(idxm);
 
 
 % cfg          = [];
@@ -120,17 +111,17 @@ h2 = plot(EEG_avg.time,scale*EEG_gmfp.avg,'color',[1,0,0],'linewidth',1);
 % 
 % 
 % 
-% cfg            = [];
-% cfg.zlim       = 'maxmin';
-% cfg.comment    = 'xlim';
-% %cfg.commentpos = 'title';
-% cfg.xlim       = [0.0248 0.0255];%[0.0245 0.0455];%[EEG_toi_mean_trial EEG_toi_mean_trial+0.01*EEG_toi_mean_trial];
-% cfg.layout     = 'EEG1010.lay';
-% cfg.fontsize   = 14;
+cfg            = [];
+cfg.zlim       = 'maxmin';
+cfg.comment    = 'no';
+%cfg.commentpos = 'title';
+cfg.xlim       = [EEG_toi_mean_trial EEG_toi_mean_trial+0.01*EEG_toi_mean_trial];
+cfg.layout     = 'EEG1010.lay';
+cfg.fontsize   = 14;
 % 
-% figure;
-% ft_topoplotER(cfg, EEG_avg);
-% set(gcf, 'Position',[1 1 1200 800])
+figure;
+ft_topoplotER(cfg, EEG_avg);
+set(gcf, 'Position',[1 1 1200 800])
 % 
 % 
 % cfg            = [];
