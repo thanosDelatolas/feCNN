@@ -1,7 +1,7 @@
 clear; close all; clc;
 
 %A1999,A1974,A0206
-subject='A1974';
+subject='A0206';
 ms = '22_5';
 load(sprintf('../real_data/%s/EEG_avg.mat',subject));
 
@@ -16,11 +16,11 @@ signal_EEG = scale*pol*EEG_avg.avg; % add single trials in a new value
 figure;
 plot(EEG_avg.time,signal_EEG,'color',[0,0,0.5]);
 hold on;
-plot([x_val x_val], [2.4 3],'--','color',[0,0,0],'linewidth',2);
+plot([x_val x_val], [2 3],'--','color',[0,0,0],'linewidth',2);
 hold on;
-plot([x_val x_val], [-2.4 -3],'--','color',[0,0,0],'linewidth',2);
+plot([x_val x_val], [-1.2 -3],'--','color',[0,0,0],'linewidth',2);
 text(x_val, 2.6, '\leftarrow Topogrpahy timepoint','HorizontalAlignment','left','FontSize',13)
-xlabel('Time [ms]');
+xlabel('Time [s]');
 ylabel('EEG signal');
 hold off;
 set(gca,'FontSize',15)
