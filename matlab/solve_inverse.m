@@ -127,16 +127,16 @@ source_grid_lt = downsample(cd_matrix_lt(:,1:3),3);
 source_grid = downsample(cd_matrix(:,1:3),3);
 
 % project to MRI the neural net's prediction
-source_activation_mri(mri_t1_regist,mri_data_scale,neural_net_pred,source_grid_lt,...
+source_activation_mri_alt(mri_t1_regist,mri_data_scale,neural_net_pred,source_grid_lt,...
     mri_data_clipping,EEG_avg.time(eeg_idx),'Localization with Neural Net');
 
 % project to MRI the sLORETA solution
-source_activation_mri(mri_t1,mri_data_scale,s_loreta_out,source_grid,...
+source_activation_mri_alt(mri_t1,mri_data_scale,s_loreta_out,source_grid,...
     mri_data_clipping,EEG_avg.time(eeg_idx),'Localization with sLORETA');
 
 
 % project to MRI the dipole scan solution
-source_activation_mri(mri_t1,mri_data_scale,dipole_scan_out,source_grid,...
+source_activation_mri_alt(mri_t1,mri_data_scale,dipole_scan_out,source_grid,...
     mri_data_clipping,EEG_avg.time(eeg_idx),'Localization with Dipole Scan');
 
 
