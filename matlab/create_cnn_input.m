@@ -7,7 +7,7 @@ sensor_labels = split(sensor_labels{4});
 sensor_labels = sensor_labels(1:end-1);
 
 snr='20'; % 
-eeg = double(readNPY(sprintf('./../eval_sim_data/single_source/%sdb/eeg.npy',snr)));
+eeg = double(readNPY(sprintf('./../eval_sim_data/old_nn/single_source/%sdb/eeg.npy',snr)));
 
 layout = '/home/thanos/fieldtrip/template/layout/EEG1010.lay';
 
@@ -48,7 +48,7 @@ toc;
 
 close(w_bar);
 
-save(sprintf('./../eval_sim_data/single_source/%sdb/eeg_topos_noisy.mat',snr), 'eeg_topos', '-v7.3')
+save(sprintf('./../eval_sim_data/old_nn/single_source/%sdb/eeg_topos_noisy.mat',snr), 'eeg_topos', '-v7.3')
 % save(sprintf('./../eval_sim_data/one_two_sources/%sdb/eeg_topos_xi.mat',snr), 'eeg_Xi', '-v7.3')
 % save(sprintf('./../eval_sim_data/one_two_sources/%sdb/eeg_topos_yi.mat',snr), 'eeg_Yi', '-v7.3')
 
@@ -59,8 +59,8 @@ save(sprintf('./../eval_sim_data/single_source/%sdb/eeg_topos_noisy.mat',snr), '
 
 %% visualize
 
-sample = randi([1 n_samples],1,1);
-figure;
-contourf(eeg_Xi(:,:,sample),eeg_Yi(:,:,sample),eeg_topos(:,:,sample));
-colorbar;
-title(sprintf('Topography for sample: %d',sample));
+% sample = randi([1 n_samples],1,1);
+% figure;
+% contourf(eeg_Xi(:,:,sample),eeg_Yi(:,:,sample),eeg_topos(:,:,sample));
+% colorbar;
+% title(sprintf('Topography for sample: %d',sample));

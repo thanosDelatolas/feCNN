@@ -9,7 +9,7 @@ layout = '/home/thanos/fieldtrip/template/layout/EEG1010.lay';
 [sensors_1010, lay] = compatible_elec(sensor_labels, layout);
 
 snr='20';
-depth_dataset_path = sprintf('../eval_sim_data/depth/%sdb/',snr);
+depth_dataset_path = sprintf('../eval_sim_data/old_nn/depth/%sdb/',snr);
 depths_struct = dir(fullfile(depth_dataset_path,'*'));
 
 w_bar_title = sprintf('CNN input for depth dataset with snr=%sdB',snr);

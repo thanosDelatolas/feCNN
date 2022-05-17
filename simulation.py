@@ -204,7 +204,7 @@ class Simulation:
         '''
 
         if not os.path.isdir(path_to_save_dataset):
-            os.mkdir(path_to_save_dataset)
+            os.makedirs(path_to_save_dataset)
             
         source_space = self.fwd.dipoles[:,:3]
 
