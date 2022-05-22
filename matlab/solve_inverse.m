@@ -15,7 +15,6 @@ if strcmp(subject,'A0206')
     
     cd_matrix_lt = cd_matrix(:,1:3);
 elseif strcmp(subject,'A1974') || strcmp(subject,'A1999')
-    % load and resample leadfield
     load(sprintf('../real_data/%s/%s_Le.mat',subject,subject));
     
     load(sprintf('../real_data/%s/%s_source_space.mat',subject,subject));

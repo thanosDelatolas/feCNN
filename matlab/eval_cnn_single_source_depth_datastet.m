@@ -124,5 +124,5 @@ xlabel('Depth [mm]','fontsize',14,'fontweight','bold');
 ylabel('Localization Error [mm]','fontsize',14,'fontweight','bold');
 set(gca,'FontSize',18)
 
-saveas(gcf,sprintf('../../GitHub/thesisLatex/doc/Figures/chapter6/depth_snr_%s',snr_db),'epsc')
-saveas(gcf,sprintf('../../GitHub/thesis_summary/res/depth_snr_%s',snr_db),'epsc')
+% saveas(gcf,sprintf('../../GitHub/thesisLatex/doc/Figures/chapter6/depth_snr_%s',snr_db),'epsc')
+% saveas(gcf,sprintf('../../GitHub/thesis_summary/res/depth_snr_%s',snr_db),'epsc')
