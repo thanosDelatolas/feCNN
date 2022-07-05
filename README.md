@@ -1,6 +1,5 @@
-# thesis
- 
-My thesis code so far.
+# tuc_eeg_cnn
+A CNN for the inverse problem of Source Analysis. A detailed description of this project can be found [here](https://dias.library.tuc.gr/view/92520?show=full).
 
 ## Installation
 ```
