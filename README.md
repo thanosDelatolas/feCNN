@@ -1,11 +1,9 @@
-# tuc_eeg_cnn
-A CNN for the inverse problem of Source Analysis. A detailed description of this project can be found [here](https://dias.library.tuc.gr/view/92520?locale=en).
-
+# EEG Source Analysis with a Convolutional Neural Network and Finite Element Analysis
+Code and data for [feCNN](https://www.sci.utah.edu/~wolters/PaperWolters/2023/DelatolasEtAl_IEEE-EMBS-Sydney-feCNN.pdf) published at EMBC 2023
 ## Installation
 ```
 pip3 install -r requirements.txt
 ```
-
 ## Duneuro
 Duneuro is already installed but you can check for new versions [here](http://duneuro.org/).
 ## Data
